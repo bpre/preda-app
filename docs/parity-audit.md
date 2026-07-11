@@ -30,6 +30,9 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
   a real-data resource smoke test.
 - Ewidencja letter file preview/download, offer PDF download, and branch report export
   are covered by a real-data operations smoke test.
+- Selected side-effect workflows are covered by a transaction-safe real-data smoke
+  test: website lead status changes, letter notification mail rendering with an
+  attachment, and offer notification mail preparation with a PDF attachment.
 - Legacy `/kancelaria/...` Ewidencja panel paths redirect to the new root paths on
   the `ewidencja` subdomain.
 
@@ -59,5 +62,5 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 - Sync remaining old `preda.info` storage files, then rerun `legacy:audit-files`.
 - Compare public pages visually against the old `preda.info` pages on real data after
   public storage files are available.
-- Exercise selected write/side-effect workflows in an isolated transaction or with
-  faked mail: CRM lead status changes, offer sending, and letter notification actions.
+- Exercise remaining Livewire-only action paths manually or with browser automation
+  once needed, especially full offer sending and queued letter notification actions.
