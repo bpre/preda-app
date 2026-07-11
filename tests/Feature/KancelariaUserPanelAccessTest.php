@@ -2,10 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Crm\Resources\LeadResource as CrmLeadResource;
 use App\Filament\Resources\CHFMatterResource;
 use App\Filament\Resources\ContactResource;
+use App\Filament\Resources\Roles\Pages\EditRole as EditRolePage;
+use App\Filament\Resources\Roles\RoleResource as KancelariaRoleResource;
 use App\Filament\Resources\UserResource;
 use App\Filament\Resources\UserResource\Pages\EditUser;
+use App\Filament\Website\Resources\Banks\BankResource as WebsiteBankResource;
 use App\Models\User;
 use App\Support\PanelAccess;
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
@@ -139,6 +143,52 @@ class KancelariaUserPanelAccessTest extends TestCase
             ->all();
 
         $this->assertContains('view_any_contact', $checkedPermissions);
+    }
+
+    public function test_kancelaria_role_edit_form_groups_permissions_by_panel(): void
+    {
+        $admin = $this->makeSuperAdmin();
+        $role = Role::firstOrCreate([
+            'name' => 'pracownik',
+            'guard_name' => 'web',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(KancelariaRoleResource::getUrl('edit', ['record' => $role], panel: 'kancelaria'))
+            ->assertOk()
+            ->assertSee('Uprawnienia')
+            ->assertSee('Kancelaria')
+            ->assertSee('CRM')
+            ->assertSee('Strona www')
+            ->assertSee('Zasoby');
+    }
+
+    public function test_kancelaria_role_edit_form_saves_permissions_from_panel_groups(): void
+    {
+        Filament::setCurrentPanel('kancelaria');
+
+        $admin = $this->makeSuperAdmin();
+        $role = Role::firstOrCreate([
+            'name' => 'panel-test',
+            'guard_name' => 'web',
+        ]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditRolePage::class, ['record' => $role->getRouteKey()])
+            ->set('data.'.ContactResource::class, ['view_any_contact'])
+            ->set('data.'.CrmLeadResource::class, ['view_any_lead'])
+            ->set('data.'.WebsiteBankResource::class, ['ViewAny:Bank'])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $expectedPermissions = ['view_any_contact', 'view_any_lead', 'ViewAny:Bank'];
+        $actualPermissions = $role->refresh()->permissions()->pluck('name')->all();
+
+        sort($expectedPermissions);
+        sort($actualPermissions);
+
+        $this->assertSame($expectedPermissions, $actualPermissions);
     }
 
     private function makeSuperAdmin(): User

@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Facades\Website\Seo as SeoFacade;
-use App\Filament\Website\Resources\Users\UserResource as WebsiteUserResource;
 use App\Jobs\SendLetterNotificationJob;
 use App\Models\BankMatter;
 use App\Models\CHFMatter;
@@ -41,6 +40,7 @@ use App\Observers\Website\ContactObserver as WebsiteContactObserver;
 use App\Observers\Website\SentenceObserver;
 use App\Services\LetterNotificationQueueMonitor;
 use App\Services\Website\Seo;
+use App\Support\ShieldPermissionKeys;
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use Filament\Support\Assets\Js;
 use Filament\Support\Colors\Color;
@@ -58,7 +58,6 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -214,31 +213,13 @@ class AppServiceProvider extends ServiceProvider
 
     private function configureShieldPermissionKeys(): void
     {
-        FilamentShield::buildPermissionKeyUsing(function (string $entity, string $affix, string $subject): string {
-            if (
-                str_starts_with($entity, 'App\\Filament\\Website\\Resources\\')
-                && $entity !== WebsiteUserResource::class
-            ) {
-                return Str::studly($affix).':'.Str::studly($subject);
-            }
-
-            $legacySubject = [
-                'BankMatter' => 'bank::matter',
-                'CHFMatter' => 'c::h::f::matter',
-                'CHFPaymentMatter' => 'c::h::f::payment::matter',
-                'CHFPotentialMatter' => 'c::h::f::potential::matter',
-                'ContactMatter' => 'contact::matter',
-                'DatabaseNotification' => 'notification',
-                'ExchangeRate' => 'exchange::rate',
-                'LetterNotification' => 'letter::notification',
-                'LetterNotificationTemplate' => 'letter::notification::template',
-                'OtherMatter' => 'other::matter',
-                'PortalUser' => 'portal::user',
-                'TemplateStage' => 'template::stage',
-            ][$subject] ?? Str::snake($subject);
-
-            return Str::snake($affix).'_'.$legacySubject;
-        });
+        FilamentShield::buildPermissionKeyUsing(
+            fn (string $entity, string $affix, string $subject): string => ShieldPermissionKeys::build(
+                entity: $entity,
+                affix: $affix,
+                subject: $subject,
+            )
+        );
     }
 
     private function registerWebsiteThemeViews(): void
