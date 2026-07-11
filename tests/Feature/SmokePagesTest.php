@@ -5,16 +5,24 @@ namespace Tests\Feature;
 use App\Filament\Website\Resources\Leads\LeadResource;
 use App\Filament\Website\Resources\Posts\PostResource;
 use App\Filament\Website\Resources\Sentences\SentenceResource;
+use App\Filament\Portal\Resources\CHFMatterResource as PortalCHFMatterResource;
+use App\Filament\Portal\Resources\LetterResource as PortalLetterResource;
 use App\Filament\Resources\CHFMatterResource as KancelariaCHFMatterResource;
 use App\Filament\Resources\CHFPotentialMatterResource as CrmPotentialMatterResource;
 use App\Filament\Resources\ContactResource as KancelariaContactResource;
 use App\Filament\Resources\LeadResource as CrmLeadResource;
 use App\Filament\Resources\LetterResource as KancelariaLetterResource;
 use App\Filament\Resources\TaskResource as KancelariaTaskResource;
+use App\Models\CHFMatter;
+use App\Models\Contact;
+use App\Models\ContactMatter;
+use App\Models\Letter;
+use App\Models\PortalUser;
 use App\Models\User;
 use App\Models\Website\Lead;
 use App\Models\Website\Post;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -32,6 +40,54 @@ class SmokePagesTest extends TestCase
     public function test_the_portal_login_page_is_accessible(): void
     {
         $this->get('http://portal.preda-app.test/login')->assertOk();
+    }
+
+    public function test_an_active_portal_user_can_only_open_their_own_matters_and_letters(): void
+    {
+        [$portalUser, $matter, $letter, $otherMatter] = $this->createPortalMatterFixture();
+
+        $this->actingAs($portalUser, 'portal')
+            ->get(PortalCHFMatterResource::getUrl(panel: 'portal'))
+            ->assertOk()
+            ->assertSee('Portal matter')
+            ->assertDontSee('Other portal matter');
+
+        $this->actingAs($portalUser, 'portal')
+            ->get(PortalCHFMatterResource::getUrl('view', ['record' => $matter], panel: 'portal'))
+            ->assertOk()
+            ->assertSee('Portal matter');
+
+        $this->actingAs($portalUser, 'portal')
+            ->get(PortalCHFMatterResource::getUrl('view', ['record' => $otherMatter], panel: 'portal'))
+            ->assertNotFound();
+
+        $this->actingAs($portalUser, 'portal')
+            ->get(PortalLetterResource::getUrl(panel: 'portal'))
+            ->assertOk()
+            ->assertSee('Portal letter')
+            ->assertDontSee('Other portal letter');
+
+        $this->actingAs($portalUser, 'portal')
+            ->get(PortalLetterResource::getUrl('view', ['record' => $letter], panel: 'portal'))
+            ->assertOk()
+            ->assertSee('Portal letter');
+    }
+
+    public function test_portal_letter_files_are_scoped_to_the_logged_in_contact(): void
+    {
+        [$portalUser] = $this->createPortalMatterFixture();
+
+        Storage::fake('local');
+        Storage::disk('local')->put('k2/portal/document.pdf', 'portal file');
+        Storage::disk('local')->put('k2/portal/other.pdf', 'other file');
+
+        $this->actingAs($portalUser, 'portal')
+            ->get('http://portal.preda-app.test/file/k2/portal/document.pdf')
+            ->assertOk();
+
+        $this->actingAs($portalUser, 'portal')
+            ->get('http://portal.preda-app.test/file/k2/portal/other.pdf')
+            ->assertNotFound();
     }
 
     public function test_the_blog_listing_page_renders_successfully(): void
@@ -181,6 +237,88 @@ class SmokePagesTest extends TestCase
         $user->assignRole($role);
 
         return $user;
+    }
+
+    private function createPortalMatterFixture(): array
+    {
+        $lawyer = User::factory()->create([
+            'is_active' => true,
+            'is_lawyer' => true,
+        ]);
+
+        $contact = Contact::create([
+            'type' => 'person',
+            'category' => 'Kredytobiorca',
+            'first_name' => 'Jan',
+            'last_name' => 'Portalowy',
+            'label' => 'Jan Portalowy',
+            'sort_name' => 'Portalowy Jan',
+            'email' => 'jan.portalowy@example.test',
+        ]);
+
+        $otherContact = Contact::create([
+            'type' => 'person',
+            'category' => 'Kredytobiorca',
+            'first_name' => 'Anna',
+            'last_name' => 'Inna',
+            'label' => 'Anna Inna',
+            'sort_name' => 'Inna Anna',
+            'email' => 'anna.inna@example.test',
+        ]);
+
+        $portalUser = PortalUser::create([
+            'name' => 'Jan Portalowy',
+            'email' => 'portal@example.test',
+            'password' => 'password',
+            'is_active' => true,
+            'contact_id' => $contact->id,
+        ]);
+
+        $matter = CHFMatter::create([
+            'label' => 'Portal matter',
+            'lawyer_id' => $lawyer->id,
+            'category' => 'CHF',
+            'is_matter' => true,
+        ]);
+
+        $otherMatter = CHFMatter::create([
+            'label' => 'Other portal matter',
+            'lawyer_id' => $lawyer->id,
+            'category' => 'CHF',
+            'is_matter' => true,
+        ]);
+
+        ContactMatter::create([
+            'matter_id' => $matter->id,
+            'contact_id' => $contact->id,
+            'receives_notifications' => true,
+        ]);
+
+        ContactMatter::create([
+            'matter_id' => $otherMatter->id,
+            'contact_id' => $otherContact->id,
+            'receives_notifications' => true,
+        ]);
+
+        $letter = Letter::create([
+            'label' => 'Portal letter',
+            'date' => now()->toDateString(),
+            'type' => 'in',
+            'matter_id' => $matter->id,
+            'files' => ['k2/portal/document.pdf'],
+            'files_names' => ['k2/portal/document.pdf' => 'Dokument.pdf'],
+        ]);
+
+        $otherLetter = Letter::create([
+            'label' => 'Other portal letter',
+            'date' => now()->toDateString(),
+            'type' => 'in',
+            'matter_id' => $otherMatter->id,
+            'files' => ['k2/portal/other.pdf'],
+            'files_names' => ['k2/portal/other.pdf' => 'Inny.pdf'],
+        ]);
+
+        return [$portalUser, $matter, $letter, $otherMatter, $otherLetter];
     }
 
     private function createNavigationPosts(): void

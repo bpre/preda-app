@@ -7,3 +7,6 @@ Route::domain(config('preda.domains.public'))
 
 Route::domain(config('preda.domains.kancelaria'))
     ->group(base_path('routes/kancelaria.php'));
+
+Route::domain(config('preda.domains.portal'))
+    ->group(base_path('routes/portal.php'));

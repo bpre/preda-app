@@ -18,6 +18,7 @@ use App\Models\Letter;
 use App\Models\Matter;
 use App\Models\Stage;
 use App\Models\Task;
+use App\Models\User;
 use App\Services\Website\Seo;
 use App\Services\LetterNotificationQueueMonitor;
 use App\Models\Website\Contact as WebsiteContact;
@@ -44,6 +45,7 @@ use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\ServiceProvider;
 use App\Facades\Website\Seo as SeoFacade;
@@ -84,6 +86,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::before(function (object $user): ?bool {
+            if (! $user instanceof User) {
+                return null;
+            }
+
+            return $user->hasRole(config('filament-shield.super_admin.name', 'super_admin'))
+                ? true
+                : null;
+        });
+
         FilamentAsset::register([
             Js::make('kancelaria-admin', resource_path('js/admin.js')),
         ]);

@@ -39,7 +39,7 @@ class PortalPanelProvider extends PanelProvider
                 'primary' => Color::Emerald,
             ])
             ->font('Manrope', provider: LocalFontProvider::class)
-            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->viteTheme('resources/css/filament/portal/theme.css')
             ->discoverResources(in: app_path('Filament/Portal/Resources'), for: 'App\\Filament\\Portal\\Resources')
             ->discoverPages(in: app_path('Filament/Portal/Pages'), for: 'App\\Filament\\Portal\\Pages')
             ->pages([
