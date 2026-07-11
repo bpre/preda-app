@@ -34,9 +34,10 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
   and correspondence envelope/send-list PDF generation are covered by a real-data
   operations smoke test.
 - Selected side-effect workflows are covered by a transaction-safe real-data smoke
-  test: website lead status changes, letter notification mail rendering with an
-  attachment, offer notification mail preparation with a PDF attachment, and
-  `r8dsg` mailing links for offer/remove requests.
+  test: website lead status changes, letter notification mail rendering and sender
+  status transition with an attachment, offer notification mail preparation and
+  CRM edit-page sending with a PDF attachment, and `r8dsg` mailing links for
+  offer/remove requests.
 - Legacy `/kancelaria/...` Ewidencja panel paths redirect to the new root paths on
   the `ewidencja` subdomain.
 
@@ -73,4 +74,5 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 - Compare public pages visually against the old `preda.info` pages on real data after
   public storage files are available.
 - Exercise remaining Livewire-only action paths manually or with browser automation
-  once needed, especially full offer sending and queued letter notification actions.
+  once needed, especially less critical table/bulk actions not yet covered by
+  smoke tests.
