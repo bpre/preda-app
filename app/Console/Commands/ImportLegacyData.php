@@ -78,10 +78,13 @@ class ImportLegacyData extends Command
         $this->mergeWebsiteUserProfiles($targetSchema, $websiteSource);
         $this->mergeWebsiteAccess($targetSchema, $websiteSource);
         $this->ensurePanelAccess($targetSchema);
+        $this->normalizeNullableForeignKeys($targetSchema);
+        $this->repairBrokenOptionalRelations($targetSchema);
+        $this->pruneInvalidPortalUsers($targetSchema);
 
         $permissionRegistrar->forgetCachedPermissions();
 
-        $this->displayDryRun($targetSchema, $mappings, 'Imported rows');
+        $this->displayDryRun($targetSchema, $mappings, 'Source rows');
         $this->info('Legacy data import completed.');
 
         return self::SUCCESS;
@@ -406,6 +409,85 @@ class ImportLegacyData extends Command
             'access_crm_panel',
             'access_cms_panel',
         ]);
+    }
+
+    private function normalizeNullableForeignKeys(string $targetSchema): void
+    {
+        $columns = DB::table('information_schema.columns')
+            ->where('table_schema', $targetSchema)
+            ->where('is_nullable', 'YES')
+            ->whereIn('data_type', ['char', 'varchar'])
+            ->where(function ($query): void {
+                $query
+                    ->where('column_name', 'like', '%\_id')
+                    ->orWhereIn('column_name', [
+                        'lawfirm_id',
+                        'sender_id',
+                    ]);
+            })
+            ->orderBy('table_name')
+            ->orderBy('ordinal_position')
+            ->get(['table_name', 'column_name']);
+
+        foreach ($columns as $column) {
+            $affected = DB::affectingStatement(sprintf(
+                'UPDATE %s SET %s = NULL WHERE %s = ?',
+                $this->qualifiedTable($targetSchema, $column->TABLE_NAME),
+                $this->quoteIdentifier($column->COLUMN_NAME),
+                $this->quoteIdentifier($column->COLUMN_NAME),
+            ), ['']);
+
+            if ($affected > 0) {
+                $this->line("Normalized {$affected} empty {$column->TABLE_NAME}.{$column->COLUMN_NAME} values to NULL");
+            }
+        }
+    }
+
+    private function repairBrokenOptionalRelations(string $targetSchema): void
+    {
+        $tasks = DB::affectingStatement(sprintf(
+            'UPDATE %s AS task
+                LEFT JOIN %s AS matter ON matter.id = task.matter_id
+                SET task.matter_id = NULL
+                WHERE task.matter_id IS NOT NULL
+                    AND matter.id IS NULL',
+            $this->qualifiedTable($targetSchema, 'tasks'),
+            $this->qualifiedTable($targetSchema, 'matters'),
+        ));
+
+        if ($tasks > 0) {
+            $this->line("Detached {$tasks} tasks from missing matters");
+        }
+
+        $contactLetters = DB::affectingStatement(sprintf(
+            'DELETE contact_letter
+                FROM %s AS contact_letter
+                LEFT JOIN %s AS letter ON letter.id = contact_letter.letter_id
+                WHERE letter.id IS NULL',
+            $this->qualifiedTable($targetSchema, 'contact_letter'),
+            $this->qualifiedTable($targetSchema, 'letters'),
+        ));
+
+        if ($contactLetters > 0) {
+            $this->line("Deleted {$contactLetters} orphan contact_letter rows");
+        }
+    }
+
+    private function pruneInvalidPortalUsers(string $targetSchema): void
+    {
+        $portalUsers = DB::affectingStatement(sprintf(
+            'DELETE portal_user
+                FROM %s AS portal_user
+                LEFT JOIN %s AS contact ON contact.id = portal_user.contact_id
+                WHERE portal_user.contact_id IS NOT NULL
+                    AND contact.id IS NULL',
+            $this->qualifiedTable($targetSchema, 'portal_users'),
+            $this->qualifiedTable($targetSchema, 'contacts'),
+        ));
+
+        if ($portalUsers > 0) {
+            $this->line("Deleted {$portalUsers} portal users linked to missing contacts");
+        }
     }
 
     /**
