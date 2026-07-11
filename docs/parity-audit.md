@@ -33,6 +33,8 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 - Ewidencja letter file preview/download, offer PDF download, branch report export,
   and correspondence envelope/send-list PDF generation are covered by a real-data
   operations smoke test.
+- Data-count parity across the imported `ewidencja.preda.info` and `preda.info`
+  functional tables is documented in `docs/data-and-storage-audit.md`.
 - Selected side-effect workflows are covered by a transaction-safe real-data smoke
   test: website lead status changes, letter notification mail rendering and sender
   status transition with an attachment, offer notification mail preparation and
@@ -59,21 +61,16 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
   - `letters.files`: 12271/12272 files present; 1 missing file.
   - `stages.files`: 13/13 files present.
   - `offers.pdf_path`: 86/86 files present.
-  - `neostamps.generated_file`: 0/2643 files present; old `neoznaczki`
-    storage still missing, so direct neostamp file download cannot yet be
-    verified on a real local file.
-  - `website_leads.files`: 0/1477 files present; old `preda.info` storage still missing.
-  - `website_sentences.files`: 0/374 files present; old public storage still missing.
-  - `website_securities.files`: 0/35 files present; old public storage still missing.
-- The current Codex session cannot fetch the remaining website files over SSH without
-  credentials, so those must be synced separately.
+  - `neostamps.generated_file`: 2643/2643 files present.
+  - `website_leads.files`: 686/1477 files present; remaining missing
+    `umowy-do-analizy` files are accepted archival gaps.
+  - `website_sentences.files`: 374/374 files present.
+  - `website_securities.files`: 35/35 files present.
 
 ## Next audit targets
 
-- Sync remaining old storage folders (`neoznaczki`, `umowy-do-analizy`, `sentences`,
-  `securities`), then rerun `legacy:audit-files`.
-- Compare public pages visually against the old `preda.info` pages on real data after
-  public storage files are available.
+- Compare public pages visually against the old `preda.info` pages on real data
+  with synced public storage.
 - Exercise remaining Livewire-only action paths manually or with browser automation
   once needed, especially less critical table/bulk actions not yet covered by
   smoke tests.
