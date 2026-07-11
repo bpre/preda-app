@@ -14,10 +14,7 @@ use App\Filament\Resources\TaskResource as KancelariaTaskResource;
 use App\Models\User;
 use App\Models\Website\Lead;
 use App\Models\Website\Post;
-use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -177,34 +174,11 @@ class SmokePagesTest extends TestCase
             'guard_name' => 'web',
         ]);
 
-        $permissions = collect([
-            LeadResource::class => ['viewAny', 'view', 'update'],
-            PostResource::class => ['viewAny', 'create'],
-            SentenceResource::class => ['viewAny'],
-        ])
-            ->flatMap(fn (array $actions, string $resource) => collect(
-                FilamentShield::getDefaultPermissionKeys($resource, $actions)
-            )->pluck('key'))
-            ->merge([
-                'view_any_c::h::f::matter',
-                'view_any_c::h::f::potential::matter',
-                'view_any_contact',
-                'view_any_lead',
-                'view_any_letter',
-                'view_any_task',
-            ])
-            ->map(fn (string $name) => Permission::firstOrCreate([
-                'name' => $name,
-                'guard_name' => 'web',
-            ]));
-
         $user = User::factory()->create([
             'is_active' => $isActive,
         ]);
 
-        $role->syncPermissions($permissions);
         $user->assignRole($role);
-        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         return $user;
     }
