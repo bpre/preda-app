@@ -82,11 +82,11 @@ class SmokePagesTest extends TestCase
         Storage::disk('local')->put('k2/portal/other.pdf', 'other file');
 
         $this->actingAs($portalUser, 'portal')
-            ->get('http://portal.preda-app.test/file/k2/portal/document.pdf')
+            ->get('http://portal.preda-app.test/z/k2/portal/document.pdf')
             ->assertOk();
 
         $this->actingAs($portalUser, 'portal')
-            ->get('http://portal.preda-app.test/file/k2/portal/other.pdf')
+            ->get('http://portal.preda-app.test/z/k2/portal/other.pdf')
             ->assertNotFound();
     }
 
