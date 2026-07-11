@@ -8,7 +8,6 @@ use App\Filament\Website\Resources\Contacts\ContactResource;
 use App\Filament\Website\Resources\Credits\CreditResource;
 use App\Filament\Website\Resources\Faqs\FaqResource;
 use App\Filament\Website\Resources\Offices\OfficeResource;
-use App\Filament\Website\Resources\PageSnapshots\PageSnapshotResource;
 use App\Filament\Website\Resources\Posts\PostResource;
 use App\Filament\Website\Resources\Reviews\ReviewResource;
 use App\Filament\Website\Resources\Securities\SecurityResource;
@@ -21,7 +20,6 @@ use App\Models\Website\Contact;
 use App\Models\Website\Credit;
 use App\Models\Website\Faq;
 use App\Models\Website\Office;
-use App\Models\Website\PageSnapshot;
 use App\Models\Website\Post;
 use App\Models\Website\Review;
 use App\Models\Website\Security;
@@ -88,7 +86,6 @@ class RealDataCmsSmokeTest extends TestCase
             CityResource::class,
             OfficeResource::class,
             ReviewResource::class,
-            PageSnapshotResource::class,
         ];
     }
 
@@ -105,7 +102,6 @@ class RealDataCmsSmokeTest extends TestCase
             CityResource::class,
             OfficeResource::class,
             ReviewResource::class,
-            PageSnapshotResource::class,
             WebsiteUserResource::class,
         ];
     }
@@ -123,7 +119,6 @@ class RealDataCmsSmokeTest extends TestCase
             [CityResource::class, City::query()->firstOrFail()],
             [OfficeResource::class, Office::query()->firstOrFail()],
             [ReviewResource::class, Review::query()->firstOrFail()],
-            [PageSnapshotResource::class, PageSnapshot::query()->firstOrFail()],
             [WebsiteUserResource::class, User::query()->firstOrFail()],
         ];
     }

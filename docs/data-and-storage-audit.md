@@ -25,8 +25,8 @@ All mapped `ewidencja.preda.info` tables match the target counts exactly except:
 | Source table | Source rows | Target table | Target rows | Result |
 | --- | ---: | --- | ---: | --- |
 | `contact_letter` | 4420 | `contact_letter` | 4418 | Accepted cleanup |
-| `permissions` | 326 | `permissions` | 667 | Expected access merge |
-| `role_has_permissions` | 769 | `role_has_permissions` | 1129 | Expected access merge |
+| `permissions` | 326 | `permissions` | 644 | Expected access merge |
+| `role_has_permissions` | 769 | `role_has_permissions` | 1106 | Expected access merge |
 | `model_has_roles` | 14 | `model_has_roles` | 19 | Expected access merge |
 | `model_has_permissions` | 0 | `model_has_permissions` | 15 | Expected panel access |
 
@@ -56,7 +56,6 @@ All mapped `preda.info` content tables match the target counts exactly:
 | `lead_status_changes` | 330 | `website_lead_status_changes` | 330 |
 | `offers` | 16 | `website_offers` | 16 |
 | `offices` | 5 | `website_offices` | 5 |
-| `page_snapshots` | 485 | `website_page_snapshots` | 485 |
 | `posts` | 45 | `website_posts` | 45 |
 | `reviews` | 115 | `website_reviews` | 115 |
 | `securities` | 43 | `website_securities` | 43 |
@@ -66,6 +65,9 @@ All mapped `preda.info` content tables match the target counts exactly:
 `pipedrives` was originally imported as `website_pipedrives` with `136` rows, but
 this one-off reactivation module was removed from the new application after the
 delete-request list was extracted.
+
+`page_snapshots` was originally imported as `website_page_snapshots` with `485`
+rows, but this legacy SEO audit module was removed from the new application.
 
 ### Users And Access
 
