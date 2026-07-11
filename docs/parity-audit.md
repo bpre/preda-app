@@ -14,6 +14,8 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 
 - Ewidencja operational Filament resources are present in the `kancelaria` panel.
 - Website public routes from `preda.info` are present on the public domain.
+- Website static pages, dynamic public records, and legacy redirects are covered by
+  a real-data public smoke test.
 - Website CMS resources are present in the `cms` panel.
 - Website leads and offer inquiries are intentionally registered in `crm`, not `cms`.
 - Ewidencja lead and potential matter resources are intentionally registered in `crm`.
@@ -27,6 +29,8 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 - CMS `Pracownicy` is restored as public website team profile management.
 - CMS `Pracownicy` does not allow user creation or deletion.
 - CRM does not register employee/user administration.
+- Public family-law pages (`/rozwod`, `/podzial-majatku`) remain controlled by the
+  existing `family-law` practice context flag.
 - Portal user administration exists, but portal product development is not a priority.
 
 ## Known non-code gaps
