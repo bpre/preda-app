@@ -89,7 +89,7 @@ class GoogleBusinessProfileCallbackController extends Controller
             ]);
 
             $connection = GoogleBusinessProfileConnection::query()->firstOrNew();
-            $refreshToken = (string) ($tokens['refresh_token'] ?? $connection->refresh_token);
+            $refreshToken = (string) ($tokens['refresh_token'] ?? $connection->refreshTokenValue() ?? '');
 
             $connection->fill([
                 'access_token' => (string) ($tokens['access_token'] ?? ''),

@@ -6,6 +6,7 @@ use App\Models\Website\GoogleBusinessProfileConnection;
 use App\Models\Website\Review;
 use App\Services\Integrations\GoogleBusinessProfileService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Tests\TestCase;
@@ -71,6 +72,27 @@ class GoogleBusinessProfileServiceTest extends TestCase
         $this->assertNotNull($connection);
         $this->assertTrue($connection->hasRefreshToken());
         $this->assertSame('https://www.googleapis.com/auth/business.manage', $connection->scopes);
+    }
+
+    public function test_imported_google_business_profile_tokens_encrypted_with_another_key_do_not_crash_reads(): void
+    {
+        DB::table('website_google_business_profile_connections')->insert([
+            'access_token' => 'encrypted-with-another-app-key',
+            'refresh_token' => 'encrypted-with-another-app-key',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $connection = GoogleBusinessProfileConnection::query()->firstOrFail();
+
+        $this->assertFalse($connection->hasRefreshToken());
+        $this->assertNull($connection->accessTokenValue());
+        $this->assertNull($connection->refreshTokenValue());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Brakuje refresh tokena Google Business Profile.');
+
+        app(GoogleBusinessProfileService::class)->refreshAccessToken($connection);
     }
 
     public function test_sync_reviews_uses_account_scoped_reviews_parent(): void

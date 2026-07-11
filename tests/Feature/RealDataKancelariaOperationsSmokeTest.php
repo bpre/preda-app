@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Print\PrintEnvelopeController;
 use App\Models\Branch;
 use App\Models\Letter;
 use App\Models\Offer;
@@ -66,6 +67,26 @@ class RealDataKancelariaOperationsSmokeTest extends TestCase
         $this->get("http://ewidencja.preda-app.test/oddzialy/{$branch->getKey()}/raport/export/xlsx?report_category=CHF")
             ->assertOk()
             ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
+    public function test_real_data_letter_envelope_and_sendlist_exports_render(): void
+    {
+        $letter = Letter::query()
+            ->with(['recipients', 'matter', 'contact_letter_neostamp.neostamp'])
+            ->where('type', 'out')
+            ->whereHas('recipients')
+            ->orderBy('id')
+            ->firstOrFail();
+
+        foreach ([
+            PrintEnvelopeController::envelope(collect([$letter])),
+            PrintEnvelopeController::sendlist(collect([$letter])),
+        ] as $response) {
+            $this->assertNotNull($response);
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertStringContainsString('attachment', strtolower((string) $response->headers->get('content-disposition')));
+            $this->assertStringContainsString('.pdf', strtolower((string) $response->headers->get('content-disposition')));
+        }
     }
 
     private function firstExistingLetterFile(): array

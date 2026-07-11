@@ -12,9 +12,18 @@ use App\Filament\Resources\CreditResource;
 use App\Filament\Resources\DealResource;
 use App\Filament\Resources\DepartamentResource;
 use App\Filament\Resources\ExchangeRateResource;
+use App\Filament\Resources\LawsuitResource;
+use App\Filament\Resources\LetterNotificationResource;
+use App\Filament\Resources\LetterNotificationTemplateResource;
+use App\Filament\Resources\LetterResource;
 use App\Filament\Resources\MatterResource;
 use App\Filament\Resources\NeostampResource;
+use App\Filament\Resources\NotificationResource;
 use App\Filament\Resources\OtherMatterResource;
+use App\Filament\Resources\PaymentResource;
+use App\Filament\Resources\StageResource;
+use App\Filament\Resources\TaskResource;
+use App\Filament\Resources\TemplateStageResource;
 use App\Filament\Resources\UserResource;
 use App\Models\BankMatter;
 use App\Models\Branch;
@@ -58,6 +67,16 @@ class RealDataKancelariaResourcesSmokeTest extends TestCase
         }
     }
 
+    public function test_real_data_kancelaria_resource_lists_render(): void
+    {
+        $this->actingAs($this->superAdmin());
+
+        foreach ($this->listableKancelariaResources() as $resource) {
+            $this->get($resource::getUrl(panel: 'kancelaria'))
+                ->assertOk();
+        }
+    }
+
     public function test_real_data_kancelaria_record_pages_render(): void
     {
         $this->actingAs($this->superAdmin());
@@ -90,6 +109,35 @@ class RealDataKancelariaResourcesSmokeTest extends TestCase
             MatterResource::class,
             NeostampResource::class,
             OtherMatterResource::class,
+        ];
+    }
+
+    private function listableKancelariaResources(): array
+    {
+        return [
+            BankMatterResource::class,
+            BranchResource::class,
+            CHFMatterResource::class,
+            CHFPaymentMatterResource::class,
+            ContactMatterResource::class,
+            ContactResource::class,
+            CreditResource::class,
+            DealResource::class,
+            DepartamentResource::class,
+            ExchangeRateResource::class,
+            LawsuitResource::class,
+            LetterNotificationResource::class,
+            LetterNotificationTemplateResource::class,
+            LetterResource::class,
+            MatterResource::class,
+            NeostampResource::class,
+            NotificationResource::class,
+            OtherMatterResource::class,
+            PaymentResource::class,
+            StageResource::class,
+            TaskResource::class,
+            TemplateStageResource::class,
+            UserResource::class,
         ];
     }
 

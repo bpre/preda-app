@@ -2,6 +2,7 @@
 
 namespace App\Models\Website;
 
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
 
 class GoogleBusinessProfileConnection extends Model
@@ -36,11 +37,32 @@ class GoogleBusinessProfileConnection extends Model
 
     public function hasRefreshToken(): bool
     {
-        return filled($this->refresh_token);
+        return filled($this->refreshTokenValue());
+    }
+
+    public function refreshTokenValue(): ?string
+    {
+        return $this->decryptedTokenValue('refresh_token');
+    }
+
+    public function accessTokenValue(): ?string
+    {
+        return $this->decryptedTokenValue('access_token');
     }
 
     public function hasSelectedLocation(): bool
     {
         return filled($this->google_location_name);
+    }
+
+    private function decryptedTokenValue(string $attribute): ?string
+    {
+        try {
+            $value = $this->getAttribute($attribute);
+        } catch (DecryptException) {
+            return null;
+        }
+
+        return filled($value) ? (string) $value : null;
     }
 }

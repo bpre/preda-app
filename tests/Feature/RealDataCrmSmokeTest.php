@@ -65,6 +65,16 @@ class RealDataCrmSmokeTest extends TestCase
             ->assertOk();
     }
 
+    public function test_real_data_crm_resource_lists_render(): void
+    {
+        $this->actingAs($this->superAdmin());
+
+        foreach ($this->creatableCrmResources() as $resource) {
+            $this->get($resource::getUrl(panel: 'crm'))
+                ->assertOk();
+        }
+    }
+
     private function creatableCrmResources(): array
     {
         return [

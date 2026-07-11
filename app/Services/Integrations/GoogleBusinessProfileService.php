@@ -124,21 +124,21 @@ class GoogleBusinessProfileService
             throw new RuntimeException('Brakuje refresh tokena Google Business Profile.');
         }
 
-        if ($connection->token_expires_at?->isFuture() && filled($connection->access_token)) {
+        if ($connection->token_expires_at?->isFuture() && filled($connection->accessTokenValue())) {
             return $connection;
         }
 
         $response = Http::asForm()->post(self::OAUTH_TOKEN_URL, [
             'client_id' => config('services.google_business_profile.client_id'),
             'client_secret' => config('services.google_business_profile.client_secret'),
-            'refresh_token' => $connection->refresh_token,
+            'refresh_token' => $connection->refreshTokenValue(),
             'grant_type' => 'refresh_token',
         ]);
 
         $payload = $this->decodeResponse($response, 'Nie udało się odświeżyć tokena Google Business Profile.');
 
         $connection->fill([
-            'access_token' => $payload['access_token'] ?? $connection->access_token,
+            'access_token' => $payload['access_token'] ?? $connection->accessTokenValue(),
             'token_expires_at' => isset($payload['expires_in']) ? now()->addSeconds(max(((int) $payload['expires_in']) - 60, 60)) : $connection->token_expires_at,
             'scopes' => isset($payload['scope']) ? (string) $payload['scope'] : $connection->scopes,
         ])->save();
@@ -420,8 +420,13 @@ class GoogleBusinessProfileService
     ): array {
         $connection = $this->refreshAccessToken($connection);
         $query = array_filter($query, fn ($value) => $value !== null && $value !== '');
+        $accessToken = $connection->accessTokenValue();
 
-        $response = Http::withToken($connection->access_token)
+        if (! filled($accessToken)) {
+            throw new RuntimeException('Brakuje access tokena Google Business Profile.');
+        }
+
+        $response = Http::withToken($accessToken)
             ->acceptJson()
             ->{$method}($url, $query);
 

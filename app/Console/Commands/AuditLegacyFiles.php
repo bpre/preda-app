@@ -19,6 +19,7 @@ class AuditLegacyFiles extends Command
             $this->auditJsonColumn('letters.files', 'letters', 'files', 'local', $limit),
             $this->auditJsonColumn('stages.files', 'stages', 'files', 'local', $limit),
             $this->auditStringColumn('offers.pdf_path', 'offers', 'pdf_path', 'local', $limit),
+            $this->auditNeostampImages($limit),
             $this->auditJsonColumn('website_leads.files', 'website_leads', 'files', 'local', $limit),
             $this->auditJsonColumn('website_offers.files', 'website_offers', 'files', 'local', $limit),
             $this->auditJsonColumn('website_sentences.files', 'website_sentences', 'files', 'public', $limit),
@@ -81,6 +82,36 @@ class AuditLegacyFiles extends Command
                     foreach ($paths as $path) {
                         $this->countPath($audit, $disk, $path, $limit);
                     }
+                }
+            });
+
+        return $audit;
+    }
+
+    /**
+     * @return array{source: string, disk: string, records: int, referenced: int, existing: int, missing: int, samples: array<int, string>}
+     */
+    private function auditNeostampImages(int $limit): array
+    {
+        $audit = $this->emptyAudit('neostamps.generated_file', 'local');
+
+        DB::table('neostamps')
+            ->select(['id', 'created_at', 'label'])
+            ->whereNotNull('created_at')
+            ->whereNotNull('label')
+            ->where('label', '!=', '')
+            ->orderBy('id')
+            ->chunk(500, function ($rows) use (&$audit, $limit): void {
+                foreach ($rows as $row) {
+                    $date = substr((string) $row->created_at, 0, 10);
+                    $label = trim((string) $row->label);
+
+                    if ($date === '' || $label === '') {
+                        continue;
+                    }
+
+                    $audit['records']++;
+                    $this->countPath($audit, 'local', "neoznaczki/{$date}/{$label}_znaczek.jpg", $limit);
                 }
             });
 

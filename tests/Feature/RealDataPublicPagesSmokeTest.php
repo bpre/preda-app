@@ -92,6 +92,18 @@ class RealDataPublicPagesSmokeTest extends TestCase
 
         $this->get('http://preda-app.test/uniewaznienie-umowy')
             ->assertRedirect('http://preda-app.test/blog/uniewaznienie-umowy');
+
+        $this->get('http://preda-app.test/zwrot-splacony-kredyt')
+            ->assertRedirect('http://preda-app.test/blog/zwrot-splacony-kredyt');
+
+        $this->get('http://preda-app.test/ugoda-z-bankiem')
+            ->assertRedirect('http://preda-app.test/blog/ugoda-z-bankiem');
+
+        $this->get('http://preda-app.test/konsultacje')
+            ->assertRedirect('https://calendar.app.google/8wZMGof5vFbqMhND8');
+
+        $this->get('http://preda-app.test/konsultacje/wiktoria-rajzynger')
+            ->assertRedirect('https://calendar.app.google/CduSKq9VRVB6yG9c7');
     }
 
     public function test_public_family_law_pages_follow_active_context_config(): void

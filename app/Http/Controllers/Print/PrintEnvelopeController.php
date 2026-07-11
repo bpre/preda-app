@@ -41,7 +41,10 @@ class PrintEnvelopeController extends Controller
                     $neostamp = $record->contact_letter_neostamp->where('contact_id', $recipient->id)->pluck('neostamp')->first();
                     $contact_letter = ContactLetter::where('contact_id', $recipient->id)->where('letter_id', $record->id)->first();
                     $dir = str_replace('public', 'storage/app/', realpath($_SERVER["DOCUMENT_ROOT"]));
-                    $file = 'neoznaczki/' . substr($neostamp?->created_at, 0, 10) . '/' . $neostamp?->label . '_znaczek.jpg';
+                    $neostampDate = $neostamp?->created_at?->format('Y-m-d');
+                    $file = $neostamp && $neostampDate
+                        ? 'neoznaczki/' . $neostampDate . '/' . $neostamp->label . '_znaczek.jpg'
+                        : null;
 
                     $r[$i]['delivery_type'] = $contact_letter->delivery_type;
 
@@ -49,7 +52,7 @@ class PrintEnvelopeController extends Controller
 
                     $r[$i]['neostamp']['assigned'] = $neostamp !== NULL;
 
-                    if(Storage::disk('local')->exists($file))
+                    if($file && Storage::disk('local')->exists($file))
                     {
                         $r[$i]['neostamp']['label'] = $neostamp->label;
                         $r[$i]['neostamp']['path'] = $dir . $file;
