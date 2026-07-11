@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Facades\Website\Seo as SeoFacade;
+use App\Filament\Website\Resources\Users\UserResource as WebsiteUserResource;
 use App\Jobs\SendLetterNotificationJob;
 use App\Models\BankMatter;
 use App\Models\CHFMatter;
@@ -19,8 +21,6 @@ use App\Models\Matter;
 use App\Models\Stage;
 use App\Models\Task;
 use App\Models\User;
-use App\Services\Website\Seo;
-use App\Services\LetterNotificationQueueMonitor;
 use App\Models\Website\Contact as WebsiteContact;
 use App\Models\Website\Sentence;
 use App\Observers\BankMatterObserver;
@@ -37,25 +37,28 @@ use App\Observers\LetterObserver;
 use App\Observers\MatterObserver;
 use App\Observers\StageObserver;
 use App\Observers\TaskObserver;
-use Filament\Support\Colors\Color;
-use Filament\Support\Assets\Js;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Contracts\View\View as ViewContract;
-use Illuminate\Queue\Events\JobFailed;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Queue\Events\JobProcessing;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\ServiceProvider;
-use App\Facades\Website\Seo as SeoFacade;
 use App\Observers\Website\ContactObserver as WebsiteContactObserver;
 use App\Observers\Website\SentenceObserver;
+use App\Services\LetterNotificationQueueMonitor;
+use App\Services\Website\Seo;
+use BezhanSalleh\FilamentShield\Facades\FilamentShield;
+use Filament\Support\Assets\Js;
+use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Facades\FilamentColor;
 use Filament\Support\Facades\FilamentView;
 use Filament\Tables\View\TablesRenderHook;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\View as ViewContract;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -66,7 +69,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Rejestracja SEO jako singleton w kontenerze (obszar "website")
         $this->app->singleton('website.seo', function () {
-            return new Seo();
+            return new Seo;
         });
 
         FilamentColor::register([
@@ -86,6 +89,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureShieldPermissionKeys();
+
         Gate::before(function (object $user): ?bool {
             if (! $user instanceof User) {
                 return null;
@@ -135,7 +140,6 @@ class AppServiceProvider extends ServiceProvider
 
         Blade::componentNamespace('App\\View\\Components\\Partial', 'partial');
         $this->app['view']->addNamespace('partial', $this->websiteThemeViewPaths('partial'));
-
 
         $this->loadMigrationsFrom([
             database_path('migrations'),
@@ -206,6 +210,35 @@ class AppServiceProvider extends ServiceProvider
 
         // ## - SEO -- ##
 
+    }
+
+    private function configureShieldPermissionKeys(): void
+    {
+        FilamentShield::buildPermissionKeyUsing(function (string $entity, string $affix, string $subject): string {
+            if (
+                str_starts_with($entity, 'App\\Filament\\Website\\Resources\\')
+                && $entity !== WebsiteUserResource::class
+            ) {
+                return Str::studly($affix).':'.Str::studly($subject);
+            }
+
+            $legacySubject = [
+                'BankMatter' => 'bank::matter',
+                'CHFMatter' => 'c::h::f::matter',
+                'CHFPaymentMatter' => 'c::h::f::payment::matter',
+                'CHFPotentialMatter' => 'c::h::f::potential::matter',
+                'ContactMatter' => 'contact::matter',
+                'DatabaseNotification' => 'notification',
+                'ExchangeRate' => 'exchange::rate',
+                'LetterNotification' => 'letter::notification',
+                'LetterNotificationTemplate' => 'letter::notification::template',
+                'OtherMatter' => 'other::matter',
+                'PortalUser' => 'portal::user',
+                'TemplateStage' => 'template::stage',
+            ][$subject] ?? Str::snake($subject);
+
+            return Str::snake($affix).'_'.$legacySubject;
+        });
     }
 
     private function registerWebsiteThemeViews(): void

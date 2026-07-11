@@ -2,13 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\CHFMatterResource;
+use App\Filament\Resources\ContactResource;
 use App\Filament\Resources\UserResource;
 use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Models\User;
 use App\Support\PanelAccess;
+use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -95,6 +99,46 @@ class KancelariaUserPanelAccessTest extends TestCase
 
         $this->assertSame(['crm'], PanelAccess::directPanelsFor($user));
         $this->assertFalse($user->canAccessPredaPanel('crm'));
+    }
+
+    public function test_shield_generates_kancelaria_permission_keys_used_by_current_policies(): void
+    {
+        Filament::setCurrentPanel('kancelaria');
+
+        $contactPermissions = FilamentShield::getResourcePermissionsWithLabels(ContactResource::class);
+        $chfMatterPermissions = FilamentShield::getResourcePermissionsWithLabels(CHFMatterResource::class);
+
+        $this->assertArrayHasKey('view_any_contact', $contactPermissions);
+        $this->assertArrayHasKey('create_contact', $contactPermissions);
+        $this->assertArrayNotHasKey('ViewAny:Contact', $contactPermissions);
+
+        $this->assertArrayHasKey('view_any_c::h::f::matter', $chfMatterPermissions);
+        $this->assertArrayHasKey('create_c::h::f::matter', $chfMatterPermissions);
+        $this->assertArrayNotHasKey('ViewAny:CHFMatter', $chfMatterPermissions);
+    }
+
+    public function test_shield_role_form_permission_state_matches_role_permissions(): void
+    {
+        Filament::setCurrentPanel('kancelaria');
+
+        $role = Role::firstOrCreate([
+            'name' => 'pracownik',
+            'guard_name' => 'web',
+        ]);
+
+        Permission::firstOrCreate([
+            'name' => 'view_any_contact',
+            'guard_name' => 'web',
+        ]);
+
+        $role->givePermissionTo('view_any_contact');
+
+        $checkedPermissions = collect(FilamentShield::getResourcePermissionsWithLabels(ContactResource::class))
+            ->filter(fn (string $label, string $permission): bool => $role->checkPermissionTo($permission))
+            ->keys()
+            ->all();
+
+        $this->assertContains('view_any_contact', $checkedPermissions);
     }
 
     private function makeSuperAdmin(): User
