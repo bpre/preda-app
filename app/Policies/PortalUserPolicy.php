@@ -10,9 +10,12 @@ class PortalUserPolicy
 {
     use HandlesAuthorization;
 
-    public function before(User $user): ?bool
+    public function before(User $user, string $ability): ?bool
     {
-        if ($user->hasRole(config('filament-shield.super_admin.name', 'super_admin'))) {
+        if (
+            in_array($ability, ['viewAny', 'view', 'create', 'update'], true)
+            && $user->hasRole(config('filament-shield.super_admin.name', 'super_admin'))
+        ) {
             return true;
         }
 

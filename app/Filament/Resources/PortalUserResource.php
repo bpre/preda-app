@@ -21,6 +21,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 
 class PortalUserResource extends Resource implements HasShieldPermissions
@@ -52,6 +53,46 @@ class PortalUserResource extends Resource implements HasShieldPermissions
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-identification';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Administracja';
+
+    public static function canDelete(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
+    }
+
+    public static function canForceDelete(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return false;
+    }
+
+    public static function canReplicate(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canReorder(): bool
+    {
+        return false;
+    }
+
+    public static function canRestore(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canRestoreAny(): bool
+    {
+        return false;
+    }
 
     public static function form(Schema $schema): Schema
     {

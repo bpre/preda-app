@@ -67,6 +67,20 @@ class PortalUserResourceTest extends TestCase
             ->assertOk();
     }
 
+    public function test_portal_user_resource_does_not_allow_destructive_actions(): void
+    {
+        $portalUser = $this->createPortalUserFixture();
+
+        $this->assertFalse(PortalUserResource::canDelete($portalUser));
+        $this->assertFalse(PortalUserResource::canDeleteAny());
+        $this->assertFalse(PortalUserResource::canForceDelete($portalUser));
+        $this->assertFalse(PortalUserResource::canForceDeleteAny());
+        $this->assertFalse(PortalUserResource::canReplicate($portalUser));
+        $this->assertFalse(PortalUserResource::canReorder());
+        $this->assertFalse(PortalUserResource::canRestore($portalUser));
+        $this->assertFalse(PortalUserResource::canRestoreAny());
+    }
+
     private function makeSuperAdmin(): User
     {
         $role = Role::firstOrCreate([
