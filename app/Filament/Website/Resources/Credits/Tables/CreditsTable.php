@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Filament\Website\Resources\Credits\Tables;
+
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class CreditsTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('bank.label')
+                    ->label('Bank'),
+                TextColumn::make('credit_name')
+                    ->label('Nazwa')
+                    ->searchable(),
+                TextColumn::make('credit_year')
+                    ->label('Rok')
+                    ->searchable(),
+                TextColumn::make('credit_type')
+                    ->label('Top')
+                    ->searchable(),
+                TextColumn::make('credit_currency')
+                    ->label('Waluta')
+                    ->searchable(),
+                IconColumn::make('is_published')
+                    ->label('Opublikowana?')
+                    ->boolean(),
+                TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->reorderable('sort')
+            ->defaultSort('sort')
+            ->filters([
+                //
+            ])
+            ->recordActions([
+                EditAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}

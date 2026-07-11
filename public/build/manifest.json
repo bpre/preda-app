@@ -1,0 +1,39 @@
+{
+  "_index-B8_nURbH.js": {
+    "file": "assets/index-B8_nURbH.js",
+    "name": "index"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-6diGfAPO.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/css/filament/admin/theme.css": {
+    "file": "assets/theme-Bm9SEGiZ.css",
+    "src": "resources/css/filament/admin/theme.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-BLsH5fEn.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_index-B8_nURbH.js"
+    ]
+  },
+  "resources/views/themes/duo/assets/css/duo.css": {
+    "file": "assets/duo-CR9_Jdkl.css",
+    "src": "resources/views/themes/duo/assets/css/duo.css",
+    "isEntry": true
+  },
+  "resources/views/themes/duo/assets/js/duo.js": {
+    "file": "assets/duo-B1lxrj6c.js",
+    "name": "duo",
+    "src": "resources/views/themes/duo/assets/js/duo.js",
+    "isEntry": true,
+    "imports": [
+      "_index-B8_nURbH.js"
+    ]
+  }
+}
