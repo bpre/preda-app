@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\LeadResource\Pages;
+namespace App\Filament\Crm\Resources\LeadResource\Pages;
 
-use App\Filament\Resources\LeadResource;
-use Filament\Actions;
+use App\Filament\Crm\Resources\LeadResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateLead extends CreateRecord

@@ -2,15 +2,11 @@
 
 namespace App\Filament\Resources\CHFMatterResource\Pages;
 
-use Filament\Actions\ActionGroup;
-use Filament\Actions\CreateAction;
-use Filament\Actions\Action;
-use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
-use App\Filament\Resources\CHFMatterResource;
-use App\Filament\Resources\CHFPotentialMatterResource;
-use App\Filament\Support\PresetTab;
 use App\Filament\AdvancedTables\Concerns\InteractsWithAdvancedTablePresetTabs;
+use App\Filament\Resources\CHFMatterResource;
+use App\Filament\Support\PresetTab;
+use Filament\Actions\CreateAction;
+use Filament\Resources\Pages\ListRecords;
 
 class ListCHFMatters extends ListRecords
 {
@@ -21,20 +17,8 @@ class ListCHFMatters extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-
-            ActionGroup::make([
-
-                CreateAction::make()->label('Nową sprawę CHF'),
-                Action::make('Nową potencjalną sprawę')
-                    ->action(function () {
-                        redirect(CHFPotentialMatterResource::getUrl('create', panel: 'kancelaria'));
-                    })
-                    ->icon('heroicon-m-plus'),
-
-            ])->button()->label('Utwórz'),
-
+            CreateAction::make()->label('Nową sprawę CHF'),
         ];
-
     }
 
     public function getTabs(): array
@@ -51,7 +35,7 @@ class ListCHFMatters extends ListRecords
             'Zarchiwizowane' => PresetTab::make()
                 ->modifyQueryUsing(fn ($query) => $query->where('is_matter', 1)->where('is_archived', 1))
                 ->icon('heroicon-o-archive-box')
-                ->favorite()
+                ->favorite(),
             // 'Wszystkie' => PresetTab::make()
             //     ->modifyQueryUsing(fn ($query) => $query)
             //     ->icon('heroicon-o-list-bullet')

@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Filament\Resources\LeadResource\Pages;
+namespace App\Filament\Crm\Resources\LeadResource\Pages;
 
+use App\Filament\Crm\Resources\LeadResource;
+use App\Filament\Resources\MatterResource;
+use App\Models\Matter;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Filament\Actions;
-use App\Models\Matter;
-use App\Filament\Resources\MatterResource;
-use App\Filament\Resources\LeadResource;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
@@ -19,20 +18,20 @@ class EditLead extends EditRecord
     {
         return [
             Action::make('archive')
-            ->label(function (Matter $record) {
-                return $this->record->is_archived ? 'Przywróć z archiwum' : 'Archiwizuj';
-            })
-            ->color('gray')
-            ->icon(function ($record) {
-                    return  $record->is_archived ? 'heroicon-m-arrow-uturn-up' : 'heroicon-m-archive-box-arrow-down';
-            })
-            ->action(function (array $data, $record) {
-                $record->is_archived = !$record->is_archived;
-                Matter::where('id', $record->id)->update(['is_archived' => $record->is_archived]);
-                Notification::make()->title(
-                    $record->is_archived ? 'Zarchiwizowano' : 'Przywrócono z archiwum'
+                ->label(function (Matter $record) {
+                    return $this->record->is_archived ? 'Przywróć z archiwum' : 'Archiwizuj';
+                })
+                ->color('gray')
+                ->icon(function ($record) {
+                    return $record->is_archived ? 'heroicon-m-arrow-uturn-up' : 'heroicon-m-archive-box-arrow-down';
+                })
+                ->action(function (array $data, $record) {
+                    $record->is_archived = ! $record->is_archived;
+                    Matter::where('id', $record->id)->update(['is_archived' => $record->is_archived]);
+                    Notification::make()->title(
+                        $record->is_archived ? 'Zarchiwizowano' : 'Przywrócono z archiwum'
                     )->success()->send();
-            }),
+                }),
             Action::make('Zmień w sprawę')
                 ->color('gray')
                 ->icon('heroicon-m-arrow-path')

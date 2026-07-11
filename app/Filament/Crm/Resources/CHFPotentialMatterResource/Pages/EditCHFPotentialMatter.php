@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\CHFPotentialMatterResource\Pages;
+namespace App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages;
 
-use App\Filament\Resources\CHFPotentialMatterResource;
+use App\Filament\Crm\Resources\CHFPotentialMatterResource;
 use App\Filament\Resources\MatterResource;
 use App\Models\Matter;
 use Filament\Actions\Action;

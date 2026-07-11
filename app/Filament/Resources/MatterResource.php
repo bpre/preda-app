@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Crm\Resources\CHFPotentialMatterResource;
 use App\Filament\Resources\MatterResource\Pages\CreateMatter;
 use App\Filament\Resources\MatterResource\Pages\EditMatter;
 use App\Filament\Resources\MatterResource\Pages\ListMatters;
@@ -70,7 +71,8 @@ class MatterResource extends Resource
         }
 
         $resource = static::getResourceForMatter($matter);
-        $url = $resource::getUrl('edit', ['record' => $matter], panel: 'kancelaria');
+        $panel = $resource === CHFPotentialMatterResource::class ? 'crm' : 'kancelaria';
+        $url = $resource::getUrl('edit', ['record' => $matter], panel: $panel);
 
         if ($query === []) {
             return $url;

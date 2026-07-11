@@ -2,17 +2,17 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Website\Resources\Leads\LeadResource;
-use App\Filament\Website\Resources\Posts\PostResource;
-use App\Filament\Website\Resources\Sentences\SentenceResource;
+use App\Filament\Crm\Resources\CHFPotentialMatterResource as CrmPotentialMatterResource;
+use App\Filament\Crm\Resources\LeadResource as CrmLeadResource;
 use App\Filament\Portal\Resources\CHFMatterResource as PortalCHFMatterResource;
 use App\Filament\Portal\Resources\LetterResource as PortalLetterResource;
 use App\Filament\Resources\CHFMatterResource as KancelariaCHFMatterResource;
-use App\Filament\Resources\CHFPotentialMatterResource as CrmPotentialMatterResource;
 use App\Filament\Resources\ContactResource as KancelariaContactResource;
-use App\Filament\Resources\LeadResource as CrmLeadResource;
 use App\Filament\Resources\LetterResource as KancelariaLetterResource;
 use App\Filament\Resources\TaskResource as KancelariaTaskResource;
+use App\Filament\Website\Resources\Leads\LeadResource;
+use App\Filament\Website\Resources\Posts\PostResource;
+use App\Filament\Website\Resources\Sentences\SentenceResource;
 use App\Models\CHFMatter;
 use App\Models\Contact;
 use App\Models\ContactMatter;
@@ -22,6 +22,7 @@ use App\Models\User;
 use App\Models\Website\Lead;
 use App\Models\Website\Post;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -174,6 +175,15 @@ class SmokePagesTest extends TestCase
         $this->actingAs($user)
             ->get(CrmPotentialMatterResource::getUrl(panel: 'crm'))
             ->assertOk();
+    }
+
+    public function test_crm_resources_are_not_registered_in_the_kancelaria_panel(): void
+    {
+        $this->assertTrue(Route::has('filament.crm.resources.szanse.index'));
+        $this->assertTrue(Route::has('filament.crm.resources.potencjalne.index'));
+
+        $this->assertFalse(Route::has('filament.kancelaria.resources.szanse.index'));
+        $this->assertFalse(Route::has('filament.kancelaria.resources.potencjalne.index'));
     }
 
     public function test_an_active_super_admin_can_open_the_post_create_form(): void

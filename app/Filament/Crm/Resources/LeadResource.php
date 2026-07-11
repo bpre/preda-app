@@ -1,48 +1,56 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Crm\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Support\Enums\TextSize;
-use Filament\Actions\EditAction;
+use App\Filament\Crm\Resources\LeadResource\Pages\CreateLead;
+use App\Filament\Crm\Resources\LeadResource\Pages\EditLead;
+use App\Filament\Crm\Resources\LeadResource\Pages\ListLeads;
+use App\Filament\Crm\Resources\LeadResource\RelationManagers\StagesRelationManager;
+use App\Filament\Resources\CHFMatterResource;
+use App\Models\Lead;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\LeadResource\Pages\ListLeads;
-use App\Filament\Resources\LeadResource\Pages\CreateLead;
-use App\Filament\Resources\LeadResource\Pages\EditLead;
-use App\Models\Lead;
-use Filament\Tables;
-use Filament\Tables\Table;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\TextSize;
 use Filament\Tables\Columns\TextColumn;
-use App\Filament\Resources\LeadResource\Pages;
-use App\Filament\Resources\LeadResource\RelationManagers\StagesRelationManager;
+use Filament\Tables\Table;
 
 class LeadResource extends Resource
 {
-
     protected static ?int $navigationSort = 2;
+
     protected static ?string $slug = 'szanse';
+
     protected static ?string $model = Lead::class;
+
     protected static ?string $navigationLabel = 'Szanse';
+
     protected static ?string $modelLabel = 'Szanse';
+
     protected static ?string $pluralModelLabel = 'Szanse';
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
+
     protected static bool $shouldRegisterNavigation = false;
 
     protected function shouldPersistTableColumnSearchInSession(): bool
     {
         return true;
     }
+
     protected function shouldPersistTableFiltersInSession(): bool
     {
         return true;
     }
+
     protected function shouldPersistTableSearchInSession(): bool
     {
         return true;
     }
+
     protected function shouldPersistTableSortInSession(): bool
     {
         return true;

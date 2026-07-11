@@ -2,8 +2,8 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Resources\CHFPotentialMatterResource;
-use App\Filament\Resources\LeadResource;
+use App\Filament\Crm\Resources\CHFPotentialMatterResource;
+use App\Filament\Crm\Resources\LeadResource;
 use App\Http\Middleware\IsActiveUser;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Enums\ThemeMode;

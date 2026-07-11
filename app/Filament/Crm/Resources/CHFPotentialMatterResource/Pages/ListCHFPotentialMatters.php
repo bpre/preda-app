@@ -1,19 +1,16 @@
 <?php
 
-namespace App\Filament\Resources\CHFPotentialMatterResource\Pages;
+namespace App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages;
 
-use Filament\Actions\CreateAction;
-use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
-use App\Filament\Support\PresetTab;
 use App\Filament\AdvancedTables\Concerns\InteractsWithAdvancedTablePresetTabs;
-use App\Filament\Resources\CHFPotentialMatterResource;
+use App\Filament\Crm\Resources\CHFPotentialMatterResource;
+use App\Filament\Support\PresetTab;
+use Filament\Actions\CreateAction;
+use Filament\Resources\Pages\ListRecords;
 
 class ListCHFPotentialMatters extends ListRecords
 {
     use InteractsWithAdvancedTablePresetTabs;
-
-
 
     protected static string $resource = CHFPotentialMatterResource::class;
 
@@ -34,7 +31,7 @@ class ListCHFPotentialMatters extends ListRecords
             'Zarchiwizowane' => PresetTab::make()
                 ->modifyQueryUsing(fn ($query) => $query->where('is_archived', 1))
                 ->icon('heroicon-o-archive-box')
-                ->favorite()
+                ->favorite(),
         ];
     }
 }
