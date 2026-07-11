@@ -21,6 +21,8 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 - Ewidencja lead and potential matter resources are intentionally registered in `crm`.
 - Letter notifications jobs, mail classes, templates, print views, file preview routes,
   and branch report export code are present.
+- Ewidencja letter file preview/download, offer PDF download, and branch report export
+  are covered by a real-data operations smoke test.
 - Legacy `/kancelaria/...` Ewidencja panel paths redirect to the new root paths on
   the `ewidencja` subdomain.
 
