@@ -3,31 +3,39 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Laravel\Sanctum\HasApiTokens;
 use Filament\Panel;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Filament\Models\Contracts\FilamentUser;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use RalphJSmit\Filament\Notifications\Concerns\FilamentNotifiable;
 
 class User extends Authenticatable implements FilamentUser
 {
 
-    use HasFactory, Notifiable, HasRoles;
+    use FilamentNotifiable;
+    use HasApiTokens;
+    use HasFactory, HasRoles;
     use HasPanelShield {
         canAccessPanel as canAccessPanelViaShield;
     }
 
     protected $fillable = [
         'name',
+        'signature_title',
+        'name_genitive',
         'email',
+        'phone',
         'is_active',
         'is_employee',
         'is_lawyer',
         'password',
         'website_title',
-        'website_description'
+        'website_description',
+        'filament_layout_preferences',
     ];
 
     /**
@@ -53,6 +61,7 @@ class User extends Authenticatable implements FilamentUser
             'is_active' => 'boolean',
             'is_employee' => 'boolean',
             'is_lawyer' => 'boolean',
+            'filament_layout_preferences' => 'array',
         ];
     }
 
@@ -76,5 +85,61 @@ class User extends Authenticatable implements FilamentUser
                 || (bool) $this->is_employee,
             default => false,
         };
+    }
+
+    public function lawyer_matters()
+    {
+        return $this->hasMany(Matter::class, 'lawyer_id');
+    }
+
+    public function tasks_assigned_to()
+    {
+        return $this->hasMany(Task::class, 'assigned_to');
+    }
+
+    public function matterUser(): HasMany
+    {
+        return $this->hasMany(MatterUser::class);
+    }
+
+    public function userLetters()
+    {
+        return $this->hasManyThrough(Letter::class, MatterUser::class, 'matter_id', 'id');
+    }
+
+    public static function responsible_lawyers()
+    {
+        return User::where('is_lawyer', 1);
+    }
+
+    public static function is_active()
+    {
+        return User::where('is_active', 1);
+    }
+
+    public function isAdmin(): bool
+    {
+        if (($this->role ?? null) === 'admin') {
+            return true;
+        }
+
+        return $this->hasRole(config('filament-shield.super_admin.name', 'super_admin'));
+    }
+
+    public function getMailSignatureTitleAttribute(): string
+    {
+        if (filled($this->signature_title)) {
+            return (string) $this->signature_title;
+        }
+
+        if ($this->is_lawyer) {
+            return 'Adwokat';
+        }
+
+        if ($this->is_employee) {
+            return 'Pracownik kancelarii';
+        }
+
+        return '';
     }
 }

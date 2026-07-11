@@ -1,3 +1,19 @@
+@props([
+    'mailSignatureGreeting' => 'Z wyrazami szacunku',
+    'mailSignatureName' => null,
+    'mailSignatureTitle' => null,
+    'mailSignatureCompany' => config('mail.from.name') ?: 'PRĘDA Kancelaria Adwokacka',
+])
+
+@php
+    $signatureLines = array_values(array_filter([
+        $mailSignatureGreeting,
+        $mailSignatureName,
+        $mailSignatureTitle,
+        $mailSignatureCompany,
+    ], fn ($line) => filled($line)));
+@endphp
+
 <x-mail::layout>
     {{-- Header --}}
     <x-slot:header>
@@ -9,6 +25,10 @@
     {{-- Body --}}
     {{ $slot }}
 
+    @if (count($signatureLines))
+{{ "\n\n" . implode("\n", $signatureLines) }}
+    @endif
+
     {{-- Subcopy --}}
     @isset($subcopy)
         <x-slot:subcopy>
@@ -17,11 +37,4 @@
             </x-mail::subcopy>
         </x-slot:subcopy>
     @endisset
-
-    {{-- Footer --}}
-    <x-slot:footer>
-        <x-mail::footer>
-            © {{ date('Y') }} {{ config('app.name') }}. @lang('All rights reserved.')
-        </x-mail::footer>
-    </x-slot:footer>
 </x-mail::layout>

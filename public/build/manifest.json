@@ -4,13 +4,29 @@
     "name": "index"
   },
   "resources/css/app.css": {
-    "file": "assets/app-6diGfAPO.css",
+    "file": "assets/app-Dltnwt7j.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/css/filament/admin/theme.css": {
-    "file": "assets/theme-Bm9SEGiZ.css",
+    "file": "assets/theme-DhIbY0k2.css",
     "src": "resources/css/filament/admin/theme.css",
+    "isEntry": true
+  },
+  "resources/css/filament/kancelaria/theme.css": {
+    "file": "assets/theme-3ihD2EDW.css",
+    "src": "resources/css/filament/kancelaria/theme.css",
+    "isEntry": true
+  },
+  "resources/css/filament/portal/theme.css": {
+    "file": "assets/theme-DX53ycHa.css",
+    "src": "resources/css/filament/portal/theme.css",
+    "isEntry": true
+  },
+  "resources/js/admin.js": {
+    "file": "assets/admin-DILKnqUi.js",
+    "name": "admin",
+    "src": "resources/js/admin.js",
     "isEntry": true
   },
   "resources/js/app.js": {
@@ -23,7 +39,7 @@
     ]
   },
   "resources/views/themes/duo/assets/css/duo.css": {
-    "file": "assets/duo-CR9_Jdkl.css",
+    "file": "assets/duo-BKlpHszZ.css",
     "src": "resources/views/themes/duo/assets/css/duo.css",
     "isEntry": true
   },

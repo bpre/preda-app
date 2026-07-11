@@ -1,0 +1,84 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import '../../../../vendor/malzariey/filament-daterangepicker-filter/dist/filament-daterangepicker.css';
+
+@source '../../../../app/Filament/Portal/**/*.php';
+@source '../../../../resources/views/filament/portal/**/*.blade.php';
+@source '../../../../resources/views/**/*.blade.php';
+
+
+trix-editor h3 {
+    text-align: center;
+}
+
+.filepond--item {
+    /* background: green !important; */
+}
+.filepond--file-wrapper {
+    background: linear-gradient(0deg, rgba(66,66,66,0.2) 50%,rgba(66,66,66,0.7) 100%);
+    border-radius: 10px;
+}
+
+.fi-modal-header {
+    @apply py-4 border-b dark:border-b-gray-700 border-b-gray-200;
+}
+
+.selectify-button-group {
+    cursor: pointer
+}
+
+.fi-sidebar-header, .fi-sidebar-nav {
+    background: #1F2937;
+    @apply dark:bg-gray-900;
+}
+aside .fi-sidebar-item-label {
+    color: #fff;
+}
+
+aside .fi-sidebar-item-active .fi-sidebar-item-button {
+    background: #121826;
+}
+aside .fi-sidebar-item-button:hover {
+    background: #394150 !important;
+}
+aside .fi-sidebar-item-button:hover .fi-sidebar-item-icon {
+    color: #fff !important;
+}
+
+.fi-tabs-item.fi-advanced-table-preset-tab {
+    border-bottom: 2px solid transparent;
+}
+
+.fi-tabs-item.fi-advanced-table-preset-tab.fi-active {
+    background-color: transparent;
+    border-bottom-color: var(--color-600);
+}
+
+.fi-tabs-item.fi-advanced-table-preset-tab.fi-active .fi-tabs-item-label {
+    color: var(--gray-700);
+    font-weight: 700;
+}
+
+.fi-tabs-item.fi-advanced-table-preset-tab.fi-active > .fi-icon {
+    color: var(--gray-700);
+}
+
+.fi-tabs-item.fi-advanced-table-preset-tab.fi-active:where(.dark, .dark *) {
+    border-bottom-color: var(--color-400);
+}
+
+.fi-tabs-item.fi-advanced-table-preset-tab.fi-active:where(.dark, .dark *) .fi-tabs-item-label,
+.fi-tabs-item.fi-advanced-table-preset-tab.fi-active:where(.dark, .dark *) > .fi-icon {
+    color: var(--gray-200);
+}
+
+body {
+    background: #F3F4F6;
+}
+
+.fi-sidebar-header, .fi-sidebar-header .fi-logo img {
+    height: 100px !important;
+}
+
+.fi-header-heading {
+    @apply text-slate-600;
+}

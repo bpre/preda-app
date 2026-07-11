@@ -1,0 +1,107 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import '../../../../vendor/malzariey/filament-daterangepicker-filter/dist/filament-daterangepicker.css';
+
+@source '../../../../app/Filament/**/*.php';
+@source '../../../../resources/views/filament/**/*.blade.php';
+@source '../../../../resources/views/**/*.blade.php';
+
+
+trix-editor h3 {
+    text-align: center;
+}
+
+.filepond--item {
+    /* background: green !important; */
+}
+.filepond--file-wrapper {
+    background: linear-gradient(0deg, rgba(66,66,66,0.2) 50%,rgba(66,66,66,0.7) 100%);
+    border-radius: 10px;
+}
+
+.fi-modal-header {
+    @apply py-4 border-b dark:border-b-gray-700 border-b-gray-200;
+}
+
+.selectify-button-group {
+    cursor: pointer
+}
+.fi-sidebar-nav {
+    background: #FFF;
+    padding-right: 10px;
+}
+
+.fi-sidebar-nav:where(.dark, .dark *) {
+    background: #18181B;
+}
+
+.fi-logo svg {
+    height: 40px !important;
+    margin-top: -5px
+}
+
+h1.fi-header-heading {
+    @apply text-slate-600;
+}
+
+
+
+.fi-sc-tabs {
+    border: none;
+    margin-bottom: 0;
+}
+
+.fi-tabs {
+    margin-left: 0;
+    border: none;
+    background: transparent;
+    padding-bottom: 1px;
+    padding-top: 1px;
+    box-shadow: none;
+    border-radius :0 !important;
+}
+.fi-tabs-item {
+    border-radius :0 !important;
+    background: #efefef;
+    border-top: 2px solid transparent;
+}
+
+.fi-tabs-item:has(> .fi-icon) {
+    padding-right: 20px;
+}
+
+.fi-tabs-item:where(.dark, .dark *) {
+    background: #18181B;
+}
+
+.fi-tabs-item.fi-advanced-table-preset-tab > .fi-icon {
+    font-weight: 700;
+    line-height: 1;
+}
+
+.fi-tabs-item.fi-active {
+    background-color: transparent;
+    border-top-color: var(--primary-600);
+}
+
+.fi-tabs-item.fi-advanced-table-preset-tab.fi-active {
+    background-color: transparent;
+    border-top-color: var(--color-600);
+}
+
+.fi-tabs-item.fi-active .fi-tabs-item-label {
+    color: var(--gray-700);
+    font-weight: 700;
+}
+
+.fi-tabs-item.fi-active > .fi-icon {
+    color: var(--gray-700);
+}
+
+.fi-tabs-item.fi-active:where(.dark, .dark *) {
+    border-top-color: var(--color-400);
+}
+
+.fi-tabs-item.fi-advanced-table-preset-tab.fi-active:where(.dark, .dark *) .fi-tabs-item-label,
+.fi-tabs-item.fi-advanced-table-preset-tab.fi-active:where(.dark, .dark *) > .fi-icon {
+    color: var(--gray-200);
+}

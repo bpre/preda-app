@@ -9,11 +9,22 @@
         "php": "^8.3",
         "barryvdh/laravel-dompdf": "^3.1",
         "bezhansalleh/filament-shield": "^4",
+        "calcinai/php-imagick": "^0.1.2",
         "filament/filament": "^5",
+        "guzzlehttp/guzzle": "^7.8",
+        "guzzlehttp/psr7": "^2.6",
         "laravel/framework": "^13",
+        "laravel/sanctum": "^4.0",
+        "laravel/tinker": "^3.0",
         "livewire/livewire": "^4",
+        "malzariey/filament-daterangepicker-filter": "^5.0",
+        "ocr/core": "^1.0",
+        "ocr/ocr-space-engine": "^2.0",
+        "phpoffice/phpspreadsheet": "^5.3",
+        "ralphjsmit/laravel-filament-notifications": "^3.0",
         "spatie/laravel-pdf": "^2.4",
         "spatie/laravel-sitemap": "^7.3",
+        "spatie/pdf-to-image": "^2.3",
         "symfony/http-client": "^7.4",
         "symfony/mailgun-mailer": "^7.4"
     },
@@ -33,6 +44,7 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
+            "app/Forms/contactForm.php",
             "app/helpers.php"
         ]
     },
@@ -78,8 +90,15 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "ralphjsmit/packages": true
         }
     },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://satis.ralphjsmit.com"
+        }
+    ],
     "prefer-stable": true
 }
