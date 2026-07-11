@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Website\Pages\NewYearMailingController;
 use App\Http\Controllers\Website\Pages\FAQController;
 use App\Http\Controllers\Website\Pages\BankController;
 use App\Http\Controllers\Website\Pages\BlogController;
@@ -114,9 +113,3 @@ Route::prefix('website/integrations/google-business-profile')->name('website.int
     Route::get('/connect', GoogleBusinessProfileConnectController::class)->middleware(['auth'])->name('connect');
     Route::get('/callback', GoogleBusinessProfileCallbackController::class)->name('callback');
 });
-
-
-// r8dsg
-// Mailing wysyłany na początku 2026 r. - próba reaktywacji starych kontaktów z informacją o nowej ofercie / wyczyszczenia bazy
-
-Route::get('/r8dsg/{typ}/{ident}', NewYearMailingController::class)->name('new-year-mailing');

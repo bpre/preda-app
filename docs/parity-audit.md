@@ -21,8 +21,7 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 - Website CMS resources are present in the `cms` panel.
 - Website CMS list pages plus create/edit forms for posts, sentences, banks,
   credits, courts/judges, securities, FAQs, cities, offices, reviews, page
-  snapshots, Pipedrive mappings, and team profiles are covered by a real-data
-  smoke test.
+  snapshots, and team profiles are covered by a real-data smoke test.
 - Website leads and offer inquiries are intentionally registered in `crm`, not `cms`.
 - Ewidencja lead and potential matter resources are intentionally registered in `crm`.
 - CRM list pages plus create/edit/view pages for Ewidencja leads/potential matters
@@ -39,8 +38,9 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 - Selected side-effect workflows are covered by a transaction-safe real-data smoke
   test: website lead status changes, letter notification mail rendering and sender
   status transition with an attachment, offer notification mail preparation and
-  CRM edit-page sending with a PDF attachment, and `r8dsg` mailing links for
-  offer/remove requests.
+  CRM edit-page sending with a PDF attachment.
+- The legacy one-off Pipedrive reactivation module and `r8dsg` mailing links were
+  removed from the new application after extracting the delete-request list.
 - Legacy `/kancelaria/...` Ewidencja panel paths redirect to the new root paths on
   the `ewidencja` subdomain.
 

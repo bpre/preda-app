@@ -9,7 +9,6 @@ use App\Filament\Website\Resources\Credits\CreditResource;
 use App\Filament\Website\Resources\Faqs\FaqResource;
 use App\Filament\Website\Resources\Offices\OfficeResource;
 use App\Filament\Website\Resources\PageSnapshots\PageSnapshotResource;
-use App\Filament\Website\Resources\Pipedrives\PipedriveResource;
 use App\Filament\Website\Resources\Posts\PostResource;
 use App\Filament\Website\Resources\Reviews\ReviewResource;
 use App\Filament\Website\Resources\Securities\SecurityResource;
@@ -23,7 +22,6 @@ use App\Models\Website\Credit;
 use App\Models\Website\Faq;
 use App\Models\Website\Office;
 use App\Models\Website\PageSnapshot;
-use App\Models\Website\Pipedrive;
 use App\Models\Website\Post;
 use App\Models\Website\Review;
 use App\Models\Website\Security;
@@ -91,7 +89,6 @@ class RealDataCmsSmokeTest extends TestCase
             OfficeResource::class,
             ReviewResource::class,
             PageSnapshotResource::class,
-            PipedriveResource::class,
         ];
     }
 
@@ -109,7 +106,6 @@ class RealDataCmsSmokeTest extends TestCase
             OfficeResource::class,
             ReviewResource::class,
             PageSnapshotResource::class,
-            PipedriveResource::class,
             WebsiteUserResource::class,
         ];
     }
@@ -128,7 +124,6 @@ class RealDataCmsSmokeTest extends TestCase
             [OfficeResource::class, Office::query()->firstOrFail()],
             [ReviewResource::class, Review::query()->firstOrFail()],
             [PageSnapshotResource::class, PageSnapshot::query()->firstOrFail()],
-            [PipedriveResource::class, Pipedrive::query()->firstOrFail()],
             [WebsiteUserResource::class, User::query()->firstOrFail()],
         ];
     }

@@ -8,10 +8,7 @@ use App\Models\LetterNotification;
 use App\Models\User;
 use App\Models\Website\Lead as WebsiteLead;
 use App\Models\Website\Offer as WebsiteOffer;
-use App\Models\Website\Pipedrive;
-use App\Notifications\NewOfferRequestMailing;
 use App\Notifications\OfferToClient;
-use App\Notifications\RemoveRequestMailing;
 use App\Services\LetterNotificationSender;
 use App\Support\Website\LeadStatuses;
 use Filament\Facades\Filament;
@@ -203,35 +200,6 @@ class RealDataSideEffectSmokeTest extends TestCase
                 Storage::disk('local')->delete($path);
             }
         }
-    }
-
-    public function test_real_data_new_year_offer_request_link_updates_pipedrive_inside_transaction(): void
-    {
-        Notification::fake();
-
-        $client = Pipedrive::query()->firstOrFail();
-
-        $this->get('http://preda-app.test/r8dsg/o/'.$client->id)
-            ->assertOk()
-            ->assertSee('Przyjęliśmy Twoje zgłoszenie');
-
-        $this->assertNotNull($client->fresh()->offer_request);
-        Notification::assertSentOnDemand(NewOfferRequestMailing::class);
-    }
-
-    public function test_real_data_new_year_remove_request_link_updates_pipedrive_inside_transaction(): void
-    {
-        Notification::fake();
-
-        $client = Pipedrive::query()->firstOrFail();
-        $client->forceFill(['remove_request' => null])->save();
-
-        $this->get('http://preda-app.test/r8dsg/r/'.$client->id)
-            ->assertOk()
-            ->assertSee('Zgłoszenie przyjęte');
-
-        $this->assertNotNull($client->fresh()->remove_request);
-        Notification::assertSentOnDemand(RemoveRequestMailing::class);
     }
 
     private function differentLeadStatus(WebsiteLead $lead): string

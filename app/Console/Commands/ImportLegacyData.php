@@ -161,7 +161,6 @@ class ImportLegacyData extends Command
             ['source_schema' => $sourceSchema, 'source_table' => 'offers', 'target_table' => 'website_offers'],
             ['source_schema' => $sourceSchema, 'source_table' => 'offices', 'target_table' => 'website_offices'],
             ['source_schema' => $sourceSchema, 'source_table' => 'page_snapshots', 'target_table' => 'website_page_snapshots'],
-            ['source_schema' => $sourceSchema, 'source_table' => 'pipedrives', 'target_table' => 'website_pipedrives'],
             ['source_schema' => $sourceSchema, 'source_table' => 'posts', 'target_table' => 'website_posts'],
             ['source_schema' => $sourceSchema, 'source_table' => 'reviews', 'target_table' => 'website_reviews'],
             ['source_schema' => $sourceSchema, 'source_table' => 'securities', 'target_table' => 'website_securities'],

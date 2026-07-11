@@ -9,7 +9,6 @@ use App\Filament\Website\Resources\Credits\CreditResource;
 use App\Filament\Website\Resources\Faqs\FaqResource;
 use App\Filament\Website\Resources\Offices\OfficeResource;
 use App\Filament\Website\Resources\PageSnapshots\PageSnapshotResource;
-use App\Filament\Website\Resources\Pipedrives\PipedriveResource;
 use App\Filament\Website\Resources\Posts\PostResource;
 use App\Filament\Website\Resources\Reviews\ReviewResource;
 use App\Filament\Website\Resources\Securities\SecurityResource;
@@ -68,7 +67,6 @@ class CmsPanelProvider extends PanelProvider
                 FaqResource::class,
                 OfficeResource::class,
                 PageSnapshotResource::class,
-                PipedriveResource::class,
                 PostResource::class,
                 ReviewResource::class,
                 SecurityResource::class,
