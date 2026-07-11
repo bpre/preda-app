@@ -2,14 +2,11 @@
 
 namespace App\Filament\Website\Resources\Users\Tables;
 
-use Filament\Tables\Table;
 use Filament\Actions\EditAction;
 use Filament\Support\Enums\TextSize;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Table;
 
 class UsersTable
 {
@@ -41,10 +38,6 @@ class UsersTable
             ->recordActions([
                 EditAction::make(),
             ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->toolbarActions([]);
     }
 }

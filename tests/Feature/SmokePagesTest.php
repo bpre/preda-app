@@ -14,6 +14,7 @@ use App\Filament\Website\Resources\Leads\LeadResource as WebsiteLeadResource;
 use App\Filament\Website\Resources\Offers\OffersResource as WebsiteOfferResource;
 use App\Filament\Website\Resources\Posts\PostResource;
 use App\Filament\Website\Resources\Sentences\SentenceResource;
+use App\Filament\Website\Resources\Users\UserResource as WebsiteUserResource;
 use App\Models\CHFMatter;
 use App\Models\Contact;
 use App\Models\ContactMatter;
@@ -38,6 +39,15 @@ class SmokePagesTest extends TestCase
         $this->get('http://ewidencja.preda-app.test/login')->assertOk();
         $this->get('http://crm.preda-app.test/login')->assertOk();
         $this->get('http://cms.preda-app.test/login')->assertOk();
+    }
+
+    public function test_old_kancelaria_panel_paths_redirect_to_the_ewidencja_root_paths(): void
+    {
+        $this->get('http://ewidencja.preda-app.test/kancelaria')
+            ->assertRedirect('http://ewidencja.preda-app.test');
+
+        $this->get('http://ewidencja.preda-app.test/kancelaria/chf?table=wide')
+            ->assertRedirect('http://ewidencja.preda-app.test/chf?table=wide');
     }
 
     public function test_the_portal_login_page_is_accessible(): void
@@ -172,6 +182,10 @@ class SmokePagesTest extends TestCase
         $this->actingAs($user)
             ->get(SentenceResource::getUrl(panel: 'cms'))
             ->assertOk();
+
+        $this->actingAs($user)
+            ->get(WebsiteUserResource::getUrl(panel: 'cms'))
+            ->assertOk();
     }
 
     public function test_an_active_super_admin_can_open_key_kancelaria_resource_lists(): void
@@ -229,15 +243,28 @@ class SmokePagesTest extends TestCase
     {
         $this->assertTrue(Route::has('filament.crm.resources.umowy-do-analizy.index'));
         $this->assertTrue(Route::has('filament.crm.resources.zapytania-ofertowe.index'));
+        $this->assertTrue(Route::has('filament.cms.resources.pracownicy.index'));
 
         $this->assertFalse(Route::has('filament.cms.resources.umowy-do-analizy.index'));
         $this->assertFalse(Route::has('filament.cms.resources.zapytania-ofertowe.index'));
-        $this->assertFalse(Route::has('filament.cms.resources.pracownicy.index'));
     }
 
     public function test_employee_user_management_is_not_registered_in_the_crm_panel(): void
     {
         $this->assertFalse(Route::has('filament.crm.resources.pracownicy.index'));
+    }
+
+    public function test_cms_team_profiles_do_not_allow_user_lifecycle_actions(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+            'is_employee' => true,
+        ]);
+
+        $this->assertFalse(Route::has('filament.cms.resources.pracownicy.create'));
+        $this->assertFalse(WebsiteUserResource::canCreate());
+        $this->assertFalse(WebsiteUserResource::canDelete($user));
+        $this->assertFalse(WebsiteUserResource::canDeleteAny());
     }
 
     public function test_non_admin_panel_access_requires_explicit_panel_permission(): void

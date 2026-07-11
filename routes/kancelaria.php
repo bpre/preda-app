@@ -13,6 +13,16 @@ Route::get('fontgenerator', FontgeneratorController::class);
 Route::get('neoznaczek', [NeoznaczekController::class, 'index']);
 Route::get('neoznaczek/ocr', [NeoznaczekController::class, 'ocr']);
 
+Route::get('/kancelaria/{path?}', function (?string $path = null) {
+    $target = url('/'.ltrim((string) $path, '/'));
+
+    if ($query = request()->getQueryString()) {
+        $target .= '?'.$query;
+    }
+
+    return redirect()->to($target, 301);
+})->where('path', '.*');
+
 Route::post('/preferencje-uzytkownika/szerokosc-tabel', FilamentLayoutPreferenceController::class)
     ->middleware(['auth'])
     ->name('filament-layout.preferences.table-width');

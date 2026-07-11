@@ -15,6 +15,7 @@ use App\Filament\Website\Resources\Reviews\ReviewResource;
 use App\Filament\Website\Resources\Securities\SecurityResource;
 use App\Filament\Website\Resources\SentenceContentTemplates\SentenceContentTemplateResource;
 use App\Filament\Website\Resources\Sentences\SentenceResource;
+use App\Filament\Website\Resources\Users\UserResource;
 use App\Filament\Website\Widgets\PostsFreshnessWidget;
 use App\Http\Middleware\IsActiveUser;
 use App\Support\Website\WebsiteFeatures;
@@ -72,7 +73,8 @@ class CmsPanelProvider extends PanelProvider
                 ReviewResource::class,
                 SecurityResource::class,
                 SentenceResource::class,
-                ... (WebsiteFeatures::sentenceContentGeneratorEnabled()
+                UserResource::class,
+                ...(WebsiteFeatures::sentenceContentGeneratorEnabled()
                     ? [SentenceContentTemplateResource::class]
                     : []),
             ])

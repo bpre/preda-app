@@ -2,18 +2,18 @@
 
 namespace App\Filament\Website\Resources\Users;
 
-use App\Filament\Website\Resources\Users\Pages\CreateUser;
 use App\Filament\Website\Resources\Users\Pages\EditUser;
 use App\Filament\Website\Resources\Users\Pages\ListUsers;
 use App\Filament\Website\Resources\Users\Schemas\UserForm;
 use App\Filament\Website\Resources\Users\Tables\UsersTable;
 use App\Models\User;
 use BackedEnum;
-use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
+use UnitEnum;
 
 class UserResource extends Resource
 {
@@ -24,12 +24,39 @@ class UserResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?string $navigationLabel = 'Pracownicy';
+
     protected static ?string $pluralModelLabel = 'Pracownicy';
 
     protected static string|UnitEnum|null $navigationGroup = 'Zasoby';
 
     protected static ?int $navigationSort = 9;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
+    }
+
+    public static function canForceDelete(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return false;
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -52,7 +79,6 @@ class UserResource extends Resource
     {
         return [
             'index' => ListUsers::route('/'),
-            'create' => CreateUser::route('/create'),
             'edit' => EditUser::route('/{record}/edit'),
         ];
     }
