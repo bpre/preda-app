@@ -10,6 +10,7 @@ use App\Filament\Resources\CHFMatterResource as KancelariaCHFMatterResource;
 use App\Filament\Resources\ContactResource as KancelariaContactResource;
 use App\Filament\Resources\LetterResource as KancelariaLetterResource;
 use App\Filament\Resources\TaskResource as KancelariaTaskResource;
+use App\Filament\Resources\UserResource as KancelariaUserResource;
 use App\Filament\Website\Resources\Leads\LeadResource as WebsiteLeadResource;
 use App\Filament\Website\Resources\Offers\OffersResource as WebsiteOfferResource;
 use App\Filament\Website\Resources\Posts\PostResource;
@@ -207,6 +208,20 @@ class SmokePagesTest extends TestCase
         $this->actingAs($user)
             ->get(KancelariaTaskResource::getUrl(panel: 'kancelaria'))
             ->assertOk();
+    }
+
+    public function test_kancelaria_user_edit_page_uses_user_name_as_title(): void
+    {
+        $user = $this->makeSuperAdmin();
+        $managedUser = User::factory()->create([
+            'name' => 'Anna Testowa',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get(KancelariaUserResource::getUrl('edit', ['record' => $managedUser], panel: 'kancelaria'))
+            ->assertOk()
+            ->assertSeeInOrder(['fi-header-heading', 'Anna Testowa'], false);
     }
 
     public function test_an_active_super_admin_can_open_key_crm_resource_lists(): void

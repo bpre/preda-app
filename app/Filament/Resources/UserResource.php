@@ -32,7 +32,7 @@ class UserResource extends Resource
 
     protected static ?string $slug = 'uzytkownicy';
 
-    // protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?string $model = User::class;
 
@@ -67,6 +67,7 @@ class UserResource extends Resource
                 Section::make('Dane')
                     ->collapsible()
                     ->collapsed($schema->getOperation() === "edit")
+                    ->columnSpanFull()
                     ->schema(
                     [
                     TextInput::make('name')
@@ -145,6 +146,7 @@ class UserResource extends Resource
                 Section::make('Sprawy')
                     ->collapsible()
                     ->collapsed($schema->getOperation() === "edit")
+                    ->columnSpanFull()
                     ->schema([
                         Repeater::make('matters')
                             ->relationship('matterUser')
