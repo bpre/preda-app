@@ -45,18 +45,19 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 ## Known non-code gaps
 
 - Local storage audit after `k1` and `k2` sync:
-  - `letters.files`: 1 missing file.
-  - `stages.files`: complete.
-  - `offers.pdf_path`: complete.
-  - `website_leads.files`: missing files from the old `preda.info` storage.
-  - `website_sentences.files`: missing public files from the old `preda.info` storage.
-  - `website_securities.files`: missing public files from the old `preda.info` storage.
+  - `letters.files`: 12271/12272 files present; 1 missing file.
+  - `stages.files`: 13/13 files present.
+  - `offers.pdf_path`: 86/86 files present.
+  - `website_leads.files`: 0/1477 files present; old `preda.info` storage still missing.
+  - `website_sentences.files`: 0/374 files present; old public storage still missing.
+  - `website_securities.files`: 0/35 files present; old public storage still missing.
 - The current Codex session cannot fetch the remaining website files over SSH without
   credentials, so those must be synced separately.
 
 ## Next audit targets
 
-- Compare public pages visually against the old `preda.info` pages on real data.
-- Exercise key Ewidencja create/edit/print/download actions on real records.
-- Verify CMS edit flows for posts, sentences, banks, offices, reviews, FAQs, and team.
-- Verify CRM lead and offer workflows using imported production data.
+- Sync remaining old `preda.info` storage files, then rerun `legacy:audit-files`.
+- Compare public pages visually against the old `preda.info` pages on real data after
+  public storage files are available.
+- Exercise selected write/side-effect workflows in an isolated transaction or with
+  faked mail: CRM lead status changes, offer sending, and letter notification actions.
