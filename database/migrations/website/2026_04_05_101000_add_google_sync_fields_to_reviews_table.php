@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('reviews', function (Blueprint $table) {
+        Schema::table('website_reviews', function (Blueprint $table) {
             $table->string('source')->nullable()->after('name');
             $table->string('source_review_id')->nullable()->after('source');
             $table->text('avatar_url')->nullable()->after('review');
@@ -20,7 +20,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('reviews', function (Blueprint $table) {
+        Schema::table('website_reviews', function (Blueprint $table) {
             $table->dropUnique(['source', 'source_review_id']);
             $table->dropIndex(['source', 'date']);
             $table->dropColumn([

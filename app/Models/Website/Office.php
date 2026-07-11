@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Office extends Model
 {
+    protected $table = 'website_offices';
+
     protected $fillable = [
         'city',
         'slug',

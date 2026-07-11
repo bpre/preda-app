@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sentence extends Model
 {
+    protected $table = 'website_sentences';
+
     protected $casts = [
         'is_published' => 'boolean',
         'is_paid_off' => 'boolean',

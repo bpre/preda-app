@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class GoogleBusinessProfileConnection extends Model
 {
+    protected $table = 'website_google_business_profile_connections';
+
     protected $casts = [
         'available_accounts' => 'array',
         'available_locations' => 'array',

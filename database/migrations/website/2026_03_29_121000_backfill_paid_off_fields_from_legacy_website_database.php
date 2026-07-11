@@ -18,7 +18,7 @@ return new class extends Migration
             return;
         }
 
-        if (! Schema::hasTable('sentences')) {
+        if (! Schema::hasTable('website_sentences')) {
             return;
         }
 
@@ -59,7 +59,7 @@ return new class extends Migration
         $sourceTable = sprintf('`%s`.`sentences`', $sourceDatabase);
 
         DB::statement("
-            UPDATE `sentences` AS target
+            UPDATE `website_sentences` AS target
             INNER JOIN {$sourceTable} AS source
                 ON source.`id` = target.`id`
                AND source.`slug` = target.`slug`

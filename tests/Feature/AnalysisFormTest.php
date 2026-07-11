@@ -50,7 +50,7 @@ class AnalysisFormTest extends TestCase
             ->assertSee('Dziękujemy. Skontaktujemy się z Tobą po przeanalizowaniu zgłoszenia.')
             ->assertDontSee('Dziękujemy. Twoje zgłoszenie zostało przyjęte.');
 
-        $this->assertDatabaseHas('leads', [
+        $this->assertDatabaseHas('website_leads', [
             'name' => 'Jan Kowalski',
             'email' => 'jan@example.test',
             'postal_code' => '67-200',
@@ -97,7 +97,7 @@ class AnalysisFormTest extends TestCase
             ->assertDontSee('Załącz dokumenty')
             ->assertDontSee('Możesz od razu przesłać skan umowy. Nie jest to obowiązkowe');
 
-        $this->assertDatabaseHas('leads', [
+        $this->assertDatabaseHas('website_leads', [
             'name' => 'Anna Nowak',
             'email' => 'anna@example.test',
             'postal_code' => '59-100',

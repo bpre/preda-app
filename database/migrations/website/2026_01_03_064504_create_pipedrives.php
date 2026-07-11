@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pipedrives', function (Blueprint $table) {
+        Schema::create('website_pipedrives', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('matter_id')->nullable();
             $table->string('gdrive')->nullable();
@@ -42,6 +42,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pipedrives');
+        Schema::dropIfExists('website_pipedrives');
     }
 };

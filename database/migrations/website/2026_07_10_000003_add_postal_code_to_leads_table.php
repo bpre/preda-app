@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('leads', function (Blueprint $table) {
+        Schema::table('website_leads', function (Blueprint $table) {
             $table->string('postal_code', 6)->nullable()->after('email');
         });
     }
 
     public function down(): void
     {
-        Schema::table('leads', function (Blueprint $table) {
+        Schema::table('website_leads', function (Blueprint $table) {
             $table->dropColumn('postal_code');
         });
     }

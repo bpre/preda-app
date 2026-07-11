@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sentence_content_templates', function (Blueprint $table) {
+        Schema::create('website_sentence_content_templates', function (Blueprint $table) {
             $table->id();
             $table->string('key')->nullable()->unique();
             $table->string('name');
@@ -32,7 +32,7 @@ return new class extends Migration
 
         $now = now();
 
-        DB::table('sentence_content_templates')->insert(array_map(
+        DB::table('website_sentence_content_templates')->insert(array_map(
             fn (array $template): array => [
                 ...$template,
                 'is_active' => true,
@@ -51,7 +51,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sentence_content_templates');
+        Schema::dropIfExists('website_sentence_content_templates');
     }
 
     /**

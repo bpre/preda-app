@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('contacts', function (Blueprint $table) {
+        Schema::create('website_contacts', function (Blueprint $table) {
             $table->id();
             $table->string('category')->default('Sędzia');
             $table->string('first_name')->nullable();
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('contacts');
+        Schema::dropIfExists('website_contacts');
     }
 };

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('page_snapshots', function (Blueprint $table) {
+       Schema::create('website_page_snapshots', function (Blueprint $table) {
             $table->id();
             $table->string('url')->index();
             $table->string('title')->nullable();
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('page_snapshots');
+        Schema::dropIfExists('website_page_snapshots');
     }
 };

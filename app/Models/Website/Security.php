@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Security extends Model
 {
+    protected $table = 'website_securities';
+
     protected $casts = [
         'is_published' => 'boolean',
         'files' => 'array'

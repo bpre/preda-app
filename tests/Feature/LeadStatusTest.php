@@ -18,7 +18,7 @@ class LeadStatusTest extends TestCase
 
         $this->assertSame(LeadStatuses::NEW, $lead->status);
         $this->assertNotNull($lead->status_changed_at);
-        $this->assertDatabaseHas('lead_status_changes', [
+        $this->assertDatabaseHas('website_lead_status_changes', [
             'lead_id' => $lead->id,
             'status' => LeadStatuses::NEW,
             'note' => 'Status początkowy.',
@@ -43,7 +43,7 @@ class LeadStatusTest extends TestCase
         $this->assertSame('Wysłano analizę umowy', $lead->status);
         $this->assertSame('2026-07-10 12:30:00', $lead->status_changed_at->format('Y-m-d H:i:s'));
         $this->assertSame(2, $lead->statusChanges()->count());
-        $this->assertDatabaseHas('lead_status_changes', [
+        $this->assertDatabaseHas('website_lead_status_changes', [
             'lead_id' => $lead->id,
             'status' => 'Wysłano analizę umowy',
             'changed_by' => $user->id,

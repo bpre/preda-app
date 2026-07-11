@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void {
-        Schema::table('page_snapshots', function (Blueprint $table) {
+        Schema::table('website_page_snapshots', function (Blueprint $table) {
             $table->string('h2')->nullable()->after('h1');
 
             $table->unsignedInteger('title_length')->nullable()->after('title');
@@ -22,7 +22,7 @@ return new class extends Migration {
     }
 
     public function down(): void {
-        Schema::table('page_snapshots', function (Blueprint $table) {
+        Schema::table('website_page_snapshots', function (Blueprint $table) {
             $table->dropColumn([
                 'h2',
                 'title_length','meta_description_length','h1_length','h2_length',

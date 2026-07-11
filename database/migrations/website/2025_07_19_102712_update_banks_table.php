@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('banks', function (Blueprint $table) {
+        Schema::table('website_banks', function (Blueprint $table) {
             $table->integer('sort')->default(0);
         });
     }

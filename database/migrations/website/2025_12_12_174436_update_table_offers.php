@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('offers', function (Blueprint $table) {
+        Schema::table('website_offers', function (Blueprint $table) {
 
             $table->integer('start_wstepna')->nullable();
             $table->integer('start_premia')->nullable();

@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Schema;
 
 class Lead extends Model
 {
+    protected $table = 'website_leads';
+
     protected $casts = [
         'files' => 'array',
         'has_contract' => 'boolean',
@@ -68,7 +70,7 @@ class Lead extends Model
 
         static::created(function (Lead $lead): void {
             if (
-                ! Schema::hasTable('lead_status_changes')
+                ! Schema::hasTable('website_lead_status_changes')
                 || ! Schema::hasColumn($lead->getTable(), 'status')
             ) {
                 return;

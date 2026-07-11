@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeadStatusChange extends Model
 {
+    protected $table = 'website_lead_status_changes';
+
     protected $fillable = [
         'lead_id',
         'status',

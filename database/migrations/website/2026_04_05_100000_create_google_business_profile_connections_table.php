@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('google_business_profile_connections', function (Blueprint $table) {
+        Schema::create('website_google_business_profile_connections', function (Blueprint $table) {
             $table->id();
             $table->string('google_account_name')->nullable();
             $table->string('google_account_label')->nullable();
@@ -29,6 +29,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('google_business_profile_connections');
+        Schema::dropIfExists('website_google_business_profile_connections');
     }
 };

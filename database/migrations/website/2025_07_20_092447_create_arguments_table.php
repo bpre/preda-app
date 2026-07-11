@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('arguments', function (Blueprint $table) {
+        Schema::create('website_arguments', function (Blueprint $table) {
             $table->id();
             $table->string('label');
             $table->text('content');
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('arguments');
+        Schema::dropIfExists('website_arguments');
     }
 };

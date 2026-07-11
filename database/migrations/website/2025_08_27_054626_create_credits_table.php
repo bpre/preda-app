@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('credits', function (Blueprint $table) {
+        Schema::create('website_credits', function (Blueprint $table) {
             $table->id();
             $table->string('credit_name');
             $table->string('credit_year');
             $table->string('credit_type');
             $table->string('credit_currency')->default('CHF');
-            $table->foreignId('bank_id')->references('id')->on('banks');
+            $table->foreignId('bank_id')->references('id')->on('website_banks');
             $table->boolean('is_published')->default(false);
             $table->json('clauses')->nullable();
             $table->integer('sort')->default(0);
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('credits');
+        Schema::dropIfExists('website_credits');
     }
 };

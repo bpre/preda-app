@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class SentenceContentTemplate extends Model
 {
+    protected $table = 'website_sentence_content_templates';
+
     protected $casts = [
         'is_active' => 'boolean',
         'all_of' => 'array',

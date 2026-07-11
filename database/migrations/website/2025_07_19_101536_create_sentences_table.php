@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sentences', function (Blueprint $table) {
+        Schema::create('website_sentences', function (Blueprint $table) {
             $table->id();
             $table->string('sign')->nullable();
             $table->date('lawsuit_date')->nullable();
@@ -40,11 +40,11 @@ return new class extends Migration
             $table->json('files')->nullable();
             $table->timestamps();
 
-            $table->foreign('parent_id')->references('id')->on('sentences');
-            $table->foreign('bank_id')->references('id')->on('banks');
-            $table->foreign('bank_previously_id')->references('id')->on('banks');
-            $table->foreign('court_id')->references('id')->on('contacts');
-            $table->foreign('judge_id')->references('id')->on('contacts');
+            $table->foreign('parent_id')->references('id')->on('website_sentences');
+            $table->foreign('bank_id')->references('id')->on('website_banks');
+            $table->foreign('bank_previously_id')->references('id')->on('website_banks');
+            $table->foreign('court_id')->references('id')->on('website_contacts');
+            $table->foreign('judge_id')->references('id')->on('website_contacts');
         });
     }
 
@@ -53,6 +53,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sentences');
+        Schema::dropIfExists('website_sentences');
     }
 };

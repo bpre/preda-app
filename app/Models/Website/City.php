@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class City extends Model
 {
+    protected $table = 'website_cities';
+
     protected $casts = [
         'is_published' => 'boolean',
         'show_in_footer' => 'boolean',

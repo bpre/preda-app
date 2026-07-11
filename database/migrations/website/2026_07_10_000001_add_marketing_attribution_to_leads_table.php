@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('leads', function (Blueprint $table) {
+        Schema::table('website_leads', function (Blueprint $table) {
             $table->string('attribution_channel')->nullable()->after('documents_skipped_at');
             $table->string('attribution_source')->nullable()->after('attribution_channel');
             $table->string('attribution_medium')->nullable()->after('attribution_source');
@@ -31,7 +31,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('leads', function (Blueprint $table) {
+        Schema::table('website_leads', function (Blueprint $table) {
             $table->dropIndex(['attribution_channel']);
             $table->dropIndex(['attribution_source']);
             $table->dropIndex(['attribution_campaign']);

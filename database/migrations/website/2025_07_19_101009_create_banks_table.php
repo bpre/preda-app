@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('banks', function (Blueprint $table) {
+        Schema::create('website_banks', function (Blueprint $table) {
             $table->id();
             $table->string('bank');
             $table->string('label');
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->boolean('is_published')->default(false);
             $table->timestamps();
 
-            $table->foreign('successor_id')->references('id')->on('banks');
+            $table->foreign('successor_id')->references('id')->on('website_banks');
         });
     }
 
@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('banks');
+        Schema::dropIfExists('website_banks');
     }
 };

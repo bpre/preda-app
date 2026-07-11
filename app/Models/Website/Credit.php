@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Credit extends Model
 {
+    protected $table = 'website_credits';
+
     protected $casts = [
         'is_published' => 'boolean',
         'clauses' => 'array'

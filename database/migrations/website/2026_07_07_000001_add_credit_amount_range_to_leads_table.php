@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('leads', function (Blueprint $table) {
+        Schema::table('website_leads', function (Blueprint $table) {
             $table->string('credit_amount_range')->nullable()->after('credit_currency');
         });
     }
 
     public function down(): void
     {
-        Schema::table('leads', function (Blueprint $table) {
+        Schema::table('website_leads', function (Blueprint $table) {
             $table->dropColumn('credit_amount_range');
         });
     }

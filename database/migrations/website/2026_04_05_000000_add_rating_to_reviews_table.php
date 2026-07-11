@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('reviews', function (Blueprint $table): void {
+        Schema::table('website_reviews', function (Blueprint $table): void {
             $table->unsignedTinyInteger('rating')->default(5)->after('amount');
         });
     }
 
     public function down(): void
     {
-        Schema::table('reviews', function (Blueprint $table): void {
+        Schema::table('website_reviews', function (Blueprint $table): void {
             $table->dropColumn('rating');
         });
     }

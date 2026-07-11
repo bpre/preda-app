@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Pipedrive extends Model
 {
     use HasFactory, HasUuids;
-    protected $table = 'pipedrives';
+    protected $table = 'website_pipedrives';
+
     protected $casts = [
         'id' => 'string',
         'reviewed' => 'datetime',
@@ -26,4 +27,3 @@ class Pipedrive extends Model
     // }
 
 }
-

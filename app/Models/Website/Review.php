@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
+    protected $table = 'website_reviews';
+
     protected $casts = [
         'date' => 'date',
         'rating' => 'integer',

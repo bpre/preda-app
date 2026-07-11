@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Offer extends Model
 {
+    protected $table = 'website_offers';
+
     protected $casts = [
         'files' => 'array'
     ];

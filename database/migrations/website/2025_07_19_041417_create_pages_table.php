@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pages', function (Blueprint $table) {
+        Schema::create('website_pages', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('label');
             $table->string('slug');
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pages');
+        Schema::dropIfExists('website_pages');
     }
 };

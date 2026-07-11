@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $shouldAddIsPaidOff = ! Schema::hasColumn('sentences', 'is_paid_off');
-        $shouldAddPaidOffYear = ! Schema::hasColumn('sentences', 'paid_off_year');
+        $shouldAddIsPaidOff = ! Schema::hasColumn('website_sentences', 'is_paid_off');
+        $shouldAddPaidOffYear = ! Schema::hasColumn('website_sentences', 'paid_off_year');
 
         if (! $shouldAddIsPaidOff && ! $shouldAddPaidOffYear) {
             return;
         }
 
-        Schema::table('sentences', function (Blueprint $table) use ($shouldAddIsPaidOff, $shouldAddPaidOffYear) {
+        Schema::table('website_sentences', function (Blueprint $table) use ($shouldAddIsPaidOff, $shouldAddPaidOffYear) {
             if ($shouldAddIsPaidOff) {
                 $table->boolean('is_paid_off')->default(false);
             }
@@ -34,14 +34,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $shouldDropIsPaidOff = Schema::hasColumn('sentences', 'is_paid_off');
-        $shouldDropPaidOffYear = Schema::hasColumn('sentences', 'paid_off_year');
+        $shouldDropIsPaidOff = Schema::hasColumn('website_sentences', 'is_paid_off');
+        $shouldDropPaidOffYear = Schema::hasColumn('website_sentences', 'paid_off_year');
 
         if (! $shouldDropIsPaidOff && ! $shouldDropPaidOffYear) {
             return;
         }
 
-        Schema::table('sentences', function (Blueprint $table) use ($shouldDropIsPaidOff, $shouldDropPaidOffYear) {
+        Schema::table('website_sentences', function (Blueprint $table) use ($shouldDropIsPaidOff, $shouldDropPaidOffYear) {
             if ($shouldDropPaidOffYear) {
                 $table->dropColumn('paid_off_year');
             }

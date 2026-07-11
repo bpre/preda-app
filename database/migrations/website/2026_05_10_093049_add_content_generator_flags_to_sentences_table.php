@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (Schema::hasColumn('sentences', 'content_generator_flags')) {
+        if (Schema::hasColumn('website_sentences', 'content_generator_flags')) {
             return;
         }
 
-        Schema::table('sentences', function (Blueprint $table) {
+        Schema::table('website_sentences', function (Blueprint $table) {
             $table->json('content_generator_flags')->nullable()->after('security_note');
         });
     }
@@ -25,11 +25,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (! Schema::hasColumn('sentences', 'content_generator_flags')) {
+        if (! Schema::hasColumn('website_sentences', 'content_generator_flags')) {
             return;
         }
 
-        Schema::table('sentences', function (Blueprint $table) {
+        Schema::table('website_sentences', function (Blueprint $table) {
             $table->dropColumn('content_generator_flags');
         });
     }

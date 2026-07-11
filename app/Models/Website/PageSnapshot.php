@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class PageSnapshot extends Model
 {
+    protected $table = 'website_page_snapshots';
+
     protected $fillable = [
         'url','category',
         'title','meta_description','h1','h2',

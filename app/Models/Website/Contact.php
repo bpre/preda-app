@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Contact extends Model
 {
+    protected $table = 'website_contacts';
+
     protected $casts = [
         'is_published' => 'boolean',
         'category' => ContactCategories::class

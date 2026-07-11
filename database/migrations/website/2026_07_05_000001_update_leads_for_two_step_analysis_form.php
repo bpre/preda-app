@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('leads', function (Blueprint $table) {
+        Schema::table('website_leads', function (Blueprint $table) {
             $table->string('bank')->nullable()->after('phone');
             $table->string('contract_year_range')->nullable()->after('bank');
             $table->string('credit_currency')->nullable()->after('contract_year_range');
@@ -22,7 +22,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('leads', function (Blueprint $table) {
+        Schema::table('website_leads', function (Blueprint $table) {
             $table->dropUnique(['upload_token']);
             $table->dropColumn([
                 'bank',

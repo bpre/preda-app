@@ -11,15 +11,15 @@ return new class extends Migration
 
     public function up(): void
     {
-        Schema::table('leads', function (Blueprint $table) {
+        Schema::table('website_leads', function (Blueprint $table) {
             $table->string('status')->default(self::DEFAULT_STATUS)->after('documents_skipped_at');
             $table->timestamp('status_changed_at')->nullable()->after('status');
             $table->index('status');
         });
 
-        Schema::create('lead_status_changes', function (Blueprint $table) {
+        Schema::create('website_lead_status_changes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lead_id')->constrained('leads')->cascadeOnDelete();
+            $table->foreignId('lead_id')->constrained('website_leads')->cascadeOnDelete();
             $table->string('status');
             $table->timestamp('changed_at');
             $table->foreignId('changed_by')->nullable()->constrained('users')->nullOnDelete();
@@ -32,14 +32,14 @@ return new class extends Migration
 
         $now = now();
 
-        DB::table('leads')
+        DB::table('website_leads')
             ->whereNull('status_changed_at')
             ->update([
                 'status' => self::DEFAULT_STATUS,
                 'status_changed_at' => $now,
             ]);
 
-        DB::table('leads')
+        DB::table('website_leads')
             ->select(['id', 'status', 'status_changed_at', 'created_at'])
             ->orderBy('id')
             ->chunkById(100, function ($leads) use ($now): void {
@@ -58,16 +58,16 @@ return new class extends Migration
                 }
 
                 if ($rows !== []) {
-                    DB::table('lead_status_changes')->insert($rows);
+                    DB::table('website_lead_status_changes')->insert($rows);
                 }
             });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('lead_status_changes');
+        Schema::dropIfExists('website_lead_status_changes');
 
-        Schema::table('leads', function (Blueprint $table) {
+        Schema::table('website_leads', function (Blueprint $table) {
             $table->dropIndex(['status']);
             $table->dropColumn([
                 'status',

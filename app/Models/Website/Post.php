@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Post extends Model
 {
+    protected $table = 'website_posts';
+
     protected $casts = [
         'is_published' => 'boolean',
         'alternative_slugs' => 'array',

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Bank extends Model
 {
+    protected $table = 'website_banks';
+
     protected $casts = [
         'is_published' => 'boolean',
         'is_analysisable' => 'boolean'

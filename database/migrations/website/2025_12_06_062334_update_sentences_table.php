@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('sentences', function (Blueprint $table) {
+        Schema::table('website_sentences', function (Blueprint $table) {
             // $table->string('paid_off_year')->nullable();
         });
     }
