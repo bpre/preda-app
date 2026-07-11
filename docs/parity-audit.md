@@ -70,7 +70,8 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 
 ## Next audit targets
 
-- Sync remaining old `preda.info` storage files, then rerun `legacy:audit-files`.
+- Sync remaining old storage folders (`neoznaczki`, `umowy-do-analizy`, `sentences`,
+  `securities`), then rerun `legacy:audit-files`.
 - Compare public pages visually against the old `preda.info` pages on real data after
   public storage files are available.
 - Exercise remaining Livewire-only action paths manually or with browser automation

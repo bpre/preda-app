@@ -93,3 +93,36 @@ Audit zalacznikow po synchronizacji plikow:
 ```sh
 php artisan legacy:audit-files
 ```
+
+Synchronizacja brakujacych plikow storage z serwera produkcyjnego, bez usuwania
+plikow lokalnych:
+
+```sh
+mkdir -p storage/app/private/neoznaczki \
+  storage/app/private/umowy-do-analizy \
+  storage/app/public/sentences \
+  storage/app/public/securities
+
+rsync -avz --progress -e 'ssh -p 222' \
+  mjp@preda.info:/home/mjp/domains/ewidencja.preda.info/storage/app/neoznaczki/ \
+  storage/app/private/neoznaczki/
+
+rsync -avz --progress -e 'ssh -p 222' \
+  mjp@preda.info:/home/mjp/domains/preda.info/storage/app/private/umowy-do-analizy/ \
+  storage/app/private/umowy-do-analizy/
+
+rsync -avz --progress -e 'ssh -p 222' \
+  mjp@preda.info:/home/mjp/domains/preda.info/storage/app/public/sentences/ \
+  storage/app/public/sentences/
+
+rsync -avz --progress -e 'ssh -p 222' \
+  mjp@preda.info:/home/mjp/domains/preda.info/storage/app/public/securities/ \
+  storage/app/public/securities/
+```
+
+Po syncu:
+
+```sh
+php artisan storage:link
+DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=preda_app_local_fresh DB_USERNAME=root DB_PASSWORD= php artisan legacy:audit-files
+```
