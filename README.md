@@ -53,3 +53,30 @@ Uzytkownicy pracowniczy korzystaja z modelu `User`. Klienci portalu korzystaja z
 ```sh
 php artisan test
 ```
+
+## Komendy operacyjne
+
+Nadawanie lub odbieranie dostepu pracownikowi do paneli:
+
+```sh
+php artisan users:panel-access email@example.com kancelaria crm cms
+php artisan users:panel-access email@example.com crm --revoke
+```
+
+Podglad kandydatow do kont portalu klienta:
+
+```sh
+php artisan portal:provision-users --limit=20
+```
+
+Utworzenie brakujacych kont portalu wymaga jawnego `--force`. Domyslnie nowe konta sa nieaktywne:
+
+```sh
+php artisan portal:provision-users --force
+```
+
+Audit zalacznikow po synchronizacji plikow:
+
+```sh
+php artisan legacy:audit-files
+```
