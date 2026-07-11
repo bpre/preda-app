@@ -24,6 +24,7 @@ use App\Models\Website\Post;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -184,6 +185,34 @@ class SmokePagesTest extends TestCase
 
         $this->assertFalse(Route::has('filament.kancelaria.resources.szanse.index'));
         $this->assertFalse(Route::has('filament.kancelaria.resources.potencjalne.index'));
+    }
+
+    public function test_non_admin_panel_access_requires_explicit_panel_permission(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+            'is_employee' => true,
+        ]);
+
+        $this->assertFalse($user->canAccessPredaPanel('crm'));
+
+        Permission::firstOrCreate([
+            'name' => 'access_crm_panel',
+            'guard_name' => 'web',
+        ]);
+
+        $user->givePermissionTo('access_crm_panel');
+
+        $this->assertTrue($user->canAccessPredaPanel('crm'));
+        $this->assertFalse($user->canAccessPredaPanel('cms'));
+
+        $this->actingAs($user)
+            ->get('http://crm.preda-app.test/')
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get('http://cms.preda-app.test/')
+            ->assertForbidden();
     }
 
     public function test_an_active_super_admin_can_open_the_post_create_form(): void

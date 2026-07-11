@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\FilamentContentLayout;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class FilamentLayoutPreferencesTest extends TestCase
@@ -75,6 +76,7 @@ class FilamentLayoutPreferencesTest extends TestCase
             'is_employee' => true,
             'is_active' => true,
         ]);
+        $this->grantPanelAccess($user, 'kancelaria');
 
         $this
             ->actingAs($user)
@@ -128,5 +130,15 @@ class FilamentLayoutPreferencesTest extends TestCase
             'password' => 'password',
             ...$attributes,
         ]);
+    }
+
+    protected function grantPanelAccess(User $user, string $panelId): void
+    {
+        Permission::firstOrCreate([
+            'name' => "access_{$panelId}_panel",
+            'guard_name' => 'web',
+        ]);
+
+        $user->givePermissionTo("access_{$panelId}_panel");
     }
 }

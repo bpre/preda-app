@@ -3,19 +3,18 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Laravel\Sanctum\HasApiTokens;
-use Filament\Panel;
-use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Filament\Models\Contracts\FilamentUser;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 use RalphJSmit\Filament\Notifications\Concerns\FilamentNotifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
 {
-
     use FilamentNotifiable;
     use HasApiTokens;
     use HasFactory, HasRoles;
@@ -81,8 +80,7 @@ class User extends Authenticatable implements FilamentUser
         }
 
         return match ($panelId) {
-            'kancelaria', 'crm', 'cms' => $this->can("access_{$panelId}_panel")
-                || (bool) $this->is_employee,
+            'kancelaria', 'crm', 'cms' => $this->can("access_{$panelId}_panel"),
             default => false,
         };
     }
