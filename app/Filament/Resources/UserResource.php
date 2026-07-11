@@ -32,8 +32,6 @@ class UserResource extends Resource
 
     protected static ?string $slug = 'uzytkownicy';
 
-    protected static ?string $recordTitleAttribute = 'name';
-
     protected static ?string $model = User::class;
 
     protected static ?string $navigationLabel = 'Użytkownicy';

@@ -224,6 +224,12 @@ class SmokePagesTest extends TestCase
             ->assertSeeInOrder(['fi-header-heading', 'Anna Testowa'], false);
     }
 
+    public function test_kancelaria_user_resource_is_not_globally_searchable(): void
+    {
+        $this->assertSame([], KancelariaUserResource::getGloballySearchableAttributes());
+        $this->assertFalse(KancelariaUserResource::canGloballySearch());
+    }
+
     public function test_an_active_super_admin_can_open_key_crm_resource_lists(): void
     {
         $user = $this->makeSuperAdmin();
