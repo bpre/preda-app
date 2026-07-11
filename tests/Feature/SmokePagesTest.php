@@ -6,7 +6,9 @@ use App\Filament\Website\Resources\Leads\LeadResource;
 use App\Filament\Website\Resources\Posts\PostResource;
 use App\Filament\Website\Resources\Sentences\SentenceResource;
 use App\Filament\Resources\CHFMatterResource as KancelariaCHFMatterResource;
+use App\Filament\Resources\CHFPotentialMatterResource as CrmPotentialMatterResource;
 use App\Filament\Resources\ContactResource as KancelariaContactResource;
+use App\Filament\Resources\LeadResource as CrmLeadResource;
 use App\Filament\Resources\LetterResource as KancelariaLetterResource;
 use App\Filament\Resources\TaskResource as KancelariaTaskResource;
 use App\Models\User;
@@ -108,6 +110,19 @@ class SmokePagesTest extends TestCase
             ->assertOk();
     }
 
+    public function test_an_active_super_admin_can_open_key_crm_resource_lists(): void
+    {
+        $user = $this->makeSuperAdmin();
+
+        $this->actingAs($user)
+            ->get(CrmLeadResource::getUrl(panel: 'crm'))
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get(CrmPotentialMatterResource::getUrl(panel: 'crm'))
+            ->assertOk();
+    }
+
     public function test_an_active_super_admin_can_open_the_post_create_form(): void
     {
         $user = $this->makeSuperAdmin();
@@ -172,7 +187,9 @@ class SmokePagesTest extends TestCase
             )->pluck('key'))
             ->merge([
                 'view_any_c::h::f::matter',
+                'view_any_c::h::f::potential::matter',
                 'view_any_contact',
+                'view_any_lead',
                 'view_any_letter',
                 'view_any_task',
             ])

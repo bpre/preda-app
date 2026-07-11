@@ -40,7 +40,7 @@ class CHFPotentialMatterResource extends Resource
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    // protected static bool $shouldRegisterNavigation = false;
+    protected static bool $shouldRegisterNavigation = false;
     protected static bool $hasTitleCaseModelLabel = false;
 
     protected static ?string $navigationParentItem = 'Sprawy CHF';

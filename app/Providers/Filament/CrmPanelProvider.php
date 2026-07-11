@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\CHFPotentialMatterResource;
+use App\Filament\Resources\LeadResource;
 use App\Http\Middleware\IsActiveUser;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Enums\ThemeMode;
@@ -10,6 +12,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -41,6 +44,10 @@ class CrmPanelProvider extends PanelProvider
             ->font('Manrope', provider: LocalFontProvider::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->discoverResources(in: app_path('Filament/Crm/Resources'), for: 'App\\Filament\\Crm\\Resources')
+            ->resources([
+                LeadResource::class,
+                CHFPotentialMatterResource::class,
+            ])
             ->discoverPages(in: app_path('Filament/Crm/Pages'), for: 'App\\Filament\\Crm\\Pages')
             ->pages([
                 Dashboard::class,
@@ -49,6 +56,19 @@ class CrmPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,
+            ])
+            ->navigationItems([
+                NavigationItem::make('Szanse')
+                    ->icon('heroicon-o-rectangle-stack')
+                    ->url(fn (): string => LeadResource::getUrl(panel: 'crm'))
+                    ->hidden(fn (): bool => ! auth()->user()?->can('view_any_lead'))
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.crm.resources.szanse.*')),
+
+                NavigationItem::make('Potencjalne sprawy')
+                    ->icon('heroicon-o-bookmark')
+                    ->url(fn (): string => CHFPotentialMatterResource::getUrl(panel: 'crm'))
+                    ->hidden(fn (): bool => ! auth()->user()?->can('view_any_c::h::f::potential::matter'))
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.crm.resources.potencjalne.*')),
             ])
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
