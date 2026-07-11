@@ -54,6 +54,19 @@ Uzytkownicy pracowniczy korzystaja z modelu `User`. Klienci portalu korzystaja z
 php artisan test
 ```
 
+Smoke testy na zaimportowanych prawdziwych danych lokalnych:
+
+```sh
+RUN_REAL_DATA_SMOKE=1 DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=preda_app_local_fresh DB_USERNAME=root DB_PASSWORD= php artisan test \
+  tests/Feature/RealDataSideEffectSmokeTest.php \
+  tests/Feature/RealDataCrmSmokeTest.php \
+  tests/Feature/RealDataCmsSmokeTest.php \
+  tests/Feature/RealDataKancelariaResourcesSmokeTest.php \
+  tests/Feature/RealDataKancelariaOperationsSmokeTest.php \
+  tests/Feature/RealDataPublicPagesSmokeTest.php \
+  tests/Feature/RealDataPanelSmokeTest.php
+```
+
 ## Komendy operacyjne
 
 Nadawanie lub odbieranie dostepu pracownikowi do paneli:
