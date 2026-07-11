@@ -2,9 +2,22 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Website\Resources\Banks\BankResource;
+use App\Filament\Website\Resources\Cities\CityResource;
+use App\Filament\Website\Resources\Contacts\ContactResource;
+use App\Filament\Website\Resources\Credits\CreditResource;
+use App\Filament\Website\Resources\Faqs\FaqResource;
+use App\Filament\Website\Resources\Offices\OfficeResource;
+use App\Filament\Website\Resources\PageSnapshots\PageSnapshotResource;
+use App\Filament\Website\Resources\Pipedrives\PipedriveResource;
+use App\Filament\Website\Resources\Posts\PostResource;
+use App\Filament\Website\Resources\Reviews\ReviewResource;
+use App\Filament\Website\Resources\Securities\SecurityResource;
+use App\Filament\Website\Resources\SentenceContentTemplates\SentenceContentTemplateResource;
 use App\Filament\Website\Resources\Sentences\SentenceResource;
 use App\Filament\Website\Widgets\PostsFreshnessWidget;
 use App\Http\Middleware\IsActiveUser;
+use App\Support\Website\WebsiteFeatures;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Enums\ThemeMode;
 use Filament\FontProviders\LocalFontProvider;
@@ -46,7 +59,23 @@ class CmsPanelProvider extends PanelProvider
             ])
             ->font('Manrope', provider: LocalFontProvider::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
-            ->discoverResources(in: app_path('Filament/Website/Resources'), for: 'App\\Filament\\Website\\Resources')
+            ->resources([
+                BankResource::class,
+                CityResource::class,
+                ContactResource::class,
+                CreditResource::class,
+                FaqResource::class,
+                OfficeResource::class,
+                PageSnapshotResource::class,
+                PipedriveResource::class,
+                PostResource::class,
+                ReviewResource::class,
+                SecurityResource::class,
+                SentenceResource::class,
+                ... (WebsiteFeatures::sentenceContentGeneratorEnabled()
+                    ? [SentenceContentTemplateResource::class]
+                    : []),
+            ])
             ->discoverPages(in: app_path('Filament/Website/Pages'), for: 'App\\Filament\\Website\\Pages')
             ->discoverWidgets(in: app_path('Filament/Website/Widgets'), for: 'App\\Filament\\Website\\Widgets')
             ->widgets([

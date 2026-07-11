@@ -2,8 +2,10 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Crm\Resources\CHFPotentialMatterResource;
-use App\Filament\Crm\Resources\LeadResource;
+use App\Filament\Crm\Resources\CHFPotentialMatterResource as CrmPotentialMatterResource;
+use App\Filament\Crm\Resources\LeadResource as CrmLeadResource;
+use App\Filament\Website\Resources\Leads\LeadResource as WebsiteLeadResource;
+use App\Filament\Website\Resources\Offers\OffersResource as WebsiteOfferResource;
 use App\Http\Middleware\IsActiveUser;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Enums\ThemeMode;
@@ -46,8 +48,10 @@ class CrmPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->discoverResources(in: app_path('Filament/Crm/Resources'), for: 'App\\Filament\\Crm\\Resources')
             ->resources([
-                LeadResource::class,
-                CHFPotentialMatterResource::class,
+                CrmLeadResource::class,
+                CrmPotentialMatterResource::class,
+                WebsiteLeadResource::class,
+                WebsiteOfferResource::class,
             ])
             ->discoverPages(in: app_path('Filament/Crm/Pages'), for: 'App\\Filament\\Crm\\Pages')
             ->pages([
@@ -61,13 +65,13 @@ class CrmPanelProvider extends PanelProvider
             ->navigationItems([
                 NavigationItem::make('Szanse')
                     ->icon('heroicon-o-rectangle-stack')
-                    ->url(fn (): string => LeadResource::getUrl(panel: 'crm'))
+                    ->url(fn (): string => CrmLeadResource::getUrl(panel: 'crm'))
                     ->hidden(fn (): bool => ! auth()->user()?->can('view_any_lead'))
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.crm.resources.szanse.*')),
 
                 NavigationItem::make('Potencjalne sprawy')
                     ->icon('heroicon-o-bookmark')
-                    ->url(fn (): string => CHFPotentialMatterResource::getUrl(panel: 'crm'))
+                    ->url(fn (): string => CrmPotentialMatterResource::getUrl(panel: 'crm'))
                     ->hidden(fn (): bool => ! auth()->user()?->can('view_any_c::h::f::potential::matter'))
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.crm.resources.potencjalne.*')),
             ])
