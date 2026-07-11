@@ -2,12 +2,12 @@
 
 namespace App\Filament\Website\Resources\Faqs\Schemas;
 
-use Filament\Schemas\Schema;
-use App\Enums\Website\FAQ\Prefix;
-use Filament\Forms\Components\Select;
-use Filament\Schemas\Components\Group;
-use Filament\Forms\Components\TextInput;
+use App\Enums\Website\FAQPrefixes;
 use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Schema;
 
 class FaqForm
 {
@@ -19,7 +19,7 @@ class FaqForm
                     Select::make('prefix')
                         ->label('Lista')
                         ->options([
-                            Prefix::HOMEPAGE->value => Prefix::HOMEPAGE->getLabel()
+                            FAQPrefixes::HOMEPAGE->value => FAQPrefixes::HOMEPAGE->getLabel(),
                         ])
                         ->native(false)
                         ->required(),
@@ -29,7 +29,7 @@ class FaqForm
                     RichEditor::make('answer')
                         ->label('Odpowiedź')
                         ->required(),
-                ])
+                ]),
 
             ]);
     }

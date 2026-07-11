@@ -17,6 +17,9 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 - Website static pages, dynamic public records, and legacy redirects are covered by
   a real-data public smoke test.
 - Website CMS resources are present in the `cms` panel.
+- Website CMS create/edit forms for posts, sentences, banks, credits, courts/judges,
+  securities, FAQs, cities, offices, reviews, and team profiles are covered by a
+  real-data smoke test.
 - Website leads and offer inquiries are intentionally registered in `crm`, not `cms`.
 - Ewidencja lead and potential matter resources are intentionally registered in `crm`.
 - Letter notifications jobs, mail classes, templates, print views, file preview routes,
