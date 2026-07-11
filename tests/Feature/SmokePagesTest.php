@@ -93,6 +93,35 @@ class SmokePagesTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_portal_user_cannot_access_employee_panels(): void
+    {
+        [$portalUser] = $this->createPortalMatterFixture();
+
+        $this->actingAs($portalUser, 'portal')
+            ->get('http://ewidencja.preda-app.test/')
+            ->assertRedirect();
+
+        $this->actingAs($portalUser, 'portal')
+            ->get('http://crm.preda-app.test/')
+            ->assertRedirect();
+
+        $this->actingAs($portalUser, 'portal')
+            ->get('http://cms.preda-app.test/')
+            ->assertRedirect();
+    }
+
+    public function test_employee_user_cannot_access_the_client_portal_with_web_session(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+            'is_employee' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get('http://portal.preda-app.test/')
+            ->assertRedirect();
+    }
+
     public function test_the_blog_listing_page_renders_successfully(): void
     {
         $this->createNavigationPosts();
@@ -236,6 +265,42 @@ class SmokePagesTest extends TestCase
 
         $this->actingAs($user)
             ->get('http://cms.preda-app.test/')
+            ->assertForbidden();
+    }
+
+    public function test_crm_and_cms_access_does_not_grant_kancelaria_access(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+            'is_employee' => true,
+        ]);
+
+        foreach (['access_crm_panel', 'access_cms_panel'] as $permission) {
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
+        }
+
+        $user->givePermissionTo([
+            'access_crm_panel',
+            'access_cms_panel',
+        ]);
+
+        $this->assertTrue($user->canAccessPredaPanel('crm'));
+        $this->assertTrue($user->canAccessPredaPanel('cms'));
+        $this->assertFalse($user->canAccessPredaPanel('kancelaria'));
+
+        $this->actingAs($user)
+            ->get('http://crm.preda-app.test/')
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get('http://cms.preda-app.test/')
+            ->assertRedirect(SentenceResource::getUrl(panel: 'cms'));
+
+        $this->actingAs($user)
+            ->get('http://ewidencja.preda-app.test/')
             ->assertForbidden();
     }
 
