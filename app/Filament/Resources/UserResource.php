@@ -11,7 +11,6 @@ use App\Support\PanelAccess;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -160,34 +159,6 @@ class UserResource extends Resource
                             ->formatStateUsing(fn (?User $record): array => $record ? PanelAccess::directPanelsFor($record) : [])
                             ->columnSpanFull(),
                     ]),
-
-                Section::make('Sprawy')
-                    ->collapsible()
-                    ->collapsed($schema->getOperation() === 'edit')
-                    ->columnSpanFull()
-                    ->schema([
-                        Repeater::make('matters')
-                            ->relationship('matterUser')
-                            ->label('')
-                            // ->required()
-                            ->addActionLabel('Dodaj sprawę')
-                            ->simple(
-
-                                Select::make('matter_id')
-                                    ->label('')
-                                    ->native(false)
-                                    ->required()
-                                    ->relationship('matter', 'label')
-                                    ->searchable()
-                            ),
-                    ]),
-
-                // Select::make('matters')
-                //     ->label('Sprawy')
-                //     ->relationship('matters', 'label')
-                //     ->multiple()
-                //     ->searchable()
-                //     ->columnSpan(6),
 
             ])->columns(6);
     }

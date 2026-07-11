@@ -70,6 +70,23 @@ class KancelariaUserPanelAccessTest extends TestCase
         $this->assertTrue($managedUser->canAccessPredaPanel('cms'));
     }
 
+    public function test_kancelaria_user_edit_form_does_not_show_legacy_client_matters_field(): void
+    {
+        Filament::setCurrentPanel('kancelaria');
+
+        $admin = $this->makeSuperAdmin();
+        $managedUser = User::factory()->create([
+            'phone' => '500 600 700',
+            'is_active' => true,
+            'is_employee' => true,
+        ]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditUser::class, ['record' => $managedUser->getRouteKey()])
+            ->assertFormFieldDoesNotExist('matters');
+    }
+
     public function test_regular_role_panel_permissions_do_not_grant_panel_entry(): void
     {
         PanelAccess::ensurePermissions(['crm']);
