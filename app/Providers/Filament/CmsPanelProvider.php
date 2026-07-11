@@ -33,12 +33,13 @@ class CmsPanelProvider extends PanelProvider
             ->id('cms')
             ->domain(config('preda.domains.cms'))
             ->path('')
+            ->sidebarFullyCollapsibleOnDesktop()
             ->homeUrl(fn (): string => SentenceResource::getUrl(panel: 'cms'))
             ->authenticatedRoutes(function (): void {
                 Route::get('/', fn () => redirect(SentenceResource::getUrl(panel: 'cms')))->name('home');
             })
             ->globalSearch(false)
-            ->brandLogo(fn () => view('components.preda.logo-admin'))
+            ->brandLogo(fn () => view('logo'))
             ->login()
             ->colors([
                 'primary' => Color::Indigo,
@@ -52,7 +53,7 @@ class CmsPanelProvider extends PanelProvider
                 PostsFreshnessWidget::class,
             ])
             ->renderHook(
-                PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
+                PanelsRenderHook::TOPBAR_LOGO_AFTER,
                 fn () => view('filament.components.panel-switcher'),
             )
             ->middleware([

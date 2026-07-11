@@ -156,7 +156,7 @@ class KancelariaPanelProvider extends PanelProvider
                     ->sort(10),
             ])
             ->renderHook(
-                PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
+                PanelsRenderHook::TOPBAR_LOGO_AFTER,
                 fn () => view('filament.components.panel-switcher'),
             )
             ->middleware([

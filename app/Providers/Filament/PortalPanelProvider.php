@@ -31,7 +31,7 @@ class PortalPanelProvider extends PanelProvider
             ->authGuard('portal')
             ->authPasswordBroker('portal_users')
             ->globalSearch(false)
-            ->brandLogo(fn () => view('components.preda.logo-admin'))
+            ->brandLogo(fn () => view('logo'))
             ->login()
             ->passwordReset()
             ->profile()

@@ -26,6 +26,11 @@ trix-editor h3 {
     cursor: pointer
 }
 
+.fi-logo svg {
+    height: 40px !important;
+    margin-top: -5px;
+}
+
 .fi-sidebar-header, .fi-sidebar-nav {
     background: #1F2937;
     @apply dark:bg-gray-900;

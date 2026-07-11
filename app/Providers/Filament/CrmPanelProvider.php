@@ -35,8 +35,9 @@ class CrmPanelProvider extends PanelProvider
             ->id('crm')
             ->domain(config('preda.domains.crm'))
             ->path('')
+            ->sidebarFullyCollapsibleOnDesktop()
             ->globalSearch(false)
-            ->brandLogo(fn () => view('components.preda.logo-admin'))
+            ->brandLogo(fn () => view('logo'))
             ->login()
             ->colors([
                 'primary' => Color::Amber,
@@ -71,7 +72,7 @@ class CrmPanelProvider extends PanelProvider
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.crm.resources.potencjalne.*')),
             ])
             ->renderHook(
-                PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
+                PanelsRenderHook::TOPBAR_LOGO_AFTER,
                 fn () => view('filament.components.panel-switcher'),
             )
             ->middleware([

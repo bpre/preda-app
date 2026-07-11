@@ -20,7 +20,7 @@ class PanelRegistry
                 'domain' => config('preda.domains.crm'),
             ],
             'cms' => [
-                'label' => 'CMS',
+                'label' => 'Strona www',
                 'domain' => config('preda.domains.cms'),
             ],
         ];
