@@ -26,6 +26,8 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
   leads/offers are covered by a real-data smoke test.
 - Letter notifications jobs, mail classes, templates, print views, file preview routes,
   and branch report export code are present.
+- Ewidencja create/edit/view forms for active operational resources are covered by
+  a real-data resource smoke test.
 - Ewidencja letter file preview/download, offer PDF download, and branch report export
   are covered by a real-data operations smoke test.
 - Legacy `/kancelaria/...` Ewidencja panel paths redirect to the new root paths on
