@@ -22,6 +22,8 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
   real-data smoke test.
 - Website leads and offer inquiries are intentionally registered in `crm`, not `cms`.
 - Ewidencja lead and potential matter resources are intentionally registered in `crm`.
+- CRM create/edit/view pages for Ewidencja leads/potential matters and website
+  leads/offers are covered by a real-data smoke test.
 - Letter notifications jobs, mail classes, templates, print views, file preview routes,
   and branch report export code are present.
 - Ewidencja letter file preview/download, offer PDF download, and branch report export

@@ -2,15 +2,11 @@
 
 namespace App\Filament\Website\Resources\Offers\Schemas;
 
-use Livewire\Component;
-use Filament\Actions\Action;
-use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\RichEditor;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Livewire\Component;
 
 class OffersForm
 {
@@ -18,19 +14,20 @@ class OffersForm
     {
 
         $lockIfSent = fn (Component $livewire): bool => filled($livewire->getRecord()?->offer_sent_at);
+        $isConfirmingOffer = fn (Component $livewire): bool => property_exists($livewire, 'saveIntent')
+            && $livewire->saveIntent === 'confirm';
 
         return $schema
             ->components([
 
                 Section::make('Zgłoszenie')->schema([
 
-
                     Select::make('sex')
                         ->label('Zwrot')
                         ->options([
                             'male' => 'Pan',
                             'female' => 'Pani',
-                            'both' => 'Państwo'
+                            'both' => 'Państwo',
                         ])
                         ->required(),
                     TextInput::make('name')
@@ -64,31 +61,31 @@ class OffersForm
                         TextInput::make('start_wstepna')
                             ->label('Opłata wstępna')
                             ->disabled($lockIfSent)
-                            ->required(fn (Component $livewire) => $livewire->saveIntent === 'confirm')
+                            ->required($isConfirmingOffer)
                             ->suffix('zł'),
 
                         TextInput::make('start_premia')
                             ->label('Premia')
                             ->disabled($lockIfSent)
-                            ->required(fn (Component $livewire) => $livewire->saveIntent === 'confirm')
+                            ->required($isConfirmingOffer)
                             ->suffix('zł'),
 
                         TextInput::make('start_procent_limit')
                             ->label('Limit procentowy premii')
                             ->disabled($lockIfSent)
-                            ->required(fn (Component $livewire) => $livewire->saveIntent === 'confirm')
+                            ->required($isConfirmingOffer)
                             ->suffix('%'),
 
                         TextInput::make('start_rozprawa')
                             ->label('Opłata za rozprawę')
                             ->disabled($lockIfSent)
-                            ->required(fn (Component $livewire) => $livewire->saveIntent === 'confirm')
+                            ->required($isConfirmingOffer)
                             ->suffix('zł'),
 
                         TextInput::make('start_razem_max')
                             ->label('Razem maksymalnie')
                             ->disabled($lockIfSent)
-                            ->required(fn (Component $livewire) => $livewire->saveIntent === 'confirm')
+                            ->required($isConfirmingOffer)
                             ->suffix('zł')
                             ->columnSpanFull(),
 
@@ -101,36 +98,35 @@ class OffersForm
                         TextInput::make('max_wstepna')
                             ->label('Opłata wstępna')
                             ->disabled($lockIfSent)
-                            ->required(fn (Component $livewire) => $livewire->saveIntent === 'confirm')
+                            ->required($isConfirmingOffer)
                             ->suffix('zł'),
 
                         TextInput::make('max_druga_instancja')
                             ->label('Druga instancja')
                             ->disabled($lockIfSent)
-                            ->required(fn (Component $livewire) => $livewire->saveIntent === 'confirm')
+                            ->required($isConfirmingOffer)
                             ->suffix('zł'),
 
                         TextInput::make('max_rozprawa')
                             ->label('Opłata za rozprawę')
                             ->disabled($lockIfSent)
-                            ->required(fn (Component $livewire) => $livewire->saveIntent === 'confirm')
+                            ->required($isConfirmingOffer)
                             ->suffix('zł'),
 
                         TextInput::make('max_rozprawy_limit')
                             ->label('Limit opłat za rozprawy')
                             ->disabled($lockIfSent)
-                            ->required(fn (Component $livewire) => $livewire->saveIntent === 'confirm')
+                            ->required($isConfirmingOffer)
                             ->suffix('zł'),
 
                         TextInput::make('max_razem_max')
                             ->label('Razem maksymalnie')
                             ->disabled($lockIfSent)
-                            ->required(fn (Component $livewire) => $livewire->saveIntent === 'confirm')
+                            ->required($isConfirmingOffer)
                             ->suffix('zł')
                             ->columnSpanFull(),
 
-                ])->columns(2)
-
+                    ])->columns(2),
 
             ]);
     }
