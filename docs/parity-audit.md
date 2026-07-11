@@ -74,3 +74,6 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 - Exercise remaining Livewire-only action paths manually or with browser automation
   once needed, especially less critical table/bulk actions not yet covered by
   smoke tests.
+- Tighten CMS `Pracownicy` as a public-profile view over `users`: keep identity
+  and access management in Kancelaria, keep CMS focused on website profile fields,
+  and decide whether the CMS list should be restricted to active employees only.

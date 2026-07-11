@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\PanelAccess;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -79,10 +80,15 @@ class User extends Authenticatable implements FilamentUser
             return true;
         }
 
-        return match ($panelId) {
-            'kancelaria', 'crm', 'cms' => $this->can("access_{$panelId}_panel"),
-            default => false,
-        };
+        if (! $this->is_employee) {
+            return false;
+        }
+
+        if (! in_array($panelId, PanelAccess::panelIds(), true)) {
+            return false;
+        }
+
+        return in_array($panelId, PanelAccess::directPanelsFor($this), true);
     }
 
     public function lawyer_matters()

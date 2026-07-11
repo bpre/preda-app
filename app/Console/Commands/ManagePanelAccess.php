@@ -3,10 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
-use App\Support\PanelRegistry;
+use App\Support\PanelAccess;
 use Illuminate\Console\Command;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\PermissionRegistrar;
 
 class ManagePanelAccess extends Command
 {
@@ -17,10 +15,10 @@ class ManagePanelAccess extends Command
 
     protected $description = 'Grants or revokes employee access to selected Filament panels.';
 
-    public function handle(PermissionRegistrar $permissionRegistrar): int
+    public function handle(): int
     {
         $panels = array_values(array_unique($this->argument('panels')));
-        $validPanels = array_keys(PanelRegistry::definitions());
+        $validPanels = PanelAccess::panelIds();
         $invalidPanels = array_diff($panels, $validPanels);
 
         if ($invalidPanels !== []) {
@@ -47,27 +45,13 @@ class ManagePanelAccess extends Command
             return self::FAILURE;
         }
 
-        $permissionNames = array_map(
-            fn (string $panel): string => "access_{$panel}_panel",
-            $panels,
-        );
-
-        foreach ($permissionNames as $permissionName) {
-            Permission::firstOrCreate([
-                'name' => $permissionName,
-                'guard_name' => 'web',
-            ]);
-        }
-
         if ($this->option('revoke')) {
-            $user->revokePermissionTo($permissionNames);
+            PanelAccess::revokeDirect($user, $panels);
             $action = 'Revoked';
         } else {
-            $user->givePermissionTo($permissionNames);
+            PanelAccess::grantDirect($user, $panels);
             $action = 'Granted';
         }
-
-        $permissionRegistrar->forgetCachedPermissions();
 
         $availablePanels = collect($validPanels)
             ->filter(fn (string $panel): bool => $user->fresh()?->canAccessPredaPanel($panel) === true)
