@@ -17,6 +17,7 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 - Website static pages, dynamic public records, and legacy redirects, including
   calendar redirects and blog aliases, are covered by a real-data public smoke
   test.
+- Public website pages were visually accepted on real data after storage sync.
 - Website CMS resources are present in the `cms` panel.
 - Website CMS list pages plus create/edit forms for posts, sentences, banks,
   credits, courts/judges, securities, FAQs, cities, offices, reviews, page
@@ -69,8 +70,6 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 
 ## Next audit targets
 
-- Compare public pages visually against the old `preda.info` pages on real data
-  with synced public storage.
 - Exercise remaining Livewire-only action paths manually or with browser automation
   once needed, especially less critical table/bulk actions not yet covered by
   smoke tests.
