@@ -21,7 +21,6 @@ class AuditLegacyFiles extends Command
             $this->auditStringColumn('offers.pdf_path', 'offers', 'pdf_path', 'local', $limit),
             $this->auditNeostampImages($limit),
             $this->auditJsonColumn('website_leads.files', 'website_leads', 'files', 'local', $limit),
-            $this->auditJsonColumn('website_offers.files', 'website_offers', 'files', 'local', $limit),
             $this->auditJsonColumn('website_sentences.files', 'website_sentences', 'files', 'public', $limit),
             $this->auditJsonColumn('website_securities.files', 'website_securities', 'files', 'public', $limit),
         ];

@@ -12,7 +12,6 @@ use App\Filament\Resources\LetterResource as KancelariaLetterResource;
 use App\Filament\Resources\TaskResource as KancelariaTaskResource;
 use App\Filament\Resources\UserResource as KancelariaUserResource;
 use App\Filament\Website\Resources\Leads\LeadResource as WebsiteLeadResource;
-use App\Filament\Website\Resources\Offers\OffersResource as WebsiteOfferResource;
 use App\Filament\Website\Resources\Posts\PostResource;
 use App\Filament\Website\Resources\Sentences\SentenceResource;
 use App\Filament\Website\Resources\Users\UserResource as WebsiteUserResource;
@@ -245,10 +244,6 @@ class SmokePagesTest extends TestCase
         $this->actingAs($user)
             ->get(WebsiteLeadResource::getUrl(panel: 'crm'))
             ->assertOk();
-
-        $this->actingAs($user)
-            ->get(WebsiteOfferResource::getUrl(panel: 'crm'))
-            ->assertOk();
     }
 
     public function test_crm_resources_are_not_registered_in_the_kancelaria_panel(): void
@@ -263,10 +258,10 @@ class SmokePagesTest extends TestCase
     public function test_acquisition_resources_are_registered_in_crm_not_cms(): void
     {
         $this->assertTrue(Route::has('filament.crm.resources.umowy-do-analizy.index'));
-        $this->assertTrue(Route::has('filament.crm.resources.zapytania-ofertowe.index'));
         $this->assertTrue(Route::has('filament.cms.resources.pracownicy.index'));
 
         $this->assertFalse(Route::has('filament.cms.resources.umowy-do-analizy.index'));
+        $this->assertFalse(Route::has('filament.crm.resources.zapytania-ofertowe.index'));
         $this->assertFalse(Route::has('filament.cms.resources.zapytania-ofertowe.index'));
     }
 

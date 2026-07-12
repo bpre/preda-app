@@ -158,7 +158,6 @@ class ImportLegacyData extends Command
             ['source_schema' => $sourceSchema, 'source_table' => 'google_business_profile_connections', 'target_table' => 'website_google_business_profile_connections'],
             ['source_schema' => $sourceSchema, 'source_table' => 'leads', 'target_table' => 'website_leads'],
             ['source_schema' => $sourceSchema, 'source_table' => 'lead_status_changes', 'target_table' => 'website_lead_status_changes'],
-            ['source_schema' => $sourceSchema, 'source_table' => 'offers', 'target_table' => 'website_offers'],
             ['source_schema' => $sourceSchema, 'source_table' => 'offices', 'target_table' => 'website_offices'],
             ['source_schema' => $sourceSchema, 'source_table' => 'posts', 'target_table' => 'website_posts'],
             ['source_schema' => $sourceSchema, 'source_table' => 'reviews', 'target_table' => 'website_reviews'],
@@ -169,7 +168,7 @@ class ImportLegacyData extends Command
     }
 
     /**
-     * @param array<int, array{source_schema: string, source_table: string, target_table: string}> $mappings
+     * @param  array<int, array{source_schema: string, source_table: string, target_table: string}>  $mappings
      * @return array<int, string>
      */
     private function validateMappings(string $targetSchema, array $mappings): array
@@ -245,7 +244,7 @@ class ImportLegacyData extends Command
     }
 
     /**
-     * @param array{source_schema: string, source_table: string, target_table: string} $mapping
+     * @param  array{source_schema: string, source_table: string, target_table: string}  $mapping
      */
     private function importTable(string $targetSchema, array $mapping): void
     {
@@ -271,7 +270,7 @@ class ImportLegacyData extends Command
     }
 
     /**
-     * @param array{source_schema: string, source_table: string, target_table: string} $mapping
+     * @param  array{source_schema: string, source_table: string, target_table: string}  $mapping
      */
     private function sourceColumnExpression(string $targetSchema, array $mapping, string $column): string
     {
@@ -489,7 +488,7 @@ class ImportLegacyData extends Command
     }
 
     /**
-     * @param array<int, array{target_table: string}> $mappings
+     * @param  array<int, array{target_table: string}>  $mappings
      * @return array<int, string>
      */
     private function targetTables(array $mappings): array
@@ -501,7 +500,7 @@ class ImportLegacyData extends Command
     }
 
     /**
-     * @param array<int, array{source_schema: string, source_table: string, target_table: string}> $mappings
+     * @param  array<int, array{source_schema: string, source_table: string, target_table: string}>  $mappings
      */
     private function displayDryRun(string $targetSchema, array $mappings, string $heading = 'Planned rows'): void
     {

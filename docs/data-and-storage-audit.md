@@ -54,7 +54,6 @@ All mapped `preda.info` content tables match the target counts exactly:
 | `google_business_profile_connections` | 1 | `website_google_business_profile_connections` | 1 |
 | `leads` | 330 | `website_leads` | 330 |
 | `lead_status_changes` | 330 | `website_lead_status_changes` | 330 |
-| `offers` | 16 | `website_offers` | 16 |
 | `offices` | 5 | `website_offices` | 5 |
 | `posts` | 45 | `website_posts` | 45 |
 | `reviews` | 115 | `website_reviews` | 115 |
@@ -68,6 +67,10 @@ delete-request list was extracted.
 
 `page_snapshots` was originally imported as `website_page_snapshots` with `485`
 rows, but this legacy SEO audit module was removed from the new application.
+
+`offers` was originally imported as `website_offers` with `16` rows, but this
+legacy offer-request module was removed from the new application. The public
+analysis form is the only current acquisition form.
 
 ### Users And Access
 
@@ -97,7 +100,6 @@ User and access tables are intentionally not a plain source-to-target copy:
 | `offers.pdf_path` | local | 86 | 86 | 86 | 0 | OK |
 | `neostamps.generated_file` | local | 2643 | 2643 | 2643 | 0 | OK |
 | `website_leads.files` | local | 311 | 1477 | 686 | 791 | Accepted archival gaps |
-| `website_offers.files` | local | 0 | 0 | 0 | 0 | OK |
 | `website_sentences.files` | public | 309 | 374 | 374 | 0 | OK |
 | `website_securities.files` | public | 35 | 35 | 35 | 0 | OK |
 

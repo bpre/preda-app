@@ -9,7 +9,6 @@ use App\Filament\Resources\ContactResource as KancelariaContactResource;
 use App\Filament\Resources\LetterResource as KancelariaLetterResource;
 use App\Filament\Resources\TaskResource as KancelariaTaskResource;
 use App\Filament\Website\Resources\Leads\LeadResource as WebsiteLeadResource;
-use App\Filament\Website\Resources\Offers\OffersResource as WebsiteOfferResource;
 use App\Filament\Website\Resources\Posts\PostResource;
 use App\Filament\Website\Resources\Sentences\SentenceResource;
 use App\Models\CHFMatter;
@@ -54,7 +53,6 @@ class RealDataPanelSmokeTest extends TestCase
         $this->get(CrmLeadResource::getUrl(panel: 'crm'))->assertOk();
         $this->get(CrmPotentialMatterResource::getUrl(panel: 'crm'))->assertOk();
         $this->get(WebsiteLeadResource::getUrl(panel: 'crm'))->assertOk();
-        $this->get(WebsiteOfferResource::getUrl(panel: 'crm'))->assertOk();
 
         $this->get(PostResource::getUrl(panel: 'cms'))->assertOk();
         $this->get(SentenceResource::getUrl(panel: 'cms'))->assertOk();

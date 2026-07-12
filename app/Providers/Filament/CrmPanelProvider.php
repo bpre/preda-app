@@ -5,7 +5,6 @@ namespace App\Providers\Filament;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource as CrmPotentialMatterResource;
 use App\Filament\Crm\Resources\LeadResource as CrmLeadResource;
 use App\Filament\Website\Resources\Leads\LeadResource as WebsiteLeadResource;
-use App\Filament\Website\Resources\Offers\OffersResource as WebsiteOfferResource;
 use App\Http\Middleware\IsActiveUser;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Enums\ThemeMode;
@@ -51,7 +50,6 @@ class CrmPanelProvider extends PanelProvider
                 CrmLeadResource::class,
                 CrmPotentialMatterResource::class,
                 WebsiteLeadResource::class,
-                WebsiteOfferResource::class,
             ])
             ->discoverPages(in: app_path('Filament/Crm/Pages'), for: 'App\\Filament\\Crm\\Pages')
             ->pages([

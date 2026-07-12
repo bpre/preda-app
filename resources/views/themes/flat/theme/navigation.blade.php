@@ -12,8 +12,8 @@
         Nasze wyroki
     </x-button.navigation>
 
-    <x-button.navigation href="{{ route('oferta') }}">
-        Oferta
+    <x-button.navigation href="{{ route('analiza') }}">
+        Analiza umowy
     </x-button.navigation>
 
     <x-button.navigation href="{{ route('kancelaria') }}">

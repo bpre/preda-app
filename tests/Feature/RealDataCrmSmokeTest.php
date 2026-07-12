@@ -5,12 +5,10 @@ namespace Tests\Feature;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource;
 use App\Filament\Crm\Resources\LeadResource as CrmLeadResource;
 use App\Filament\Website\Resources\Leads\LeadResource as WebsiteLeadResource;
-use App\Filament\Website\Resources\Offers\OffersResource as WebsiteOfferResource;
 use App\Models\CHFPotentialMatter;
 use App\Models\Lead as CrmLead;
 use App\Models\User;
 use App\Models\Website\Lead as WebsiteLead;
-use App\Models\Website\Offer as WebsiteOffer;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -47,7 +45,6 @@ class RealDataCrmSmokeTest extends TestCase
         $crmLead = CrmLead::query()->firstOrFail();
         $potentialMatter = CHFPotentialMatter::query()->firstOrFail();
         $websiteLead = WebsiteLead::query()->firstOrFail();
-        $websiteOffer = WebsiteOffer::query()->firstOrFail();
 
         $this->get(CrmLeadResource::getUrl('edit', ['record' => $crmLead], panel: 'crm'))
             ->assertOk();
@@ -59,9 +56,6 @@ class RealDataCrmSmokeTest extends TestCase
             ->assertOk();
 
         $this->get(WebsiteLeadResource::getUrl('edit', ['record' => $websiteLead], panel: 'crm'))
-            ->assertOk();
-
-        $this->get(WebsiteOfferResource::getUrl('edit', ['record' => $websiteOffer], panel: 'crm'))
             ->assertOk();
     }
 
@@ -81,7 +75,6 @@ class RealDataCrmSmokeTest extends TestCase
             CrmLeadResource::class,
             CHFPotentialMatterResource::class,
             WebsiteLeadResource::class,
-            WebsiteOfferResource::class,
         ];
     }
 

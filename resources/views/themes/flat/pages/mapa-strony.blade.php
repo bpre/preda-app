@@ -23,18 +23,7 @@
             <h3><a href="{{ route('homepage') }}">Strona główna</a></h3>
         </li>
         <li>
-            <h3><a href="{{ route('oferta') }}">Oferta</a></h3>
-            <ul>
-                <li>
-                    <a href="{{ route('kredyty-frankowe') }}">Kredyty frankowe</a>
-                </li>
-                <li>
-                    <a href="{{ route('kredyty-euro') }}">Kredyty euro</a>
-                </li>
-                <li>
-                    <a href="{{ route('oferta') }}">Wynagrodzenie kancelarii</a>
-                </li>
-            </ul>
+            <h3><a href="{{ route('analiza') }}">Analiza umowy</a></h3>
         </li>
         <li>
             <h3><a href="{{ route('kancelaria') }}">O kancelarii</a></h3>
@@ -54,9 +43,6 @@
         @endif
         <li>
             <h3><a href="{{ route('kontakt') }}">Kontakt</a></h3>
-        </li>
-        <li>
-            <h3><a href="{{ route('analiza') }}">Analiza umowy</a></h3>
         </li>
         <li>
             <h3><a href="{{ route('opinie') }}">Opinie naszych klientów</a></h3>

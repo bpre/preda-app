@@ -1,35 +1,33 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Website\Pages\FAQController;
+use App\Http\Controllers\Website\Admin\GoogleBusinessProfileCallbackController;
+use App\Http\Controllers\Website\Admin\GoogleBusinessProfileConnectController;
+use App\Http\Controllers\Website\Pages\AnalizaController;
 use App\Http\Controllers\Website\Pages\BankController;
 use App\Http\Controllers\Website\Pages\BlogController;
-use App\Http\Controllers\Website\Pages\PostController;
-use App\Http\Controllers\Website\Pages\WyrokController;
-use App\Http\Controllers\Website\Pages\OfertaController;
-use App\Http\Controllers\Website\Pages\OpinieController;
-use App\Http\Controllers\Website\Pages\RozwodController;
-use App\Http\Controllers\Website\Pages\WyrokiController;
-use App\Http\Controllers\Website\Pages\PodzialMajatkuController;
-use App\Http\Controllers\Website\Pages\AnalizaController;
 use App\Http\Controllers\Website\Pages\CityCHFController;
 use App\Http\Controllers\Website\Pages\CityEURController;
-use App\Http\Controllers\Website\Pages\KontaktController;
+use App\Http\Controllers\Website\Pages\FAQController;
+use App\Http\Controllers\Website\Pages\GdzieDzialamyController;
 use App\Http\Controllers\Website\Pages\HomepageController;
 use App\Http\Controllers\Website\Pages\KancelariaController;
-use App\Http\Controllers\Website\Pages\MapaStronyController;
-use App\Http\Controllers\Website\Pages\KredytyEuroController;
-use App\Http\Controllers\Website\Pages\OrzecznictwoController;
-use App\Http\Controllers\Website\Pages\GdzieDzialamyController;
-use App\Http\Controllers\Website\Pages\SplaconyKredytController;
-use App\Http\Controllers\Website\Pages\ZawieszenieRatController;
-use App\Http\Controllers\Website\Pages\KredytyFrankoweController;
-use App\Http\Controllers\Website\Admin\OfferPdfDownloadController;
-use App\Http\Controllers\Website\Admin\GoogleBusinessProfileConnectController;
-use App\Http\Controllers\Website\Admin\GoogleBusinessProfileCallbackController;
 use App\Http\Controllers\Website\Pages\KancelariaOfficeController;
-use App\Http\Controllers\Website\Pages\PolitykaPrywatnosciController;
 use App\Http\Controllers\Website\Pages\KlauzuleNiedozwoloneController;
+use App\Http\Controllers\Website\Pages\KontaktController;
+use App\Http\Controllers\Website\Pages\KredytyEuroController;
+use App\Http\Controllers\Website\Pages\KredytyFrankoweController;
+use App\Http\Controllers\Website\Pages\MapaStronyController;
+use App\Http\Controllers\Website\Pages\OpinieController;
+use App\Http\Controllers\Website\Pages\OrzecznictwoController;
+use App\Http\Controllers\Website\Pages\PodzialMajatkuController;
+use App\Http\Controllers\Website\Pages\PolitykaPrywatnosciController;
+use App\Http\Controllers\Website\Pages\PostController;
+use App\Http\Controllers\Website\Pages\RozwodController;
+use App\Http\Controllers\Website\Pages\SplaconyKredytController;
+use App\Http\Controllers\Website\Pages\WyrokController;
+use App\Http\Controllers\Website\Pages\WyrokiController;
+use App\Http\Controllers\Website\Pages\ZawieszenieRatController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomepageController::class)->name('homepage');
 Route::get('/wyroki', WyrokiController::class)->name('wyroki');
@@ -40,7 +38,6 @@ Route::get('/wyroki/{category}', WyrokiController::class)->name('wyroki-splacone
 Route::get('/wyroki/{category}/{slug}', WyrokiController::class)->where('category', 'sad|bank|sedzia')->name('wyroki-kategoria');
 Route::get('/wyrok/{slug}', WyrokController::class)->name('wyrok');
 Route::get('/zawieszenie-rat', ZawieszenieRatController::class)->name('zawieszenie-rat');
-// Route::get('/oferta', OfertaController::class)->name('oferta');
 Route::get('/kancelaria', KancelariaController::class)->name('kancelaria');
 Route::get('/kontakt', KontaktController::class)->name('kontakt');
 Route::get('/analiza', AnalizaController::class)->name('analiza');
@@ -70,7 +67,7 @@ $oddzialy = [
     // 'legnica',
     // 'leszno',
     // 'wroclaw'
-    ];
+];
 
 foreach ($oddzialy as $oddzial) {
     Route::get("/kancelaria/$oddzial", KancelariaOfficeController::class)
@@ -80,34 +77,27 @@ foreach ($oddzialy as $oddzial) {
 /* Przekierowania */
 
 Route::get('/konsultacje', function () {
-    return redirect("https://calendar.app.google/8wZMGof5vFbqMhND8", 301); // 301 = stałe przekierowanie
+    return redirect('https://calendar.app.google/8wZMGof5vFbqMhND8', 301); // 301 = stałe przekierowanie
 });
 Route::get('/konsultacje/wiktoria-rajzynger', function () {
-    return redirect("https://calendar.app.google/CduSKq9VRVB6yG9c7", 301); // 301 = stałe przekierowanie
+    return redirect('https://calendar.app.google/CduSKq9VRVB6yG9c7', 301); // 301 = stałe przekierowanie
 });
 
 Route::get('/klauzule-niedozwolone/{nazwa_banku}', function ($nazwa_banku) {
     return redirect("/bank/{$nazwa_banku}", 301); // 301 = stałe przekierowanie
 });
 
-
 $pages = [
     'uniewaznienie-umowy',
     'zwrot-splacony-kredyt',
-    'ugoda-z-bankiem'
+    'ugoda-z-bankiem',
 ];
 
-foreach($pages as $page) {
+foreach ($pages as $page) {
     Route::get($page, function () use ($page) {
         return redirect("/blog/{$page}", 301);
     });
 }
-
-/* Pobieranie oferty */
-
-Route::get('/offers/{offer}/pdf', OfferPdfDownloadController::class)
-    ->middleware(['auth']) // dopasuj do swojego dostępu / guardów
-    ->name('offers.download-pdf');
 
 Route::prefix('website/integrations/google-business-profile')->name('website.integrations.google-business-profile.')->group(function () {
     Route::get('/connect', GoogleBusinessProfileConnectController::class)->middleware(['auth'])->name('connect');
