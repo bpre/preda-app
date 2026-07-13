@@ -22,10 +22,11 @@ Goal: reach functional parity with the existing `ewidencja.preda.info` and
 - Website CMS list pages plus create/edit forms for posts, sentences, banks,
   credits, courts/judges, securities, FAQs, cities, offices, reviews, and team
   profiles are covered by a real-data smoke test.
-- Website analysis leads are intentionally registered in `crm`, not `cms`.
-- Ewidencja lead and potential matter resources are intentionally registered in `crm`.
-- CRM list pages plus create/edit/view pages for Ewidencja leads/potential matters
-  and website analysis leads are covered by a real-data smoke test.
+- Website analysis leads are intentionally registered in `crm` as `Leady`, not `cms`.
+- Ewidencja potential-client CHF records are intentionally registered in `crm` as
+  one `Potencjalne sprawy` resource.
+- CRM list pages plus create/edit/view pages for `Potencjalne sprawy` and website analysis
+  leads are covered by a real-data smoke test.
 - Letter notifications jobs, mail classes, templates, print views, file preview routes,
   and branch report export code are present.
 - Ewidencja list pages plus create/edit/view forms for active operational resources

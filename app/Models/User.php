@@ -27,6 +27,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'signature_title',
         'name_genitive',
+        'consultation_url',
         'email',
         'phone',
         'is_active',

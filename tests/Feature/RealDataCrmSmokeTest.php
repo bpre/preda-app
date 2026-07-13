@@ -3,10 +3,8 @@
 namespace Tests\Feature;
 
 use App\Filament\Crm\Resources\CHFPotentialMatterResource;
-use App\Filament\Crm\Resources\LeadResource as CrmLeadResource;
 use App\Filament\Website\Resources\Leads\LeadResource as WebsiteLeadResource;
 use App\Models\CHFPotentialMatter;
-use App\Models\Lead as CrmLead;
 use App\Models\User;
 use App\Models\Website\Lead as WebsiteLead;
 use Illuminate\Support\Facades\DB;
@@ -42,14 +40,10 @@ class RealDataCrmSmokeTest extends TestCase
     {
         $this->actingAs($this->superAdmin());
 
-        $crmLead = CrmLead::query()->firstOrFail();
-        $potentialMatter = CHFPotentialMatter::query()->firstOrFail();
+        $chance = CHFPotentialMatter::query()->firstOrFail();
         $websiteLead = WebsiteLead::query()->firstOrFail();
 
-        $this->get(CrmLeadResource::getUrl('edit', ['record' => $crmLead], panel: 'crm'))
-            ->assertOk();
-
-        $this->get(CHFPotentialMatterResource::getUrl('edit', ['record' => $potentialMatter], panel: 'crm'))
+        $this->get(CHFPotentialMatterResource::getUrl('edit', ['record' => $chance], panel: 'crm'))
             ->assertOk();
 
         $this->get(WebsiteLeadResource::getUrl('view', ['record' => $websiteLead], panel: 'crm'))
@@ -72,7 +66,6 @@ class RealDataCrmSmokeTest extends TestCase
     private function creatableCrmResources(): array
     {
         return [
-            CrmLeadResource::class,
             CHFPotentialMatterResource::class,
             WebsiteLeadResource::class,
         ];

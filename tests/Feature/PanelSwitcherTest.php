@@ -7,6 +7,7 @@ use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use RalphJSmit\Filament\Notifications\FilamentNotifications;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -60,6 +61,16 @@ class PanelSwitcherTest extends TestCase
         Livewire::test(PanelSwitcher::class)
             ->assertDontSee('Kancelaria')
             ->assertDontSee('Strona www');
+    }
+
+    public function test_employee_panels_have_database_notifications_enabled(): void
+    {
+        foreach (['kancelaria', 'crm', 'cms'] as $panelId) {
+            $panel = Filament::getPanel($panelId);
+
+            $this->assertTrue($panel->hasDatabaseNotifications(), "Panel [{$panelId}] should show database notifications.");
+            $this->assertTrue($panel->hasPlugin(FilamentNotifications::make()->getId()), "Panel [{$panelId}] should register the notifications plugin.");
+        }
     }
 
     private function makeSuperAdmin(): User

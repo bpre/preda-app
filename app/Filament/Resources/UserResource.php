@@ -95,6 +95,13 @@ class UserResource extends Resource
                                 ->maxLength(255)
                                 ->columnspan(3),
 
+                            TextInput::make('consultation_url')
+                                ->label('Link do konsultacji')
+                                ->url()
+                                ->maxLength(255)
+                                ->placeholder('https://calendar.app.google/...')
+                                ->columnspan(6),
+
                             TextInput::make('phone')
                                 ->label('Numer telefonu')
                                 ->required()

@@ -11,7 +11,7 @@ class StatusChangesRelationManager extends RelationManager
 {
     protected static string $relationship = 'statusChanges';
 
-    protected static ?string $title = 'Historia statusów';
+    protected static ?string $title = 'Historia kwalifikacji';
 
     public function table(Table $table): Table
     {

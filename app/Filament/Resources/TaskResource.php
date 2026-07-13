@@ -12,6 +12,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Schemas\Components\Fieldset;
 use App\Filament\TaskComments\Actions\TaskCommentsAction;
 use App\Filament\Resources\TaskResource\Pages\ListTasks;
+use App\Models\Matter;
 use App\Models\Task;
 use App\Models\User;
 use Filament\Tables;
@@ -296,7 +297,8 @@ class TaskResource extends Resource
                             TextEntry::make('label')
                             ->label('Zadanie'),
                             TextEntry::make('matter.label')
-                                ->label('Sprawa')
+                                ->label(fn (Task $record): string => static::matterTypeLabel($record->matter))
+                                ->url(fn (Task $record): ?string => static::matterUrl($record->matter))
                                 ->hidden(fn($record) => empty($record->matter)),
                             Group::make()->schema([
                                 TextEntry::make('priority')
@@ -364,6 +366,18 @@ class TaskResource extends Resource
 
 
             ]);
+    }
+
+    public static function matterTypeLabel(?Matter $matter): string
+    {
+        return $matter && ! $matter->is_matter
+            ? 'Potencjalna sprawa'
+            : 'Sprawa';
+    }
+
+    public static function matterUrl(?Matter $matter): ?string
+    {
+        return MatterResource::getEditUrlForMatter($matter);
     }
 
     public static function getRelations(): array

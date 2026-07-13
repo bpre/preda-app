@@ -16,6 +16,7 @@ use App\Filament\Resources\LawsuitResource;
 use App\Filament\Resources\LetterResource;
 use App\Filament\Resources\OtherMatterResource;
 use App\Filament\Resources\PaymentResource;
+use App\Filament\Search\KancelariaGlobalSearchProvider;
 use App\Http\Middleware\IsActiveUser;
 use App\Support\FilamentContentLayout;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -182,6 +183,7 @@ class KancelariaPanelProvider extends PanelProvider
                 FilamentNotifications::make(),
                 FilamentShieldPlugin::make(),
             ])
+            ->globalSearch(KancelariaGlobalSearchProvider::class)
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->globalSearchFieldSuffix(fn (): ?string => match (Platform::detect()) {
                 Platform::Mac => '⌘K',

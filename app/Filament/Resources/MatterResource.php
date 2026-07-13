@@ -13,6 +13,8 @@ use App\Models\Departament;
 use App\Models\Matter;
 use App\Models\TemplateStage;
 use App\Models\User;
+use App\Models\Website\Lead as WebsiteLead;
+use App\Support\Website\PostalCodeLookup;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -336,9 +338,9 @@ class MatterResource extends Resource
 //                                         Notification::make('')->title('Skopiowano adres do schowka.')->success()->send();
 //                                     })
 //                             )
-
                                 ->searchable(),
                         ]),
+                    static::sourceLeadFormSection((bool) $is_matter),
                 ]),
                 Group::make()->schema([
 
@@ -572,6 +574,123 @@ class MatterResource extends Resource
                 ]),
 
             ]);
+    }
+
+    protected static function sourceLeadFormSection(bool $isMatter): Section
+    {
+        return Section::make('Dane z formularza leada')
+            ->collapsible()
+            ->schema([
+                Placeholder::make('source_lead_name')
+                    ->label('Imię i nazwisko')
+                    ->content(fn (?Matter $record): string => self::sourceLeadText(self::sourceLead($record)?->name)),
+                Placeholder::make('source_lead_email')
+                    ->label('E-mail')
+                    ->content(fn (?Matter $record): string => self::sourceLeadText(self::sourceLead($record)?->email)),
+                Placeholder::make('source_lead_phone')
+                    ->label('Telefon')
+                    ->content(fn (?Matter $record): string => self::sourceLeadText(self::sourceLead($record)?->phone)),
+                Placeholder::make('source_lead_postal_location')
+                    ->label('Lokalizacja')
+                    ->content(fn (?Matter $record): string => self::sourceLeadPostalLocation(self::sourceLead($record))),
+                Placeholder::make('source_lead_bank')
+                    ->label('Bank')
+                    ->content(fn (?Matter $record): string => self::sourceLeadText(self::sourceLead($record)?->bank)),
+                Placeholder::make('source_lead_contract_year_range')
+                    ->label('Rok umowy')
+                    ->content(fn (?Matter $record): string => self::sourceLeadText(self::sourceLead($record)?->contract_year_range)),
+                Placeholder::make('source_lead_credit_currency')
+                    ->label('Waluta kredytu')
+                    ->content(fn (?Matter $record): string => self::sourceLeadText(self::sourceLead($record)?->credit_currency)),
+                Placeholder::make('source_lead_credit_amount_range')
+                    ->label('Kwota kredytu')
+                    ->content(fn (?Matter $record): string => self::sourceLeadText(self::sourceLead($record)?->credit_amount_range)),
+                Placeholder::make('source_lead_credit_status')
+                    ->label('Status kredytu')
+                    ->content(fn (?Matter $record): string => self::sourceLeadText(self::sourceLead($record)?->credit_status)),
+                Placeholder::make('source_lead_has_contract')
+                    ->label('Czy klient ma umowę?')
+                    ->content(fn (?Matter $record): string => self::sourceLeadHasContract(self::sourceLead($record))),
+                Placeholder::make('source_lead_additional_info')
+                    ->label('Dodatkowe informacje')
+                    ->content(fn (?Matter $record): HtmlString => self::sourceLeadAdditionalInfo(self::sourceLead($record)))
+                    ->columnSpanFull(),
+            ])
+            ->columns(2)
+            ->visibleOn('edit')
+            ->hidden(fn (?Matter $record): bool => $isMatter || ! $record?->sourceWebsiteLead);
+    }
+
+    private static function sourceLead(?Matter $matter): ?WebsiteLead
+    {
+        return $matter?->sourceWebsiteLead;
+    }
+
+    private static function sourceLeadText(?string $value): string
+    {
+        return filled($value) ? $value : '-';
+    }
+
+    private static function sourceLeadHasContract(?WebsiteLead $lead): string
+    {
+        if (! $lead) {
+            return '-';
+        }
+
+        return $lead->has_contract ? 'Tak' : 'Nie';
+    }
+
+    private static function sourceLeadPostalLocation(?WebsiteLead $lead): string
+    {
+        if (! $lead) {
+            return '-';
+        }
+
+        app(PostalCodeLookup::class)->fillMissingLeadRegion($lead);
+
+        if (blank($lead->postal_code)) {
+            return '-';
+        }
+
+        return collect([
+            $lead->postal_code,
+            filled($lead->postal_county) ? 'powiat '.$lead->postal_county : null,
+            filled($lead->postal_voivodeship) ? 'województwo '.$lead->postal_voivodeship : null,
+        ])->filter()->implode(', ');
+    }
+
+    private static function sourceLeadAdditionalInfo(?WebsiteLead $lead): HtmlString
+    {
+        $additionalInfo = self::sourceLeadAdditionalInfoText($lead);
+
+        if (blank($additionalInfo)) {
+            return new HtmlString('-');
+        }
+
+        return new HtmlString('<div class="prose prose-sm max-w-none">'.nl2br(e($additionalInfo)).'</div>');
+    }
+
+    private static function sourceLeadAdditionalInfoText(?WebsiteLead $lead): ?string
+    {
+        if (! $lead) {
+            return null;
+        }
+
+        if (filled($lead->additional_info)) {
+            return trim((string) $lead->additional_info);
+        }
+
+        if (blank($lead->message)) {
+            return null;
+        }
+
+        if (! preg_match('/(?:^|\R)Dodatkowe informacje:\s*(.+)\z/su', (string) $lead->message, $matches)) {
+            return null;
+        }
+
+        $additionalInfo = trim($matches[1]);
+
+        return $additionalInfo === '' ? null : $additionalInfo;
     }
 
     protected static function notificationRecipientsSection(): Section

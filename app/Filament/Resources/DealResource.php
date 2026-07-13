@@ -464,7 +464,7 @@ class DealResource extends Resource
             ?? ($livewire instanceof RelationManager ? $livewire->getOwnerRecord()?->getKey() : null);
     }
 
-    public static function table(Table $table): Table
+    public static function table(Table $table, bool $hideDraftsByDefault = true): Table
     {
         return $table
             ->columns([
@@ -482,7 +482,7 @@ class DealResource extends Resource
 
                 Filter::make('is_draft')
                     ->toggle()
-                    ->default(true)
+                    ->default($hideDraftsByDefault)
                     ->label('Ukryj szkice')
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->where('is_draft', 0);

@@ -7,15 +7,10 @@ use App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages\EditCHFPotential
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages\ListCHFPotentialMatters;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\CreditsRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\DealsRelationManager;
-use App\Filament\Resources\CHFMatterResource\RelationManagers\LawsuitsRelationManager;
-use App\Filament\Resources\CHFMatterResource\RelationManagers\LettersRelationManager;
-use App\Filament\Resources\CHFMatterResource\RelationManagers\OffersRelationManager;
-use App\Filament\Resources\CHFMatterResource\RelationManagers\PaymentsRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\StagesRelationManager;
 use App\Filament\Resources\MatterResource;
 use App\Filament\Resources\MatterResource\RelationManagers\ActivitiesRelationManager;
 use App\Models\CHFPotentialMatter;
-use Filament\Resources\RelationManagers\RelationGroup;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -31,9 +26,9 @@ class CHFPotentialMatterResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'label';
 
-    protected static ?string $navigationLabel = 'Potencjalne';
+    protected static ?string $navigationLabel = 'Potencjalne sprawy';
 
-    protected static ?string $modelLabel = 'Potencjalne';
+    protected static ?string $modelLabel = 'Potencjalna sprawa';
 
     protected static ?string $pluralModelLabel = 'Potencjalne sprawy';
 
@@ -65,13 +60,7 @@ class CHFPotentialMatterResource extends Resource
             StagesRelationManager::class,
             // ActivitiesRelationManager::class,
             CreditsRelationManager::class,
-            LettersRelationManager::class,
-            LawsuitsRelationManager::class,
-            RelationGroup::make('Zlecenia', [
-                OffersRelationManager::class,
-                DealsRelationManager::class,
-                PaymentsRelationManager::class,
-            ]),
+            DealsRelationManager::class,
         ];
     }
 

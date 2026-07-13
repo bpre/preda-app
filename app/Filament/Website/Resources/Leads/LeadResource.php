@@ -19,12 +19,15 @@ use App\Filament\Website\Resources\Leads\RelationManagers\StatusChangesRelationM
 class LeadResource extends Resource
 {
     protected static ?string $model = Lead::class;
-    protected static ?string $slug = 'umowy-do-analizy';
+    protected static ?string $slug = 'leady';
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationLabel = 'Umowy do analizy';
-    protected static ?string $pluralModelLabel = 'Umowy do analizy';
+    protected static ?string $navigationLabel = 'Leady';
+    protected static ?string $modelLabel = 'Lead';
+    protected static ?string $pluralModelLabel = 'Leady';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

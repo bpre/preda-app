@@ -2,21 +2,20 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Section;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\LetterNotificationTemplateResource\Pages\ListLetterNotificationTemplates;
 use App\Filament\Resources\LetterNotificationTemplateResource\Pages;
+use App\Filament\Resources\LetterNotificationTemplateResource\Pages\ListLetterNotificationTemplates;
 use App\Models\LetterNotificationTemplate;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -27,10 +26,12 @@ use Illuminate\Support\HtmlString;
 class LetterNotificationTemplateResource extends Resource
 {
     protected static ?string $model = LetterNotificationTemplate::class;
+
     protected static ?string $slug = 'szablony-powiadomien';
+
     protected static bool $hasTitleCaseModelLabel = false;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document-text';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
     protected static ?string $navigationLabel = 'Szablony powiadomień';
 
@@ -92,13 +93,13 @@ class LetterNotificationTemplateResource extends Resource
                 ->collapsed()
                 ->schema([
                     Placeholder::make('available_placeholders')
-                        ->label('')
+                        ->label('Lista placeholderów')
                         ->content(function () {
                             $items = collect(LetterNotificationTemplate::AVAILABLE_PLACEHOLDERS)
-                                ->map(fn ($description, $placeholder) => '<li><code>' . e($placeholder) . '</code> - ' . e($description) . '</li>')
+                                ->map(fn ($description, $placeholder) => '<li><code>'.e($placeholder).'</code> - '.e($description).'</li>')
                                 ->implode('');
 
-                            return new HtmlString('<ul class="pl-5 space-y-1 text-sm list-disc">' . $items . '</ul>');
+                            return new HtmlString('<ul class="pl-5 space-y-1 text-sm list-disc">'.$items.'</ul>');
                         }),
                 ])
                 ->columnSpanFull(),

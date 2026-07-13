@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Website\Lead as WebsiteLead;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,8 @@ class Matter extends Model
         'is_matter' => 'boolean',
         'is_archived' => 'boolean',
         'is_chf' => 'boolean',
+        'start' => 'date',
+        'end' => 'date',
     ];
     // protected $keyType = 'string';
     // public $incrementing = false;
@@ -83,6 +86,11 @@ class Matter extends Model
         return $this->hasMany(Credit::class, 'matter_id');
     }
 
+    public function generatedDocuments(): HasMany
+    {
+        return $this->hasMany(MatterGeneratedDocument::class, 'matter_id');
+    }
+
     public function deals()
     {
         return $this->hasMany(Deal::class, 'matter_id');
@@ -142,14 +150,14 @@ class Matter extends Model
 
     public function contacts(): BelongsToMany
     {
-        return $this->belongsToMany(Contact::class, 'contact_matter')
+        return $this->belongsToMany(Contact::class, 'contact_matter', 'matter_id', 'contact_id')
             ->withPivot('receives_notifications')
             ->withTimestamps();
     }
 
     public function notificationRecipients(): BelongsToMany
     {
-        return $this->belongsToMany(Contact::class, 'contact_matter')
+        return $this->belongsToMany(Contact::class, 'contact_matter', 'matter_id', 'contact_id')
             ->withPivot('receives_notifications')
             ->withTimestamps()
             ->wherePivot('receives_notifications', true)
@@ -169,6 +177,11 @@ class Matter extends Model
             ->whereHas('contact', fn ($query) => $query
                 ->whereNotNull('email')
                 ->where('email', '!=', ''));
+    }
+
+    public function sourceWebsiteLead()
+    {
+        return $this->hasOne(WebsiteLead::class, 'potential_matter_id', 'id');
     }
 
     // STAŁE

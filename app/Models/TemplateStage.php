@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TemplateStage extends Model
 {
@@ -21,4 +22,9 @@ class TemplateStage extends Model
     ];
 
     public $timestamps = false;
+
+    public function stages(): HasMany
+    {
+        return $this->hasMany(Stage::class, 'stage_id');
+    }
 }

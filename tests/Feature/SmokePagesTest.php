@@ -3,10 +3,17 @@
 namespace Tests\Feature;
 
 use App\Filament\Crm\Resources\CHFPotentialMatterResource as CrmPotentialMatterResource;
-use App\Filament\Crm\Resources\LeadResource as CrmLeadResource;
+use App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages\EditCHFPotentialMatter;
+use App\Filament\Crm\Resources\CrmMailTemplateResource;
 use App\Filament\Portal\Resources\CHFMatterResource as PortalCHFMatterResource;
 use App\Filament\Portal\Resources\LetterResource as PortalLetterResource;
 use App\Filament\Resources\CHFMatterResource as KancelariaCHFMatterResource;
+use App\Filament\Resources\CHFMatterResource\Pages\EditCHFMatter;
+use App\Filament\Resources\CHFMatterResource\RelationManagers\DealsRelationManager;
+use App\Filament\Resources\CHFMatterResource\RelationManagers\LawsuitsRelationManager;
+use App\Filament\Resources\CHFMatterResource\RelationManagers\LettersRelationManager;
+use App\Filament\Resources\CHFMatterResource\RelationManagers\OffersRelationManager;
+use App\Filament\Resources\CHFMatterResource\RelationManagers\PaymentsRelationManager;
 use App\Filament\Resources\ContactResource as KancelariaContactResource;
 use App\Filament\Resources\LetterResource as KancelariaLetterResource;
 use App\Filament\Resources\TaskResource as KancelariaTaskResource;
@@ -16,16 +23,20 @@ use App\Filament\Website\Resources\Posts\PostResource;
 use App\Filament\Website\Resources\Sentences\SentenceResource;
 use App\Filament\Website\Resources\Users\UserResource as WebsiteUserResource;
 use App\Models\CHFMatter;
+use App\Models\CHFPotentialMatter;
 use App\Models\Contact;
 use App\Models\ContactMatter;
+use App\Models\Deal;
 use App\Models\Letter;
 use App\Models\PortalUser;
 use App\Models\User;
 use App\Models\Website\Lead;
 use App\Models\Website\Post;
+use Filament\Resources\RelationManagers\RelationGroup;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -164,7 +175,7 @@ class SmokePagesTest extends TestCase
 
         $this->actingAs($user)
             ->get('http://crm.preda-app.test/')
-            ->assertOk();
+            ->assertRedirect(WebsiteLeadResource::getUrl(panel: 'crm'));
 
         $this->actingAs($user)
             ->get('http://cms.preda-app.test/')
@@ -232,42 +243,235 @@ class SmokePagesTest extends TestCase
     public function test_an_active_super_admin_can_open_key_crm_resource_lists(): void
     {
         $user = $this->makeSuperAdmin();
-
-        $this->actingAs($user)
-            ->get(CrmLeadResource::getUrl(panel: 'crm'))
-            ->assertOk();
+        Lead::create([
+            'name' => 'Jan Kodowy',
+            'email' => 'kodowy@example.test',
+            'phone' => '500 600 700',
+            'postal_code' => '67-200',
+            'message' => 'Zgłoszenie testowe.',
+        ]);
 
         $this->actingAs($user)
             ->get(CrmPotentialMatterResource::getUrl(panel: 'crm'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('<span data-filament-table-width-page hidden></span>', false);
 
         $this->actingAs($user)
             ->get(WebsiteLeadResource::getUrl(panel: 'crm'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('<span data-filament-table-width-page hidden></span>', false)
+            ->assertSee('67-200 (dolnośląskie, głogowski)');
+
+        $this->actingAs($user)
+            ->get(CrmMailTemplateResource::getUrl(panel: 'crm'))
+            ->assertOk()
+            ->assertSee('Szablony maili');
+    }
+
+    public function test_crm_navigation_shows_leads_before_potential_matters(): void
+    {
+        $user = $this->makeSuperAdmin();
+
+        $this->actingAs($user)
+            ->get(WebsiteLeadResource::getUrl(panel: 'crm'))
+            ->assertOk()
+            ->assertSeeInOrder(['Leady', 'Potencjalne sprawy']);
+    }
+
+    public function test_crm_has_no_dashboard_and_redirects_home_to_leads_when_available(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+            'is_employee' => true,
+        ]);
+
+        foreach (['access_crm_panel', 'ViewAny:Lead'] as $permission) {
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
+        }
+
+        $user->givePermissionTo(['access_crm_panel', 'ViewAny:Lead']);
+
+        $this->assertFalse(Route::has('filament.crm.pages.dashboard'));
+
+        $this->actingAs($user)
+            ->get('http://crm.preda-app.test/')
+            ->assertRedirect(WebsiteLeadResource::getUrl(panel: 'crm'));
+    }
+
+    public function test_crm_home_redirects_to_potential_matters_when_user_cannot_view_leads(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+            'is_employee' => true,
+        ]);
+
+        foreach (['access_crm_panel', 'view_any_c::h::f::potential::matter'] as $permission) {
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
+        }
+
+        $user->givePermissionTo(['access_crm_panel', 'view_any_c::h::f::potential::matter']);
+
+        $this->actingAs($user)
+            ->get('http://crm.preda-app.test/')
+            ->assertRedirect(CrmPotentialMatterResource::getUrl(panel: 'crm'));
+    }
+
+    public function test_potential_matter_does_not_show_accepted_matter_relation_managers(): void
+    {
+        $potentialMatterRelations = CrmPotentialMatterResource::getRelations();
+
+        $this->assertNotContains(LettersRelationManager::class, $potentialMatterRelations);
+        $this->assertNotContains(LawsuitsRelationManager::class, $potentialMatterRelations);
+        $this->assertNotContains(PaymentsRelationManager::class, $potentialMatterRelations);
+        $this->assertNotContains(OffersRelationManager::class, $potentialMatterRelations);
+        $this->assertContains(DealsRelationManager::class, $potentialMatterRelations);
+        $this->assertFalse(collect($potentialMatterRelations)->contains(
+            fn (mixed $relation): bool => $relation instanceof RelationGroup,
+        ));
+
+        $acceptedMatterRelations = KancelariaCHFMatterResource::getRelations();
+
+        $this->assertContains(LettersRelationManager::class, $acceptedMatterRelations);
+        $this->assertContains(LawsuitsRelationManager::class, $acceptedMatterRelations);
+    }
+
+    public function test_potential_matter_deals_do_not_hide_drafts_by_default(): void
+    {
+        $user = $this->makeSuperAdmin();
+        $potentialMatter = CHFPotentialMatter::create([
+            'label' => 'Potencjalna sprawa ze zleceniami',
+            'lawyer_id' => $user->getKey(),
+            'category' => 'CHF',
+            'is_matter' => false,
+        ]);
+        $acceptedMatter = CHFMatter::create([
+            'label' => 'Przyjęta sprawa ze zleceniami',
+            'lawyer_id' => $user->getKey(),
+            'category' => 'CHF',
+            'is_matter' => true,
+        ]);
+        $potentialDraftDeal = $this->createDeal($potentialMatter->getKey(), 'Szkic potencjalnej sprawy', true);
+        $potentialFinalDeal = $this->createDeal($potentialMatter->getKey(), 'Zlecenie potencjalnej sprawy', false);
+        $acceptedDraftDeal = $this->createDeal($acceptedMatter->getKey(), 'Szkic przyjętej sprawy', true);
+        $acceptedFinalDeal = $this->createDeal($acceptedMatter->getKey(), 'Zlecenie przyjętej sprawy', false);
+
+        $this->actingAs($user);
+
+        Livewire::test(DealsRelationManager::class, [
+            'ownerRecord' => $potentialMatter,
+            'pageClass' => EditCHFPotentialMatter::class,
+        ])
+            ->loadTable()
+            ->assertCanSeeTableRecords([$potentialDraftDeal, $potentialFinalDeal]);
+
+        Livewire::test(DealsRelationManager::class, [
+            'ownerRecord' => $acceptedMatter,
+            'pageClass' => EditCHFMatter::class,
+        ])
+            ->loadTable()
+            ->assertCanSeeTableRecords([$acceptedFinalDeal])
+            ->assertCanNotSeeTableRecords([$acceptedDraftDeal]);
+    }
+
+    public function test_potential_matter_edit_shows_source_lead_form_data(): void
+    {
+        $user = $this->makeSuperAdmin();
+        $potentialMatter = CHFPotentialMatter::create([
+            'label' => 'Kowalski Jan / Bank Testowy',
+            'lawyer_id' => $user->getKey(),
+            'category' => 'CHF',
+            'is_matter' => false,
+        ]);
+
+        Lead::create([
+            'name' => 'Jan Kowalski',
+            'email' => 'jan@example.test',
+            'phone' => '500 600 700',
+            'postal_code' => '67-200',
+            'bank' => 'Bank Testowy',
+            'contract_year_range' => '2007-2009',
+            'credit_currency' => 'CHF',
+            'credit_amount_range' => 'od 85.000 do 300.000 PLN',
+            'credit_status' => 'nadal spłacam',
+            'has_contract' => true,
+            'additional_info' => 'Klient prosi o kontakt po godzinie 16.',
+            'message' => 'Zgłoszenie testowe.',
+            'potential_matter_id' => $potentialMatter->getKey(),
+            'potential_matter_created_at' => now(),
+            'potential_matter_created_by' => $user->getKey(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(CrmPotentialMatterResource::getUrl('edit', ['record' => $potentialMatter], panel: 'crm'))
+            ->assertOk()
+            ->assertSee('Dane z formularza leada')
+            ->assertSee('Jan Kowalski')
+            ->assertSee('jan@example.test')
+            ->assertSee('500 600 700')
+            ->assertSee('67-200, powiat głogowski, województwo dolnośląskie')
+            ->assertSee('Bank Testowy')
+            ->assertSee('Klient prosi o kontakt po godzinie 16.');
     }
 
     public function test_crm_resources_are_not_registered_in_the_kancelaria_panel(): void
     {
-        $this->assertTrue(Route::has('filament.crm.resources.szanse.index'));
         $this->assertTrue(Route::has('filament.crm.resources.potencjalne.index'));
+        $this->assertFalse(Route::has('filament.crm.resources.szanse.index'));
 
         $this->assertFalse(Route::has('filament.kancelaria.resources.szanse.index'));
         $this->assertFalse(Route::has('filament.kancelaria.resources.potencjalne.index'));
     }
 
+    public function test_legacy_crm_chance_paths_redirect_to_potential_matters(): void
+    {
+        $this->get('http://crm.preda-app.test/szanse/abc/edit?activeRelationManager=0')
+            ->assertRedirect('/potencjalne/abc/edit?activeRelationManager=0');
+    }
+
     public function test_acquisition_resources_are_registered_in_crm_not_cms(): void
     {
-        $this->assertTrue(Route::has('filament.crm.resources.umowy-do-analizy.index'));
+        $this->assertTrue(Route::has('filament.crm.resources.leady.index'));
         $this->assertTrue(Route::has('filament.cms.resources.pracownicy.index'));
 
+        $this->assertFalse(Route::has('filament.crm.resources.umowy-do-analizy.index'));
+        $this->assertFalse(Route::has('filament.cms.resources.leady.index'));
         $this->assertFalse(Route::has('filament.cms.resources.umowy-do-analizy.index'));
         $this->assertFalse(Route::has('filament.crm.resources.zapytania-ofertowe.index'));
         $this->assertFalse(Route::has('filament.cms.resources.zapytania-ofertowe.index'));
     }
 
+    public function test_legacy_analysis_lead_paths_redirect_to_leady(): void
+    {
+        $this->get('http://crm.preda-app.test/umowy-do-analizy/123?table=wide')
+            ->assertRedirect('/leady/123?table=wide');
+    }
+
     public function test_employee_user_management_is_not_registered_in_the_crm_panel(): void
     {
         $this->assertFalse(Route::has('filament.crm.resources.pracownicy.index'));
+    }
+
+    public function test_shield_role_management_is_only_registered_in_kancelaria_panel(): void
+    {
+        $user = $this->makeSuperAdmin();
+
+        $this->assertTrue(Route::has('filament.kancelaria.resources.shield.roles.index'));
+        $this->assertFalse(Route::has('filament.crm.resources.shield.roles.index'));
+        $this->assertFalse(Route::has('filament.cms.resources.shield.roles.index'));
+
+        $this->actingAs($user)
+            ->get('http://crm.preda-app.test/shield/roles')
+            ->assertNotFound();
+
+        $this->actingAs($user)
+            ->get('http://cms.preda-app.test/shield/roles')
+            ->assertNotFound();
     }
 
     public function test_cms_team_profiles_do_not_allow_user_lifecycle_actions(): void
@@ -304,7 +508,7 @@ class SmokePagesTest extends TestCase
 
         $this->actingAs($user)
             ->get('http://crm.preda-app.test/')
-            ->assertOk();
+            ->assertRedirect(CrmPotentialMatterResource::getUrl(panel: 'crm'));
 
         $this->actingAs($user)
             ->get('http://cms.preda-app.test/')
@@ -336,7 +540,7 @@ class SmokePagesTest extends TestCase
 
         $this->actingAs($user)
             ->get('http://crm.preda-app.test/')
-            ->assertOk();
+            ->assertRedirect(CrmPotentialMatterResource::getUrl(panel: 'crm'));
 
         $this->actingAs($user)
             ->get('http://cms.preda-app.test/')
@@ -363,13 +567,43 @@ class SmokePagesTest extends TestCase
             'name' => 'Jan Kowalski',
             'email' => 'jan@example.test',
             'phone' => '500 600 700',
+            'postal_code' => '67-200',
+            'bank' => 'Bank Testowy',
+            'contract_year_range' => '2007-2009',
+            'credit_currency' => 'CHF',
+            'credit_amount_range' => 'od 85.000 do 300.000 PLN',
+            'credit_status' => 'nadal spłacam',
+            'has_contract' => true,
+            'additional_info' => 'Klient prosi o kontakt po godzinie 16.',
             'message' => 'Zgłoszenie testowe.',
         ]);
+        $matter = CHFPotentialMatter::create([
+            'label' => 'Kowalski Jan / Bank Testowy',
+            'lawyer_id' => $user->getKey(),
+            'userinfo' => [],
+            'is_matter' => false,
+        ]);
+        $lead->forceFill([
+            'potential_matter_id' => $matter->getKey(),
+            'potential_matter_created_at' => now(),
+            'potential_matter_created_by' => $user->getKey(),
+        ])->save();
+        $lead->qualify(userId: $user->getKey(), note: 'Utworzono potencjalną sprawę.');
 
         $this->actingAs($user)
             ->get(WebsiteLeadResource::getUrl('view', ['record' => $lead], panel: 'crm'))
             ->assertOk()
-            ->assertSee('Nowy lead');
+            ->assertDontSee('<span data-filament-table-width-page hidden></span>', false)
+            ->assertSeeInOrder([
+                'Źródło leada',
+                'Dane z formularza',
+                'Kwalifikacja',
+                'Dalszy przebieg',
+            ])
+            ->assertSee('Zakwalifikowany')
+            ->assertSee('Klient prosi o kontakt po godzinie 16.')
+            ->assertSee('Lokalizacja')
+            ->assertSee('67-200, powiat głogowski, województwo dolnośląskie');
     }
 
     public function test_the_sentence_content_generator_module_is_disabled(): void
@@ -517,5 +751,19 @@ class SmokePagesTest extends TestCase
             'is_published' => true,
             'category' => 'orzecznictwo',
         ]);
+    }
+
+    private function createDeal(string $matterId, string $label, bool $isDraft): Deal
+    {
+        $deal = new Deal;
+        $deal->forceFill([
+            'label' => $label,
+            'date' => now()->toDateString(),
+            'matter_id' => $matterId,
+            'is_draft' => $isDraft,
+        ]);
+        $deal->save();
+
+        return $deal;
     }
 }

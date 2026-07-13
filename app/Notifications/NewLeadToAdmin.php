@@ -42,7 +42,7 @@ class NewLeadToAdmin extends Notification
             ->line('Źródło leada: ' . $this->lead->attribution_summary)
             ->line('Szczegóły źródła: ' . ($this->lead->attribution_description ?: 'brak dodatkowych danych'))
             ->line('Dokumenty załączone po wysłaniu zgłoszenia: ' . ($this->lead->documents_uploaded_at ? 'tak' : 'nie'))
-            ->line('Wiadomość systemowa: ' . $this->lead->message);
+            ->line('Dodatkowe informacje: ' . ($this->lead->additional_info ?: 'brak'));
 
    }
 

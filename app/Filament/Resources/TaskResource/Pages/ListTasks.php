@@ -4,10 +4,6 @@ namespace App\Filament\Resources\TaskResource\Pages;
 
 use Filament\Actions\CreateAction;
 use App\Models\Task;
-use App\Models\User;
-use Filament\Actions;
-use Filament\Actions\Action;
-use App\Notifications\TaskCreated;
 use App\Filament\Resources\TaskResource;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
@@ -43,16 +39,7 @@ class ListTasks extends ListRecords
 
                     Notification::make()
                             ->success()->title('Dodano nowe zadanie.')
-                )
-                ->after(function($record) {
-
-                    if($record->assigned_to !== $record->created_by)
-                    {
-                        $recipient = User::find($record->assigned_to);
-                        $recipient->notify(new TaskCreated($record));
-                    }
-
-                }),
+                ),
 
         ];
     }

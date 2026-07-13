@@ -13,8 +13,10 @@ use App\Filament\Resources\CreditResource\Pages\CreateCredit;
 use App\Filament\Resources\CreditResource\Pages\EditCredit;
 use App\Models\Credit;
 use App\Models\Contact;
+use App\Services\MatterGeneratedDocumentService;
 use Filament\Forms\Get;
 use App\Forms\creditForm;
+use Filament\Notifications\Notification;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
@@ -60,8 +62,11 @@ class CreditResource extends Resource
         return $schema->components(creditForm::form());
     }
 
-    public static function table(Table $table): Table
+    public static function table(Table $table, ?CreditsRelationManager $relationManager = null): Table
     {
+        $shouldSaveGeneratedDocuments = $relationManager
+            && ! (bool) $relationManager->getOwnerRecord()->is_matter;
+
         return $table
             ->columns([
                 TextColumn::make('former_banks.label')
@@ -153,7 +158,22 @@ class CreditResource extends Resource
 
                             ];
                         })
-                        ->action(fn ($record, $data) => PrintController::wniosekZaswiadczenie($record, $data)),
+                        ->action(function (Credit $record, array $data) use ($relationManager, $shouldSaveGeneratedDocuments) {
+                            if (! $shouldSaveGeneratedDocuments) {
+                                return PrintController::wniosekZaswiadczenie($record, $data);
+                            }
+
+                            $document = app(MatterGeneratedDocumentService::class)
+                                ->generateCertificateRequest($record, $relationManager->getOwnerRecord(), $data);
+
+                            Notification::make()
+                                ->success()
+                                ->title('Wygenerowano dokument')
+                                ->body($document->downloadFilename())
+                                ->send();
+
+                            $relationManager->dispatch('$refresh');
+                        }),
                         // ->action(function (array $data, $record) {
                         //     redirect('/print/wniosek/' . $record?->id . '?regulamin='.$data['regulamin'].'&data='.$data['data']);
                         // }),
@@ -162,7 +182,22 @@ class CreditResource extends Resource
                         ->icon('heroicon-m-folder-arrow-down')
                         ->color('gray')
                         ->hidden(fn ($record) => !$record?->id)
-                        ->action(fn ($record) => PrintController::analizaUmowy($record)),
+                        ->action(function (Credit $record) use ($relationManager, $shouldSaveGeneratedDocuments) {
+                            if (! $shouldSaveGeneratedDocuments) {
+                                return PrintController::analizaUmowy($record);
+                            }
+
+                            $document = app(MatterGeneratedDocumentService::class)
+                                ->generateContractAnalysis($record, $relationManager->getOwnerRecord());
+
+                            Notification::make()
+                                ->success()
+                                ->title('Wygenerowano dokument')
+                                ->body($document->downloadFilename())
+                                ->send();
+
+                            $relationManager->dispatch('$refresh');
+                        }),
 
                     ])->tooltip('Generuj dokument'),
 

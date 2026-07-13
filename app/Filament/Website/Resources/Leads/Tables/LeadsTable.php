@@ -13,7 +13,10 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use App\Filament\Website\Resources\Leads\LeadResource;
+use App\Filament\Resources\MatterResource;
+use App\Support\Website\PostalCodeLookup;
 use App\Support\Website\LeadStatuses;
+use Illuminate\Support\HtmlString;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LeadsTable
@@ -24,42 +27,26 @@ class LeadsTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Imię i nazwisko')
-                    ->searchable()
+                    ->label('Kontakt')
                     ->weight('bold')
                     ->size(TextSize::Medium)
-                    ->searchable(),
-                TextColumn::make('email')
-                    ->label('Email')
-                    ->size(TextSize::ExtraSmall)
-                    ->copyable()
-                    ->copyMessage('Skopiowano adres e-mail')
-                    ->copyMessageDuration(1500)
-                    ->searchable(),
-                TextColumn::make('postal_code')
-                    ->label('Kod pocztowy')
-                    ->size(TextSize::ExtraSmall)
-                    ->copyable()
-                    ->copyMessage('Skopiowano kod pocztowy')
-                    ->copyMessageDuration(1500)
-                    ->searchable(),
-                TextColumn::make('phone')
-                    ->label('Telefon')
-                    ->size(TextSize::ExtraSmall)
-                    ->copyable()
-                    ->copyMessage('Skopiowano numer telefonu')
-                    ->copyMessageDuration(1500)
-                    ->searchable(),
+                    ->description(fn (Lead $record): ?HtmlString => self::contactDescription($record))
+                    ->searchable(['name', 'email', 'phone', 'postal_code', 'postal_voivodeship', 'postal_county']),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->color(fn (?string $state): string => LeadStatuses::color($state))
+                    ->description(fn (Lead $record): ?string => self::leadStatusDescription($record))
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('files')
-                    ->label('Pliki')
-                    ->badge()
-                    ->getStateUsing(fn ($record) => $record->files ? count($record->files) : 'Brak plików'),
+                TextColumn::make('potentialMatter.label')
+                    ->label('Potencjalna sprawa')
+                    ->placeholder('Brak')
+                    ->description(fn (Lead $record): ?string => self::potentialMatterDescription($record))
+                    ->url(fn (Lead $record): ?string => $record->potentialMatter
+                        ? MatterResource::getEditUrlForMatter($record->potentialMatter)
+                        : null)
+                    ->openUrlInNewTab(false),
                 TextColumn::make('attribution_channel')
                     ->label('Źródło')
                     ->badge()
@@ -82,12 +69,16 @@ class LeadsTable
                     ]),
                 TextColumn::make('created_at')
                     ->label('Data zgłoszenia')
+                    ->dateTime('Y-m-d H:i')
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('status')
                     ->label('Status')
                     ->options(LeadStatuses::options()),
+                SelectFilter::make('rejection_reason')
+                    ->label('Powód odrzucenia')
+                    ->options(LeadStatuses::rejectionReasons()),
                 SelectFilter::make('attribution_channel')
                     ->label('Źródło')
                     ->options([
@@ -113,20 +104,76 @@ class LeadsTable
             )
             ->recordActions([
                 Action::make('downloadFiles')
-                    ->label('Pobierz pliki')
+                    ->label(fn (Lead $record): string => 'Pliki ('.count($record->files ?? []).')')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('success')
                     ->visible(fn ($record) => !empty($record->files))
                     ->action(function ($record) {
                         return self::downloadAllFiles($record);
                     }),
-                EditAction::make(),
+                EditAction::make()->iconButton(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    private static function contactDescription(Lead $lead): ?HtmlString
+    {
+        $lines = [];
+
+        $contact = collect([
+            $lead->email,
+            $lead->phone,
+        ])->filter()->implode(' / ');
+
+        if ($contact !== '') {
+            $lines[] = e($contact);
+        }
+
+        $postalLocation = app(PostalCodeLookup::class)->postalLocationLabel($lead);
+
+        if ($postalLocation) {
+            $lines[] = e($postalLocation);
+        }
+
+        return $lines === [] ? null : new HtmlString(implode('<br>', $lines));
+    }
+
+    private static function leadStatusDescription(Lead $lead): ?string
+    {
+        if (! LeadStatuses::isRejected($lead->status)) {
+            return null;
+        }
+
+        return LeadStatuses::rejectionReasonLabel($lead->rejection_reason) ?? 'Brak powodu';
+    }
+
+    private static function potentialMatterDescription(Lead $lead): ?string
+    {
+        $matter = $lead->potentialMatter;
+
+        if (! $matter) {
+            return null;
+        }
+
+        if ($matter->is_matter) {
+            return 'Sprawa przyjęta do prowadzenia';
+        }
+
+        if ($matter->end) {
+            return 'Zamknięta';
+        }
+
+        if ($matter->currentStage) {
+            return collect([$matter->currentStage->parent, $matter->currentStage->label])
+                ->filter()
+                ->implode(' / ');
+        }
+
+        return $matter->is_archived ? 'Zarchiwizowana' : 'W toku';
     }
 
 

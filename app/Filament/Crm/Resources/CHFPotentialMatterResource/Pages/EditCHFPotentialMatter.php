@@ -3,8 +3,10 @@
 namespace App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages;
 
 use App\Filament\Crm\Resources\CHFPotentialMatterResource;
+use App\Filament\Crm\Resources\CHFPotentialMatterResource\Widgets\PotentialMatterActionWidget;
 use App\Filament\Resources\MatterResource;
 use App\Models\Matter;
+use App\Services\Website\LeadPotentialMatterService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
@@ -26,6 +28,10 @@ class EditCHFPotentialMatter extends EditRecord
                 ->action(function (array $data, $record) {
 
                     Matter::where('id', $record->id)->update(['is_matter' => 1, 'start' => now()]);
+
+                    if ($matter = Matter::query()->find($record->id)) {
+                        app(LeadPotentialMatterService::class)->markLeadAsRetained($matter);
+                    }
 
                     Notification::make()
                         ->title('Zmieniono potencjalną sprawę w sprawę CHF')
@@ -53,6 +59,18 @@ class EditCHFPotentialMatter extends EditRecord
                 ]),
 
         ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            PotentialMatterActionWidget::class,
+        ];
+    }
+
+    public function getHeaderWidgetsColumns(): int|array
+    {
+        return 1;
     }
 
     public function hasCombinedRelationManagerTabsWithContent(): bool

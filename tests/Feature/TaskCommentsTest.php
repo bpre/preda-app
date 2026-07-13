@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\MatterResource;
 use App\Livewire\TaskComments;
+use App\Models\Matter;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -66,5 +68,60 @@ class TaskCommentsTest extends TestCase
             'subject_id' => $task->id,
             'comment' => '<p>Nowy <strong>komentarz</strong></p>',
         ]);
+    }
+
+    public function test_task_modal_labels_and_links_accepted_matter(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $matter = Matter::create([
+            'label' => 'Kowalski Jan / Bank Testowy',
+            'lawyer_id' => $user->getKey(),
+            'category' => 'CHF',
+            'is_matter' => true,
+        ]);
+        $task = Task::create([
+            'label' => 'Zadanie dla sprawy',
+            'matter_id' => $matter->getKey(),
+            'created_by' => $user->getKey(),
+            'assigned_to' => $user->getKey(),
+            'is_private' => false,
+            'priority' => 2,
+        ]);
+
+        $html = view('filament.task-comments.modal', ['task' => $task])->render();
+
+        $this->assertStringContainsString('Sprawa', $html);
+        $this->assertStringContainsString('href="'.MatterResource::getEditUrlForMatter($matter).'"', $html);
+        $this->assertStringNotContainsString('Potencjalna sprawa', $html);
+    }
+
+    public function test_task_modal_labels_and_links_potential_matter_to_crm(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $matter = Matter::create([
+            'label' => 'Nowak Anna / Bank Testowy',
+            'lawyer_id' => $user->getKey(),
+            'category' => 'CHF',
+            'is_matter' => false,
+        ]);
+        $task = Task::create([
+            'label' => 'Zadanie dla potencjalnej sprawy',
+            'matter_id' => $matter->getKey(),
+            'created_by' => $user->getKey(),
+            'assigned_to' => $user->getKey(),
+            'is_private' => false,
+            'priority' => 3,
+        ]);
+
+        $html = view('filament.task-comments.modal', ['task' => $task])->render();
+        $url = MatterResource::getEditUrlForMatter($matter);
+
+        $this->assertStringContainsString('Potencjalna sprawa', $html);
+        $this->assertStringContainsString('href="'.$url.'"', $html);
+        $this->assertStringContainsString('http://crm.preda-app.test', $url);
     }
 }

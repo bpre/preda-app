@@ -1,8 +1,11 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import '../shared/panel-tabs.css';
 
 @source '../../../../app/Filament/Admin/**/*';
+@source '../../../../app/Filament/Crm/**/*';
 @source '../../../../app/Filament/Website/**/*';
 @source '../../../../resources/views/filament/admin/**/*';
+@source '../../../../resources/views/filament/crm/**/*';
 @source '../../../../resources/views/filament/website/**/*';
 
 @theme {

@@ -57,7 +57,7 @@
                     }
 
                     setMode(data.mode);
-                    applyMode(isTablePageForced || hasTableInDom());
+                    applyMode(isTableWidthPage());
                 })
                 .catch(() => {
                     //
@@ -122,7 +122,7 @@
                 setMode(detail.tableWidthMode);
             }
 
-            applyMode(isTablePageForced || hasTableInDom());
+            applyMode(isTableWidthPage());
         };
 
         window.addEventListener('filament-layout-preferences-updated', (event) => {
@@ -135,7 +135,7 @@
             }
 
             setMode(event.newValue);
-            applyMode(isTablePageForced || hasTableInDom());
+            applyMode(isTableWidthPage());
         });
 
         applyLayoutPreferences({
@@ -148,7 +148,9 @@
 
         let widthProbe = null;
 
-        const hasTableInDom = () => Boolean(document.querySelector('[data-filament-table-width-toggle], .fi-ta'));
+        const hasTableWidthPageMarker = () => Boolean(document.querySelector('[data-filament-table-width-page]'));
+        const hasTableWidthToggle = () => Boolean(document.querySelector('[data-filament-table-width-toggle]'));
+        const isTableWidthPage = () => isTablePageForced || hasTableWidthPageMarker();
 
         const getContainedWidth = () => {
             if (! document.body) {
@@ -174,7 +176,7 @@
         const canChangeTableWidth = (isTablePage) => (
             isTablePage &&
             tableToggleEnabled &&
-            hasTableInDom() &&
+            hasTableWidthToggle() &&
             (getAvailableContentWidth() > (getContainedWidth() + 1))
         );
 
@@ -224,22 +226,18 @@
         document.addEventListener('livewire:navigated', () => {
             isTablePageForced = false;
 
-            requestAnimationFrame(() => applyMode(hasTableInDom()));
+            requestAnimationFrame(() => applyMode(isTableWidthPage()));
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            applyMode(isTablePageForced || hasTableInDom());
+            applyMode(isTableWidthPage());
 
             if (! document.body) {
                 return;
             }
 
             new MutationObserver(() => {
-                if (hasTableInDom()) {
-                    applyMode(true);
-                } else if (! isTablePageForced) {
-                    applyMode(false);
-                }
+                applyMode(isTableWidthPage());
             }).observe(document.body, { childList: true, subtree: true });
         });
 
@@ -250,7 +248,7 @@
                 cancelAnimationFrame(resizeFrame);
             }
 
-            resizeFrame = requestAnimationFrame(() => applyMode(isTablePageForced || hasTableInDom()));
+            resizeFrame = requestAnimationFrame(() => applyMode(isTableWidthPage()));
         });
     })();
 </script>

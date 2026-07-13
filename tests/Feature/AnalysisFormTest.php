@@ -6,6 +6,7 @@ use App\Livewire\Website\AnalysisForm;
 use App\Models\User;
 use App\Models\Website\Bank;
 use App\Models\Website\Lead;
+use App\Support\Website\LeadStatuses;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -54,6 +55,8 @@ class AnalysisFormTest extends TestCase
             'name' => 'Jan Kowalski',
             'email' => 'jan@example.test',
             'postal_code' => '67-200',
+            'postal_voivodeship' => 'dolnośląskie',
+            'postal_county' => 'głogowski',
             'phone' => '500 600 700',
             'bank' => 'Bank Testowy',
             'contract_year_range' => '2007-2009',
@@ -61,12 +64,22 @@ class AnalysisFormTest extends TestCase
             'credit_amount_range' => 'od 85.000 do 300.000 PLN',
             'credit_status' => 'nadal spłacam',
             'has_contract' => true,
+            'additional_info' => 'Klient ma podpisany aneks do umowy.',
         ]);
-        $this->assertStringContainsString('Kwota kredytu: od 85.000 do 300.000 PLN', Lead::first()->message);
-        $this->assertStringContainsString('Kod pocztowy: 67-200', Lead::first()->message);
-        $this->assertStringContainsString('Dodatkowe informacje: Klient ma podpisany aneks do umowy.', Lead::first()->message);
+        $lead = Lead::first();
 
-        $this->assertNotNull(Lead::first()->documents_skipped_at);
+        $this->assertSame('Zgłoszenie do bezpłatnej analizy kredytu.', $lead->message);
+        $this->assertStringNotContainsString('Kwota kredytu:', $lead->message);
+        $this->assertStringNotContainsString('Kod pocztowy:', $lead->message);
+        $this->assertStringNotContainsString('Dodatkowe informacje:', $lead->message);
+        $this->assertSame('Klient ma podpisany aneks do umowy.', $lead->additional_info);
+        $this->assertSame(LeadStatuses::NEW, $lead->status);
+        $this->assertNull($lead->potential_matter_id);
+        $this->assertDatabaseMissing('matters', [
+            'label' => 'Kowalski Jan / Bank Testowy',
+        ]);
+
+        $this->assertNotNull($lead->documents_skipped_at);
     }
 
     public function test_first_step_does_not_show_upload_when_contract_is_not_available(): void
@@ -101,6 +114,8 @@ class AnalysisFormTest extends TestCase
             'name' => 'Anna Nowak',
             'email' => 'anna@example.test',
             'postal_code' => '59-100',
+            'postal_voivodeship' => 'dolnośląskie',
+            'postal_county' => 'polkowicki',
             'bank' => 'Bank Testowy',
             'has_contract' => false,
         ]);
@@ -263,6 +278,8 @@ class AnalysisFormTest extends TestCase
     {
         return User::factory()->create([
             'email' => 'bartosz.preda@preda.info',
+            'is_employee' => true,
+            'is_lawyer' => true,
         ]);
     }
 

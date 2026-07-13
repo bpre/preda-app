@@ -14,7 +14,6 @@ use App\Models\ContactLetter;
 use App\Models\ContactMatter;
 use App\Models\Credit;
 use App\Models\Deal;
-use App\Models\Lead as KancelariaLead;
 use App\Models\Letter;
 use App\Models\Matter;
 use App\Models\Stage;
@@ -156,7 +155,6 @@ class AppServiceProvider extends ServiceProvider
         CHFPaymentMatter::observe(CHFPaymentMatterObserver::class);
         CHFPotentialMatter::observe(CHFPotentialMatterObserver::class);
         BankMatter::observe(BankMatterObserver::class);
-        KancelariaLead::observe(MatterObserver::class);
         Credit::observe(CreditObserver::class);
         Letter::observe(LetterObserver::class);
         Stage::observe(StageObserver::class);

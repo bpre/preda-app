@@ -6,6 +6,7 @@ use App\Models\User;
 use Livewire\Component;
 use App\Models\Website\Lead;
 use App\Models\Website\Bank;
+use App\Services\Website\LeadPotentialMatterService;
 use App\Support\Website\LeadAttribution;
 use Filament\Schemas\Schema;
 use Illuminate\Support\HtmlString;
@@ -319,12 +320,12 @@ class AnalysisForm extends Component implements HasSchemas
         $state['has_contract'] = $hasContract;
         $state['upload_token'] = (string) Str::uuid();
         $state['message'] = $this->buildLeadMessage($state, $additionalInfo);
+        $state['additional_info'] = $additionalInfo !== '' ? $additionalInfo : null;
         $state = array_merge($state, LeadAttribution::fromPayload($this->attributionData, request()));
-        unset($state['additional_info']);
-
-        $lead = Lead::create($state);
 
         $user = User::where('email', 'bartosz.preda@preda.info')->first();
+        $lead = Lead::create($state);
+
         $user?->notify(new NewLeadToAdmin($lead));
 
         Notification::route('mail', $lead->email)
@@ -364,6 +365,8 @@ class AnalysisForm extends Component implements HasSchemas
             'documents_uploaded_at' => now(),
             'documents_skipped_at' => null,
         ])->save();
+
+        app(LeadPotentialMatterService::class)->syncLeadFilesToPotentialMatter($lead);
 
         $user = User::where('email', 'bartosz.preda@preda.info')->first();
         $user?->notify(new LeadDocumentsUploadedToAdmin($lead));
@@ -568,22 +571,7 @@ class AnalysisForm extends Component implements HasSchemas
 
     private function buildLeadMessage(array $state, string $additionalInfo = ''): string
     {
-        $message = [
-            'Zgłoszenie do bezpłatnej analizy kredytu.',
-            'Bank: ' . ($state['bank'] ?? 'brak informacji'),
-            'Rok zawarcia umowy: ' . ($this->contractYearRangeOptions()[$state['contract_year_range'] ?? ''] ?? ($state['contract_year_range'] ?? 'brak informacji')),
-            'Waluta kredytu: ' . ($state['credit_currency'] ?? 'brak informacji'),
-            'Kwota kredytu: ' . ($this->creditAmountRangeOptions()[$state['credit_amount_range'] ?? ''] ?? ($state['credit_amount_range'] ?? 'brak informacji')),
-            'Status kredytu: ' . ($state['credit_status'] ?? 'brak informacji'),
-            'Czy klient ma umowę: ' . (($state['has_contract'] ?? false) ? 'tak' : 'nie'),
-            'Kod pocztowy: ' . ($state['postal_code'] ?? 'brak informacji'),
-        ];
-
-        if ($additionalInfo !== '') {
-            $message[] = 'Dodatkowe informacje: ' . $additionalInfo;
-        }
-
-        return implode("\n", $message);
+        return 'Zgłoszenie do bezpłatnej analizy kredytu.';
     }
 
     private function dispatchAnalysisEvent(string $eventName): void

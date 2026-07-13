@@ -108,7 +108,7 @@ class Contact extends Model
 
     public function matters(): BelongsToMany
     {
-        return $this->belongsToMany(Matter::class, 'contact_matter')
+        return $this->belongsToMany(Matter::class, 'contact_matter', 'contact_id', 'matter_id')
             ->withPivot('receives_notifications')
             ->withTimestamps();
     }

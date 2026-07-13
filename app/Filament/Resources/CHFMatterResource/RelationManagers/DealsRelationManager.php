@@ -27,6 +27,14 @@ class DealsRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
-        return DealResource::table($table);
+        return DealResource::table(
+            table: $table,
+            hideDraftsByDefault: $this->shouldHideDraftsByDefault(),
+        );
+    }
+
+    protected function shouldHideDraftsByDefault(): bool
+    {
+        return $this->getOwnerRecord()?->is_matter !== false;
     }
 }

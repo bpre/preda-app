@@ -8,6 +8,7 @@ use App\Models\Deal;
 use App\Models\User;
 use App\Models\Credit;
 use App\Models\Contact;
+use App\Services\CreditDocumentPdfService;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -48,31 +49,7 @@ class PrintController extends Controller
 
     public static function analizaUmowy(Credit $record)
     {
-        $record->load('contactCredit');
-        $kredytobiorcy_ids = $record->contactCredit->pluck('contact_id')->toArray();
-
-        $pdf = Pdf::loadView('print.analiza-umowy', [
-            'record' => $record,
-            'kredytobiorcy' => Contact::whereIn('id', $kredytobiorcy_ids)->get(),
-            'bankUmowa' => $record->former_banks->organization,
-            'bankObecnie' => $record->current_banks->organization,
-            'nrUmowy' => $record->number,
-            'typKredytu' => bp_findJSON($record->details, 'rodzaj-kredytu'),
-            'kwotaKredytu' => bp_findJSON($record->details, 'kwota'),
-            'oprocentowanie' => bp_findJSON($record->details, 'oprocentowanie'),
-            'oprocentowanie_um' => bp_findJSON($record->details, 'oprocentowanie-um'),
-            'cel' => bp_findJSON($record->details, 'cel'),
-            'cel_um' => bp_findJSON($record->details, 'cel-um'),
-            'liczbaRat' => bp_findJSON($record->details, 'liczba-rat'),
-            'liczbaRat_um' => bp_findJSON($record->details, 'liczba-rat-um'),
-            'rodzajRat' => bp_findJSON($record->details, 'rodzaj-rat'),
-            'rodzajRat_um' => bp_findJSON($record->details, 'rodzaj-rat-um'),
-            'klauzuleNiedozwolone' => bp_findJSON($record->details, 'klauzule-zbiorczo'),
-            'klauzulePouczenia' => bp_findJSON($record->details, 'pouczenie'),
-            'inneKlauzule' => bp_findJSON($record->details, 'inne-klauzule'),
-            'analiza' => bp_findJSON($record->details, 'analiza'),
-            'uwagi' => bp_findJSON($record->details, 'analiza-uwagi-klient'),
-        ])->output();
+        $pdf = app(CreditDocumentPdfService::class)->contractAnalysis($record);
 
         return response()->streamDownload(
             fn () => print($pdf),
@@ -130,15 +107,7 @@ class PrintController extends Controller
 
     public static function wniosekZaswiadczenie(Credit $credit, $data)
     {
-
-        $pdf = Pdf::loadView('print.wniosek', [
-            'e' => $credit,
-            'wnioskodawca' => Contact::find($data['wnioskodawca']),
-            'waluta' => bp_findJSON($credit->details, 'waluta', 'CHF'),
-            'dokumenty' => $data['dokumenty'],
-            'regulamin' => $data['regulamin'],
-            'date' => $data['date']
-        ])->output();
+        $pdf = app(CreditDocumentPdfService::class)->certificateRequest($credit, $data);
 
         return response()->streamDownload(
             fn () => print($pdf),

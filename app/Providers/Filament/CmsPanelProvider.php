@@ -17,7 +17,6 @@ use App\Filament\Website\Resources\Users\UserResource;
 use App\Filament\Website\Widgets\PostsFreshnessWidget;
 use App\Http\Middleware\IsActiveUser;
 use App\Support\Website\WebsiteFeatures;
-use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Enums\ThemeMode;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
@@ -35,6 +34,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use RalphJSmit\Filament\Notifications\FilamentNotifications;
 
 class CmsPanelProvider extends PanelProvider
 {
@@ -95,9 +95,10 @@ class CmsPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
-                FilamentShieldPlugin::make(),
+                FilamentNotifications::make(),
             ])
             ->defaultThemeMode(ThemeMode::Light)
+            ->databaseNotifications()
             ->authMiddleware([
                 Authenticate::class,
                 IsActiveUser::class,

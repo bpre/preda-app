@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Matter;
 use App\Models\Stage;
 use App\Models\TemplateStage;
+use App\Services\Website\LeadPotentialMatterService;
 use Illuminate\Support\Carbon;
 
 class StageManager
@@ -72,34 +73,43 @@ class StageManager
             return null;
         }
 
-        $stageRecord = self::stageFor($matter, $templateStage) ?? new Stage([
-            'matter_id' => $matter->getKey(),
-            'stage_id' => $templateStage->getKey(),
-        ]);
+        $stageRecord = self::stageFor($matter, $templateStage);
 
-        self::syncStageTemplateData($stageRecord, $templateStage);
+        if (! $stageRecord) {
+            $stageRecord = new Stage([
+                'matter_id' => $matter->getKey(),
+                'stage_id' => $templateStage->getKey(),
+            ]);
+
+            self::syncStageTemplateData($stageRecord, $templateStage);
+        }
 
         $stageRecord->is_current = true;
         $stageRecord->date = $date ? Carbon::parse($date)->toDateString() : ($stageRecord->date ?? now()->toDateString());
         $stageRecord->save();
 
         $matter->forceFill(['current_template_stage_id' => $templateStage->getKey()])->save();
+        app(LeadPotentialMatterService::class)->syncStatusFromPotentialMatter($matter->refresh());
 
         return $stageRecord;
     }
 
     public static function saveStageDetails(Matter $matter, TemplateStage $templateStage, array $data): ?Stage
     {
-        if (! $templateStage->is_active) {
-            return self::stageFor($matter, $templateStage);
+        $stageRecord = self::stageFor($matter, $templateStage);
+
+        if (! $templateStage->is_active && ! $stageRecord) {
+            return null;
         }
 
-        $stageRecord = self::stageFor($matter, $templateStage) ?? new Stage([
-            'matter_id' => $matter->getKey(),
-            'stage_id' => $templateStage->getKey(),
-        ]);
+        if (! $stageRecord) {
+            $stageRecord = new Stage([
+                'matter_id' => $matter->getKey(),
+                'stage_id' => $templateStage->getKey(),
+            ]);
 
-        self::syncStageTemplateData($stageRecord, $templateStage);
+            self::syncStageTemplateData($stageRecord, $templateStage);
+        }
 
         foreach (['description', 'files', 'files_names'] as $field) {
             if (array_key_exists($field, $data)) {
@@ -115,7 +125,7 @@ class StageManager
 
         $isCurrent = (bool) ($data['is_current'] ?? false);
 
-        if ($isCurrent) {
+        if ($isCurrent && ($templateStage->is_active || $stageRecord->is_current)) {
             Stage::query()
                 ->where('matter_id', $matter->getKey())
                 ->where('stage_id', '!=', $templateStage->getKey())
@@ -124,6 +134,7 @@ class StageManager
             $stageRecord->is_current = true;
             $stageRecord->date ??= now()->toDateString();
             $matter->forceFill(['current_template_stage_id' => $templateStage->getKey()])->save();
+            app(LeadPotentialMatterService::class)->syncStatusFromPotentialMatter($matter->refresh());
         } else {
             $stageRecord->is_current = false;
 
@@ -143,6 +154,29 @@ class StageManager
         $stageRecord->save();
 
         return $stageRecord;
+    }
+
+    public static function clearCurrentStage(Matter $matter, TemplateStage | Stage | string | null $stage = null): void
+    {
+        $stageId = null;
+
+        if ($stage instanceof TemplateStage) {
+            $stageId = $stage->getKey();
+        } elseif ($stage instanceof Stage) {
+            $stageId = $stage->stage_id;
+        } elseif (is_string($stage) && filled($stage)) {
+            $stageId = $stage;
+        }
+
+        Stage::query()
+            ->where('matter_id', $matter->getKey())
+            ->when($stageId, fn ($query) => $query->where('stage_id', $stageId))
+            ->update(['is_current' => false]);
+
+        if (! $stageId || $matter->current_template_stage_id === $stageId) {
+            $matter->forceFill(['current_template_stage_id' => null])->save();
+            app(LeadPotentialMatterService::class)->syncStatusFromPotentialMatter($matter->refresh());
+        }
     }
 
     public static function stageFor(Matter $matter, TemplateStage | string $templateStage): ?Stage

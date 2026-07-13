@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Crm\Resources\LeadResource as CrmLeadResource;
+use App\Filament\Crm\Resources\CHFPotentialMatterResource as CrmChanceResource;
 use App\Filament\Resources\CHFMatterResource;
 use App\Filament\Resources\ContactResource;
 use App\Filament\Resources\Roles\Pages\EditRole as EditRolePage;
@@ -37,9 +37,35 @@ class KancelariaUserPanelAccessTest extends TestCase
             ->get(UserResource::getUrl('edit', ['record' => $managedUser], panel: 'kancelaria'))
             ->assertOk()
             ->assertSee('Dostęp do paneli')
+            ->assertSee('Link do konsultacji')
             ->assertSee('Kancelaria')
             ->assertSee('CRM')
             ->assertSee('Strona www');
+    }
+
+    public function test_kancelaria_user_edit_form_updates_consultation_url(): void
+    {
+        Filament::setCurrentPanel('kancelaria');
+
+        $admin = $this->makeSuperAdmin();
+        $managedUser = User::factory()->create([
+            'phone' => '500 600 700',
+            'is_active' => true,
+            'is_employee' => true,
+            'is_lawyer' => true,
+        ]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditUser::class, ['record' => $managedUser->getRouteKey()])
+            ->set('data.consultation_url', 'https://calendar.example.test/konsultacje')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame(
+            'https://calendar.example.test/konsultacje',
+            $managedUser->refresh()->consultation_url,
+        );
     }
 
     public function test_kancelaria_user_edit_form_updates_direct_panel_access(): void
@@ -194,12 +220,12 @@ class KancelariaUserPanelAccessTest extends TestCase
 
         Livewire::test(EditRolePage::class, ['record' => $role->getRouteKey()])
             ->set('data.'.ContactResource::class, ['view_any_contact'])
-            ->set('data.'.CrmLeadResource::class, ['view_any_lead'])
+            ->set('data.'.CrmChanceResource::class, ['view_any_c::h::f::potential::matter'])
             ->set('data.'.WebsiteBankResource::class, ['ViewAny:Bank'])
             ->call('save')
             ->assertHasNoErrors();
 
-        $expectedPermissions = ['view_any_contact', 'view_any_lead', 'ViewAny:Bank'];
+        $expectedPermissions = ['view_any_contact', 'view_any_c::h::f::potential::matter', 'ViewAny:Bank'];
         $actualPermissions = $role->refresh()->permissions()->pluck('name')->all();
 
         sort($expectedPermissions);

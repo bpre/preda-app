@@ -40,27 +40,26 @@ class StagesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn (): Builder => $this->templateStagesQuery())
+            ->query(fn (): Builder => $this->datedStagesQuery())
             ->recordTitleAttribute('label')
             ->columns([
                 TextColumn::make('label')->label('Status'),
                 ToggleColumn::make('is_current_for_matter')
                     ->label('Aktualny etap?')
-                    ->state(fn (TemplateStage $record): bool => $this->ownerRecord->current_template_stage_id === $record->getKey())
-                    ->updateStateUsing(function (TemplateStage $record, bool $state): bool {
+                    ->state(fn (Stage $record): bool => $this->ownerRecord->current_template_stage_id === $record->stage_id)
+                    ->updateStateUsing(function (Stage $record, bool $state): bool {
                         if ($state) {
                             StageManager::setCurrentStage($this->ownerRecord, $record);
                         } else {
-                            StageManager::saveStageDetails($this->ownerRecord, $record, ['is_current' => false]);
+                            StageManager::clearCurrentStage($this->ownerRecord, $record);
                         }
 
                         $this->ownerRecord->refresh();
 
                         return $state;
                     }),
-                TextColumn::make('stage_date')
+                TextColumn::make('date')
                     ->label('Data')
-                    ->state(fn (TemplateStage $record) => StageManager::stageFor($this->ownerRecord, $record)?->date)
                     ->date()
                     ->placeholder('-'),
             ])
@@ -69,17 +68,7 @@ class StagesRelationManager extends RelationManager
             ->groups([
                 Group::make('parent')
                     ->label('')
-                    ->collapsible()
-                    ->orderQueryUsing(fn (Builder $query): Builder => $query
-                        ->orderBy(
-                            Stage::query()
-                                ->selectRaw('MAX(date)')
-                                ->join('template_stages as grouped_template_stages', 'grouped_template_stages.id', '=', 'stages.stage_id')
-                                ->whereColumn('grouped_template_stages.parent', 'template_stages.parent')
-                                ->where('stages.matter_id', $this->ownerRecord->getKey())
-                                ->whereNotNull('stages.date'),
-                            'desc',
-                        )),
+                    ->collapsible(),
             ])
             ->headerActions([
                 Action::make('addStage')
@@ -109,54 +98,46 @@ class StagesRelationManager extends RelationManager
                     ->iconButton()
                     ->slideOver()
                     ->modalWidth('7xl')
-                    ->modalHeading(fn (TemplateStage $record): string => $record->label)
-                    ->fillForm(function (TemplateStage $record): array {
-                        $stage = StageManager::stageFor($this->ownerRecord, $record);
-
+                    ->modalHeading(fn (Stage $record): string => $record->label)
+                    ->fillForm(function (Stage $record): array {
                         return [
-                            'date' => $stage?->date?->format('Y-m-d'),
-                            'is_current' => $this->ownerRecord->current_template_stage_id === $record->getKey(),
-                            'description' => $stage?->description,
-                            'files' => $stage?->files ?? [],
-                            'files_names' => $stage?->files_names ?? [],
+                            'date' => $record->date?->format('Y-m-d'),
+                            'is_current' => $this->ownerRecord->current_template_stage_id === $record->stage_id,
+                            'description' => $record->description,
+                            'files' => $record->files ?? [],
+                            'files_names' => $record->files_names ?? [],
                         ];
                     })
                     ->form($this->stageDetailsForm())
-                    ->action(function (TemplateStage $record, array $data): void {
-                        StageManager::saveStageDetails($this->ownerRecord, $record, $data);
+                    ->action(function (Stage $record, array $data): void {
+                        if (! $record->templateStage) {
+                            return;
+                        }
+
+                        StageManager::saveStageDetails($this->ownerRecord, $record->templateStage, $data);
 
                         $this->ownerRecord->refresh();
                     }),
             ])
             ->defaultSort(fn (Builder $query): Builder => $query
-                ->orderBy(
-                    Stage::query()
-                        ->select('date')
-                        ->whereColumn('stages.stage_id', 'template_stages.id')
-                        ->where('stages.matter_id', $this->ownerRecord->getKey())
-                        ->whereNotNull('stages.date')
-                        ->latest('date')
-                        ->limit(1),
-                    'desc',
-                )
+                ->orderByDesc('date')
                 ->orderByDesc('sort')
                 ->orderByDesc('id'))
             ->paginated(false);
     }
 
-    protected function templateStagesQuery(): Builder
+    protected function datedStagesQuery(): Builder
     {
-        return TemplateStage::query()
-            ->whereIn('id', $this->datedStageIdsQuery());
+        return Stage::query()
+            ->where('matter_id', $this->ownerRecord->getKey())
+            ->whereNotNull('stage_id')
+            ->whereNotNull('date');
     }
 
     protected function datedStageIdsQuery(): Builder
     {
-        return Stage::query()
-            ->select('stage_id')
-            ->where('matter_id', $this->ownerRecord->getKey())
-            ->whereNotNull('stage_id')
-            ->whereNotNull('date');
+        return $this->datedStagesQuery()
+            ->select('stage_id');
     }
 
     protected function addableTemplateStagesQuery(): Builder
@@ -195,8 +176,8 @@ class StagesRelationManager extends RelationManager
 
     protected function defaultStageParent(): ?string
     {
-        $parent = $this->ownerRecord->currentStage?->parent
-            ?? $this->ownerRecord->currentStageRecord?->templateStage?->parent;
+        $parent = $this->ownerRecord->currentStageRecord?->parent
+            ?? $this->ownerRecord->currentStage?->parent;
 
         if (blank($parent)) {
             return null;

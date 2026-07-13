@@ -5,21 +5,31 @@ namespace App\Support\Website;
 class LeadStatuses
 {
     public const NEW = 'Nowy lead';
+    public const QUALIFIED = 'Zakwalifikowany';
+    public const AUTOMATICALLY_QUALIFIED = 'Zakwalifikowany automatycznie';
+    public const REJECTED = 'Odrzucony';
+
+    public const REASON_SPAM = 'spam';
+    public const REASON_DUPLICATE = 'duplicate';
+    public const REASON_NOT_PROMISING = 'not_promising';
+    public const REASON_OUT_OF_SCOPE = 'out_of_scope';
+    public const REASON_NO_CONTACT = 'no_contact';
+    public const REASON_OTHER = 'other';
 
     public const OPTIONS = [
         self::NEW => self::NEW,
-        'Wysłano potwierdzenie kwalifikacji sprawy' => 'Wysłano potwierdzenie kwalifikacji sprawy',
-        'Wysłano analizę umowy' => 'Wysłano analizę umowy',
-        'Follow-up (po wysłaniu analizy)' => 'Follow-up (po wysłaniu analizy)',
-        'Wysłano ofertę' => 'Wysłano ofertę',
-        'Follow-up (po wysłaniu oferty, przed spotkaniem)' => 'Follow-up (po wysłaniu oferty, przed spotkaniem)',
-        'Umówiono spotkanie' => 'Umówiono spotkanie',
-        'Przeprowadzono spotkanie' => 'Przeprowadzono spotkanie',
-        'Przedstawiono ofertę (podczas spotkania)' => 'Przedstawiono ofertę (podczas spotkania)',
-        'Przygotowano wniosek o wydanie zaświadczenia' => 'Przygotowano wniosek o wydanie zaświadczenia',
-        'Follow-up (po spotkaniu)' => 'Follow-up (po spotkaniu)',
-        'Potwierdzono chęć zlecenia sprawy' => 'Potwierdzono chęć zlecenia sprawy',
-        'Zlecono prowadzenie sprawy' => 'Zlecono prowadzenie sprawy',
+        self::QUALIFIED => self::QUALIFIED,
+        self::AUTOMATICALLY_QUALIFIED => self::AUTOMATICALLY_QUALIFIED,
+        self::REJECTED => self::REJECTED,
+    ];
+
+    public const REJECTION_REASONS = [
+        self::REASON_SPAM => 'Spam',
+        self::REASON_DUPLICATE => 'Duplikat',
+        self::REASON_NOT_PROMISING => 'Nierokujący',
+        self::REASON_OUT_OF_SCOPE => 'Poza zakresem kancelarii',
+        self::REASON_NO_CONTACT => 'Brak kontaktu',
+        self::REASON_OTHER => 'Inne',
     ];
 
     public static function options(): array
@@ -44,18 +54,32 @@ class LeadStatuses
 
     public static function color(?string $status): string
     {
-        if (str_starts_with((string) $status, 'Follow-up')) {
-            return 'warning';
-        }
-
         return match ($status) {
             self::NEW => 'gray',
-            'Zlecono prowadzenie sprawy',
-            'Potwierdzono chęć zlecenia sprawy' => 'success',
-            'Umówiono spotkanie',
-            'Przeprowadzono spotkanie',
-            'Przedstawiono ofertę (podczas spotkania)' => 'info',
+            self::QUALIFIED,
+            self::AUTOMATICALLY_QUALIFIED => 'success',
+            self::REJECTED => 'danger',
             default => 'primary',
         };
+    }
+
+    public static function rejectionReasons(): array
+    {
+        return self::REJECTION_REASONS;
+    }
+
+    public static function rejectionReasonLabel(?string $reason): ?string
+    {
+        return self::REJECTION_REASONS[$reason] ?? null;
+    }
+
+    public static function qualifiedStatus(bool $automatic = false): string
+    {
+        return $automatic ? self::AUTOMATICALLY_QUALIFIED : self::QUALIFIED;
+    }
+
+    public static function isRejected(?string $status): bool
+    {
+        return $status === self::REJECTED;
     }
 }

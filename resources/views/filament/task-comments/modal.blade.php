@@ -35,9 +35,26 @@
             </div>
 
             @if ($task->matter)
+                @php
+                    $matter = $task->matter;
+                    $matterUrl = \App\Filament\Resources\TaskResource::matterUrl($matter);
+                @endphp
                 <div>
-                    <div style="font-size: .75rem; color: rgb(107 114 128);">Sprawa</div>
-                    <div>{{ $task->matter->label }}</div>
+                    <div style="font-size: .75rem; color: rgb(107 114 128);">
+                        {{ \App\Filament\Resources\TaskResource::matterTypeLabel($matter) }}
+                    </div>
+                    <div>
+                        @if ($matterUrl)
+                            <a
+                                href="{{ $matterUrl }}"
+                                style="font-weight: 600; color: rgb(37 99 235); text-decoration: underline;"
+                            >
+                                {{ $matter->label }}
+                            </a>
+                        @else
+                            {{ $matter->label }}
+                        @endif
+                    </div>
                 </div>
             @endif
 

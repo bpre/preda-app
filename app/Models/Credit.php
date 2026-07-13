@@ -64,6 +64,11 @@ class Credit extends Model
         return $this->belongsTo(Matter::class, 'matter_id');
     }
 
+    public function generatedDocuments(): HasMany
+    {
+        return $this->hasMany(MatterGeneratedDocument::class, 'credit_id');
+    }
+
 
 
     // ATRYBUTY

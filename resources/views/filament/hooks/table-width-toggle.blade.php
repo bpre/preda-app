@@ -1,8 +1,14 @@
 @php
     use App\Support\FilamentContentLayout;
+
+    $isCurrentTablePage = FilamentContentLayout::isCurrentTablePage();
 @endphp
 
-@if (FilamentContentLayout::shouldShowRecordListPagesFullWidthToggle())
+@if ($isCurrentTablePage)
+    <span data-filament-table-width-page hidden></span>
+@endif
+
+@if ($isCurrentTablePage && FilamentContentLayout::shouldShowRecordListPagesFullWidthToggle())
     <x-filament::icon-button
         class="fi-table-width-toggle-icon"
         color="gray"

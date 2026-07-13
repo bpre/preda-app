@@ -2,8 +2,8 @@
 
 namespace App\Filament\Website\Resources\Leads\Pages;
 
-use App\Filament\Website\Resources\Leads\Actions\ChangeLeadStatusAction;
-use App\Filament\Website\Resources\Leads\Actions\GenerateLeadResponseAction;
+use App\Filament\Website\Resources\Leads\Actions\MarkLeadAsIncorrectlyQualifiedAction;
+use App\Filament\Website\Resources\Leads\Actions\RejectLeadAction;
 use App\Filament\Website\Resources\Leads\LeadResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
@@ -15,8 +15,8 @@ class EditLead extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            ChangeLeadStatusAction::make(),
-            GenerateLeadResponseAction::make(),
+            RejectLeadAction::make(),
+            MarkLeadAsIncorrectlyQualifiedAction::make(),
             DeleteAction::make(),
         ];
     }
