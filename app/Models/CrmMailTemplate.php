@@ -33,6 +33,11 @@ class CrmMailTemplate extends Model
         'confirm_qualification' => 'Wyślij potwierdzenie kwalifikacji sprawy',
         'request_additional_info' => 'Wyślij prośbę o dodatkowe informacje',
         'send_contract_analysis' => 'Wyślij analizę umowy',
+        'follow_up_after_qualification' => 'Wyślij follow-up po kwalifikacji',
+        'follow_up_after_info_request' => 'Wyślij follow-up po prośbie o informacje',
+        'follow_up_after_analysis' => 'Wyślij follow-up po wysłaniu analizy',
+        'send_offer' => 'Wyślij ofertę',
+        'follow_up_after_meeting' => 'Wyślij follow-up po spotkaniu',
     ];
 
     public const AVAILABLE_PLACEHOLDERS = [
@@ -43,7 +48,8 @@ class CrmMailTemplate extends Model
         '{{link_do_konsultacji}}' => 'Link do konsultacji prawnika prowadzącego potencjalną sprawę',
         '{{prawnik}}' => 'Imię i nazwisko prawnika prowadzącego potencjalną sprawę',
         '{{funkcja}}' => 'Funkcja prawnika z podpisu mailowego',
-        '{napisał|napisała}' => 'wariant zależny od płci: forma męska / forma żeńska',
+        '{napisał|napisała}' => 'wariant zależny od płci potencjalnego klienta: forma męska / forma żeńska',
+        '[przeanalizowałem|przeanalizowałam]' => 'wariant zależny od płci prawnika: forma męska / forma żeńska',
     ];
 
     public function actionLabel(): string

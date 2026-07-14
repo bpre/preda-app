@@ -60,12 +60,7 @@
             __________________________________________________
             @else
 
-            @foreach($pelnomocnicy as $pelnomocnik)
-                {{ $pelnomocnik->name_genitive }}
-                @if($loop->first && $pelnomocnicy->count() === 2)
-                    oraz
-                @endif
-            @endforeach
+            {{ $pelnomocnicy->pluck('name_genitive')->join(', ', ' oraz ') }}
 
             {{-- adwokat Wiktorię Rajzynger --}}
 @endif z kancelarii PRĘDA Kancelaria Adwokacka do dochodzenia w {{ $kredytobiorcy->count() === 1 ? 'jego' : 'ich' }} imieniu wszelkich roszczeń związanych z

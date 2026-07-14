@@ -1,4 +1,4 @@
-<div>
+<div style="page-break-after: always">
 
     <h1 style="text-align: center">
         Przetwarzanie danych osobowych - RODO

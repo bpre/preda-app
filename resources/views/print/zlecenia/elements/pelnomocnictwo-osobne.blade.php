@@ -53,12 +53,7 @@
             __________________________________________________
             @else
 
-            @foreach($pelnomocnicy as $pelnomocnik)
-                {{ $pelnomocnik->name_genitive }}
-                @if($loop->first && $pelnomocnicy->count() === 2)
-                    oraz
-                @endif
-            @endforeach
+            {{ $pelnomocnicy->pluck('name_genitive')->join(', ', ' oraz ') }}
 
             {{-- adwokat Wiktorię Rajzynger --}}
             @endif z kancelarii PRĘDA Kancelaria Adwokacka do dochodzenia w jego imieniu wszelkich roszczeń związanych z {{ $e->credits->count() === 1 ? 'opisaną wyżej umową kredytową' : 'każdą z opisanych wyżej umów kredytowych' }}, w szczególności roszczenia o ustalenie nieważności umowy, o ustalenie bezskuteczności poszczególnych postanowień umowy, ustalenie braku obowiązku zapłaty wynagrodzenia za korzystanie z kapitału i tym podobnych roszczeń, roszczeń o zapłatę, w tym również wynikających ze stwierdzenia nieważności umowy, a także do prowadzenia postępowania o wykreślenie hipoteki zabezpieczającej wierzytelności wynikające z {{ $e->credits->count() === 1 ? 'opisanej wyżej umowy kredytowej' : 'każdej z opisanych wyżej umów kredytowych' }}.

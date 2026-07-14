@@ -405,4 +405,7 @@
 <!-- RODO -->
 @include('print.zlecenia.elements.rodo')
 
+<!-- POTRĄCZENIE -->
+@include('print.zlecenia.elements.potracenie-wybor')
+
 </div>

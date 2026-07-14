@@ -14,6 +14,8 @@ class LeadGeneratedMessage extends Notification
         public string $subject,
         public string $body,
         public array $attachments = [],
+        public ?string $replyToEmail = null,
+        public ?string $replyToName = null,
     ) {}
 
     public function via(object $notifiable): array
@@ -25,9 +27,17 @@ class LeadGeneratedMessage extends Notification
     {
         $message = (new MailMessage)
             ->subject($this->subject)
-            ->markdown('emails.lead-generated-message', [
+            ->view([
+                'html' => 'emails.lead-generated-message',
+                'text' => 'emails.lead-generated-message-text',
+            ], [
+                'subject' => $this->subject,
                 'body' => $this->body,
             ]);
+
+        if (filled($this->replyToEmail) && filter_var($this->replyToEmail, FILTER_VALIDATE_EMAIL)) {
+            $message->replyTo($this->replyToEmail, filled($this->replyToName) ? $this->replyToName : null);
+        }
 
         foreach ($this->attachments as $attachment) {
             $options = [

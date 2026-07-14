@@ -5,7 +5,7 @@ namespace App\Filament\Crm\Resources\CHFPotentialMatterResource\Widgets;
 use App\Models\Matter;
 use App\Models\MatterGeneratedDocument;
 use App\Services\Crm\PotentialMatterClientActionService;
-use App\Support\StageManager;
+use App\Services\Crm\PotentialMatterWorkflowService;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -66,7 +66,9 @@ class PotentialMatterActionWidget extends Widget implements HasActions, HasForms
      */
     public function availableActions(): array
     {
-        return app(PotentialMatterClientActionService::class)->options();
+        return $this->record
+            ? app(PotentialMatterWorkflowService::class)->availableOptions($this->record)
+            : [];
     }
 
     public function shouldDisplay(): bool
@@ -75,10 +77,7 @@ class PotentialMatterActionWidget extends Widget implements HasActions, HasForms
             return false;
         }
 
-        $defaultStage = StageManager::defaultTemplateStageForMatter($this->record);
-
-        return $defaultStage
-            && $this->record->current_template_stage_id === $defaultStage->getKey();
+        return app(PotentialMatterWorkflowService::class)->shouldDisplay($this->record);
     }
 
     public function sendClientMessageAction(): Action
@@ -156,6 +155,7 @@ class PotentialMatterActionWidget extends Widget implements HasActions, HasForms
                         subject: $data['subject'] ?? null,
                         body: $data['body'] ?? null,
                         generatedDocumentIds: $data['generated_document_ids'] ?? [],
+                        sender: auth()->user(),
                     );
                 } catch (InvalidArgumentException|RuntimeException $exception) {
                     FilamentNotification::make()

@@ -591,10 +591,12 @@ class DealResource extends Resource
                                     ->label('Pełnomocnictwo dla:')
                                     ->multiple()
                                     ->required()
-                                    ->rules(['array', 'min:1', 'max:2'])
+                                    ->maxItems(3)
+                                    ->maxItemsMessage('Możesz wybrać maksymalnie 3 osoby.')
+                                    ->rules(['array', 'min:1', 'max:3'])
                                     ->validationMessages([
                                         'min' => 'Musisz wybrać co najmniej 1 osobę.',
-                                        'max' => 'Możesz wybrać maksymalnie 2 osoby.',
+                                        'max' => 'Możesz wybrać maksymalnie 3 osoby.',
                                         'array' => 'Nieprawidłowy format wyboru.',
                                     ])
                                     ->default([$record->matter->lawyer_id])

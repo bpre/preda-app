@@ -120,10 +120,6 @@ class CrmMailTemplateResource extends Resource
                     ->formatStateUsing(fn (string $state): string => CrmMailTemplate::ACTION_LABELS[$state] ?? $state)
                     ->badge()
                     ->color('info'),
-                TextColumn::make('subject')
-                    ->label('Temat')
-                    ->searchable()
-                    ->limit(60),
                 IconColumn::make('is_active')
                     ->label('Aktywny?')
                     ->boolean(),
