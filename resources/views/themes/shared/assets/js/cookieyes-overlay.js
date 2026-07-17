@@ -5,8 +5,17 @@ const SCROLL_LOCK_CLASS = 'cookieyes-consent-scroll-locked';
 const HIDE_DELAY_MS = 220;
 const DETECTION_POLL_INTERVAL_MS = 250;
 const DETECTION_POLL_TIMEOUT_MS = 8000;
-const COOKIEYES_UI_SELECTOR = [
+const COOKIEYES_DIALOG_SELECTOR = [
     '#cky-consent',
+    '.cky-consent-container',
+    '.cky-consent-bar',
+    '.cky-modal',
+    '.cky-preference-center',
+    '[role="dialog"][class*="cky-"]',
+    '[aria-modal="true"][class*="cky-"]',
+].join(',');
+const COOKIEYES_PRESENCE_SELECTOR = [
+    COOKIEYES_DIALOG_SELECTOR,
     '[id^="cky-"]',
     '[class^="cky-"]',
     '[class*=" cky-"]',
@@ -90,18 +99,6 @@ const hasCompletedCookieYesAction = (detail = null) => {
     return ['yes', 'true', '1'].includes((cookie.action ?? cookie.consent ?? '').toLowerCase());
 };
 
-const hasIncompleteCookieYesAction = (detail = null) => {
-    if (typeof detail?.isUserActionCompleted === 'boolean') {
-        return !detail.isUserActionCompleted;
-    }
-
-    const consent = readCookieYesConsent();
-
-    return typeof consent?.isUserActionCompleted === 'boolean'
-        ? !consent.isUserActionCompleted
-        : false;
-};
-
 const isElementVisible = (element) => {
     if (!element || !element.getClientRects().length) {
         return false;
@@ -115,11 +112,11 @@ const isElementVisible = (element) => {
 };
 
 const hasVisibleCookieYesUi = () => {
-    return Array.from(document.querySelectorAll(COOKIEYES_UI_SELECTOR)).some(isElementVisible);
+    return Array.from(document.querySelectorAll(COOKIEYES_DIALOG_SELECTOR)).some(isElementVisible);
 };
 
 const hasCookieYesUi = () => {
-    return Boolean(document.querySelector(COOKIEYES_UI_SELECTOR));
+    return Boolean(document.querySelector(COOKIEYES_PRESENCE_SELECTOR));
 };
 
 const hasCookieYesApi = () => {
@@ -135,7 +132,7 @@ const hasCookieYesPresence = () => {
 };
 
 const eventTargetAllowsScroll = (event) => {
-    return Boolean(event.target?.closest?.(COOKIEYES_UI_SELECTOR));
+    return Boolean(event.target?.closest?.(COOKIEYES_DIALOG_SELECTOR));
 };
 
 const initCookieYesConsentOverlay = () => {
@@ -265,7 +262,7 @@ const initCookieYesConsentOverlay = () => {
             return;
         }
 
-        if (hasVisibleCookieYesUi() || (cookieYesSeen && hasIncompleteCookieYesAction(detail))) {
+        if (hasVisibleCookieYesUi()) {
             showOverlay();
             return;
         }

@@ -184,9 +184,6 @@
 
                 @endforeach
             </div>
-            <div class="flex-1 mb-12">
-                {!! $bank->desc_eur !!}
-            </div>
         </div>
 
     </x-section::frame>

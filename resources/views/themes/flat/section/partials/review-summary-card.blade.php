@@ -19,10 +19,10 @@
 
     @if(filled($googleReviewsUrl))
         <a href="{{ $googleReviewsUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex">
-            <img src="{{ asset('images/google-logo.svg') }}" alt="Google" class="ui-review-summary-logo" loading="lazy" />
+            <img src="{{ asset('images/google-logo.svg') }}" alt="Google" width="255" height="80" class="ui-review-summary-logo" loading="lazy" />
         </a>
     @else
-        <img src="{{ asset('images/google-logo.svg') }}" alt="Google" class="ui-review-summary-logo" loading="lazy" />
+        <img src="{{ asset('images/google-logo.svg') }}" alt="Google" width="255" height="80" class="ui-review-summary-logo" loading="lazy" />
     @endif
 
     <p class="ui-review-summary-score">

@@ -83,7 +83,7 @@
         <div x-ref="headerLayer"></div>
 
         <div x-ref="smoothWrapper">
-            <div x-ref="smoothContent" class="site-page-content">
+            <div x-ref="smoothContent" class="site-page-content flex min-h-svh flex-col">
                 {{  $slot }}
             </div>
         </div>

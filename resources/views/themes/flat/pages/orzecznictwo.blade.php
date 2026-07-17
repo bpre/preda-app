@@ -18,6 +18,7 @@
     <x-section::frame
         :displaySubheadingFirst="true"
         :full="true"
+        class="pb-12 xl:pb-24"
     >
 
         <livewire:website.posts />

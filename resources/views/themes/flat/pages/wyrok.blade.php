@@ -160,7 +160,7 @@
                                 <x-icon name="heroicon-o-{{ $item['icon'] }}" class="size-5" />
                             </div>
 
-                            <div class="min-w-0">
+                            <div class="min-w-0" role="presentation">
                                 <dt class="ui-metric-label">{{ $item['label'] }}</dt>
                                 <dd class="ui-metric-value">
                                     @if($item['href'])
@@ -185,7 +185,7 @@
                                 <x-icon name="heroicon-o-{{ $item['icon'] }}" class="h-[1.125rem] w-[1.125rem]" />
                             </div>
 
-                            <div class="min-w-0">
+                            <div class="min-w-0" role="presentation">
                                 <dt class="ui-metric-label">{{ $item['label'] }}</dt>
                                 <dd class="ui-metric-value ui-metric-value-muted">
                                     @if($item['href'])

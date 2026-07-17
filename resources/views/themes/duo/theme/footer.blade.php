@@ -19,7 +19,7 @@
     ]);
 @endphp
 
-<footer class="duo-footer relative isolate bg-gray-800 text-gray-500 {{ $duoLineClasses }}">
+<footer class="duo-footer relative isolate mt-auto bg-gray-800 text-gray-500 {{ $duoLineClasses }}">
     <div aria-hidden="true" class="pointer-events-none absolute left-0 top-0 z-0 size-0 border-r-[60px] border-t-[60px] border-r-transparent border-t-rose-700"></div>
     <div aria-hidden="true" class="pointer-events-none absolute -bottom-px right-0 z-0 hidden size-[60px] bg-white [clip-path:polygon(100%_0,100%_100%,0_100%)] xl:block"></div>
 

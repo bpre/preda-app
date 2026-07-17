@@ -230,7 +230,7 @@
                             'border-t border-secondary-200/80 pt-3 sm:pt-4' => !$loop->first,
                             'lg:border-t-0 lg:pt-0' => $loop->iteration === 2,
                         ])>
-                            <div class="min-w-0">
+                            <div class="min-w-0" role="presentation">
                                 <dt class="{{ $metricLabelClasses }}">{{ $item['label'] }}</dt>
                                 <dd class="{{ $metricValueClasses }}">
                                     @if($item['href'])

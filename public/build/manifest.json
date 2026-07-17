@@ -4,7 +4,7 @@
     "name": "index"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CPSQKLPR.css",
+    "file": "assets/app-Cq47NYMi.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -39,12 +39,12 @@
     ]
   },
   "resources/views/themes/duo/assets/css/duo.css": {
-    "file": "assets/duo-BpYXWO-0.css",
+    "file": "assets/duo-4o4qHcdc.css",
     "src": "resources/views/themes/duo/assets/css/duo.css",
     "isEntry": true
   },
   "resources/views/themes/duo/assets/js/duo.js": {
-    "file": "assets/duo-Dv9LbBeL.js",
+    "file": "assets/duo-ChleIAYS.js",
     "name": "duo",
     "src": "resources/views/themes/duo/assets/js/duo.js",
     "isEntry": true,

@@ -57,7 +57,7 @@
 >
     <div
         class="flex flex-col w-full"
-        aria-labelledby="carousel-label"
+        aria-label="Opinie klientów"
         role="region"
         tabindex="0"
         x-on:keydown.left="prev"
@@ -81,11 +81,11 @@
 
                 @if(filled($googleReviewsUrl))
                     <a href="{{ $googleReviewsUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex sm:border-l sm:border-secondary-200/70 sm:pl-5">
-                        <img src="{{ asset('images/google-logo.svg') }}" alt="Google" class="h-8 w-auto" loading="lazy" />
+                        <img src="{{ asset('images/google-logo.svg') }}" alt="Google" width="255" height="80" class="h-8 w-auto" loading="lazy" />
                     </a>
                 @else
                     <span class="inline-flex sm:border-l sm:border-secondary-200/70 sm:pl-5">
-                        <img src="{{ asset('images/google-logo.svg') }}" alt="Google" class="h-8 w-auto" loading="lazy" />
+                        <img src="{{ asset('images/google-logo.svg') }}" alt="Google" width="255" height="80" class="h-8 w-auto" loading="lazy" />
                     </span>
                 @endif
             </div>
@@ -117,8 +117,7 @@
 
         <ul
             class="mt-6 flex w-full gap-4 overflow-x-scroll rounded-2xl no-scrollbar snap-x snap-mandatory"
-            role="listbox"
-            aria-labelledby="carousel-content-label"
+            role="list"
             tabindex="0"
             x-ref="slider"
             x-on:scroll.debounce.75ms="update"
@@ -135,7 +134,6 @@
 
             <li
                 class="w-full shrink-0 snap-start basis-full md:basis-[calc((100%-1rem)/2)] 2xl:basis-[calc((100%-2rem)/3)]"
-                role="option"
             >
                 <figure
                     class="{{ $reviewCardClasses }} h-full"
@@ -176,7 +174,7 @@
                             </div>
                         </div>
 
-                        <img src="{{ asset('images/google-icon.svg') }}" alt="Google" class="h-6 w-6 flex-none self-start -translate-y-0.5" loading="lazy" />
+                        <img src="{{ asset('images/google-icon.svg') }}" alt="Google" width="48" height="48" class="h-6 w-6 flex-none self-start -translate-y-0.5" loading="lazy" />
                     </div>
 
                     <div class="mt-4 flex items-center gap-1">
@@ -185,7 +183,7 @@
                                 <path d="M7.197 0.549c.104-.322.405-.54.743-.54.339 0 .64.218.744.54l1.289 3.973c.038.117.113.219.213.291.099.072.22.111.344.111l4.176-.001c.339 0 .64.218.744.54.103.321-.01.668-.28.864l-3.378 2.453a.756.756 0 0 0-.213.29.743.743 0 0 0 0 .36l1.292 3.972c.103.322-.01.668-.28.864a.777.777 0 0 1-.9 0L8.27 11.73a.78.78 0 0 0-.345-.111.78.78 0 0 0-.344.111l-3.375 2.455a.778.778 0 0 1-.9 0c-.27-.196-.383-.542-.28-.864L4.318 9.35a.741.741 0 0 0 0-.36.752.752 0 0 0-.213-.29L.728 6.247c-.27-.196-.383-.543-.28-.864.104-.322.405-.54.744-.54l4.175.001a.78.78 0 0 0 .344-.111.754.754 0 0 0 .213-.291L7.197.549Z" fill="#F6BB06"/>
                             </svg>
                         @endfor
-                        <img src="{{ asset('images/ti-verified.svg') }}" alt="Zweryfikowana opinia" class="ml-1 h-4 w-4 flex-none" loading="lazy" />
+                        <img src="{{ asset('images/ti-verified.svg') }}" alt="Zweryfikowana opinia" width="16" height="16" class="ml-1 h-4 w-4 flex-none" loading="lazy" />
 
                         <time datetime="{{ optional($review->date)->format('Y-m-d') }}" class="ml-2 text-sm text-secondary-500">
                             {{ time_ago($review->date) }}

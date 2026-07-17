@@ -1,4 +1,4 @@
-<footer>
+<footer class="mt-auto">
     <div class="mx-auto container pb-16 sm:pb-24 lg:pb-32">
 
         <div class="xl:grid xl:grid-cols-3 xl:gap-8 xl:border-t xl:border-primary-900/10 xl:pt-12">

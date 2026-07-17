@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <img src="{{ asset('images/google-icon.svg') }}" alt="Google" class="h-6 w-6 flex-none self-start -translate-y-0.5" loading="lazy" />
+        <img src="{{ asset('images/google-icon.svg') }}" alt="Google" width="48" height="48" class="h-6 w-6 flex-none self-start -translate-y-0.5" loading="lazy" />
     </div>
 
     <div class="mt-4 flex items-center gap-1">
@@ -58,7 +58,7 @@
                 <path d="M7.197 0.549c.104-.322.405-.54.743-.54.339 0 .64.218.744.54l1.289 3.973c.038.117.113.219.213.291.099.072.22.111.344.111l4.176-.001c.339 0 .64.218.744.54.103.321-.01.668-.28.864l-3.378 2.453a.756.756 0 0 0-.213.29.743.743 0 0 0 0 .36l1.292 3.972c.103.322-.01.668-.28.864a.777.777 0 0 1-.9 0L8.27 11.73a.78.78 0 0 0-.345-.111.78.78 0 0 0-.344.111l-3.375 2.455a.778.778 0 0 1-.9 0c-.27-.196-.383-.542-.28-.864L4.318 9.35a.741.741 0 0 0 0-.36.752.752 0 0 0-.213-.29L.728 6.247c-.27-.196-.383-.543-.28-.864.104-.322.405-.54.744-.54l4.175.001a.78.78 0 0 0 .344-.111.754.754 0 0 0 .213-.291L7.197.549Z" fill="#F6BB06"/>
             </svg>
         @endfor
-        <img src="{{ asset('images/ti-verified.svg') }}" alt="Zweryfikowana opinia" class="ml-1 h-4 w-4 flex-none" loading="lazy" />
+        <img src="{{ asset('images/ti-verified.svg') }}" alt="Zweryfikowana opinia" width="16" height="16" class="ml-1 h-4 w-4 flex-none" loading="lazy" />
     </div>
 
     @if(trim((string) $review->review) !== '')

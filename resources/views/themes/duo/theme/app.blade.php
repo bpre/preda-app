@@ -108,7 +108,7 @@
         <div x-ref="smoothWrapper">
             <div
                 x-ref="smoothContent"
-                class="site-page-content duo-page-content pt-[var(--duo-mobile-header-height)] [&>*:not([data-site-header])]:mx-0 [&>.duo-error-page]:min-h-[calc(100svh_-_var(--duo-mobile-header-height))] min-[1600px]:pt-0 min-[1600px]:pr-[var(--duo-sidebar-width)] min-[1600px]:[&_.container]:!pl-[var(--duo-content-safe-left)] min-[1600px]:[&>.duo-error-page]:-mr-[var(--duo-sidebar-width)] min-[1600px]:[&>.duo-error-page]:min-h-svh"
+                class="site-page-content duo-page-content flex min-h-svh flex-col pt-[var(--duo-mobile-header-height)] [&>*:not([data-site-header])]:mx-0 [&>.duo-error-page]:min-h-[calc(100svh_-_var(--duo-mobile-header-height))] min-[1600px]:pt-0 min-[1600px]:pr-[var(--duo-sidebar-width)] min-[1600px]:[&_.container]:!pl-[var(--duo-content-safe-left)] min-[1600px]:[&>.duo-error-page]:-mr-[var(--duo-sidebar-width)] min-[1600px]:[&>.duo-error-page]:min-h-svh"
             >
                 {{  $slot }}
 
