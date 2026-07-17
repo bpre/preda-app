@@ -30,10 +30,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
- {!! $seo !!}
+{!! $seo !!}
 @if (request()->routeIs('homepage'))
   <link rel="canonical" href="{{ config('app.url') }}">
 @endif
+
+  <link
+    rel="preload"
+    href="/fonts/filament/filament/inter/inter-latin-ext-wght-normal-HA22NDSG.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  >
+  <link
+    rel="preload"
+    href="/fonts/filament/filament/inter/inter-latin-wght-normal-NRMW37G5.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  >
 
  @filamentStyles
 
@@ -53,7 +68,7 @@
 
   <style>
     :root {
-        --font-family: 'Inter Variable';
+        --font-family: 'Duo Inter Variable', 'Inter Variable';
         --sidebar-width: {{ filament()->getSidebarWidth() }};
         --collapsed-sidebar-width: {{ filament()->getCollapsedSidebarWidth() }};
         --default-theme-mode: {{ filament()->getDefaultThemeMode()->value }};
@@ -88,7 +103,7 @@
     @endif
 
     <div>
-        <div x-ref="headerLayer"></div>
+        <div x-ref="headerLayer" data-site-header-layer></div>
 
         <div x-ref="smoothWrapper">
             <div
@@ -96,6 +111,19 @@
                 class="site-page-content duo-page-content pt-[var(--duo-mobile-header-height)] [&>*:not([data-site-header])]:mx-0 [&>.duo-error-page]:min-h-[calc(100svh_-_var(--duo-mobile-header-height))] min-[1600px]:pt-0 min-[1600px]:pr-[var(--duo-sidebar-width)] min-[1600px]:[&_.container]:!pl-[var(--duo-content-safe-left)] min-[1600px]:[&>.duo-error-page]:-mr-[var(--duo-sidebar-width)] min-[1600px]:[&>.duo-error-page]:min-h-svh"
             >
                 {{  $slot }}
+
+                <script>
+                    (() => {
+                        const header = document.querySelector('[data-site-header]');
+                        const headerLayer = document.querySelector('[data-site-header-layer]');
+
+                        if (!header || !headerLayer || headerLayer.contains(header)) {
+                            return;
+                        }
+
+                        headerLayer.appendChild(header);
+                    })();
+                </script>
 
                 <div x-ref="sidebarScrollSpacer" class="hidden min-[1600px]:block" aria-hidden="true"></div>
             </div>
@@ -117,6 +145,8 @@
         class="pointer-events-none fixed inset-0 z-[45] bg-black/50 opacity-0 transition-opacity duration-300 ease-out motion-reduce:transition-none"
         :class="menuEffectsVisible ? 'opacity-100' : 'opacity-0'"
     ></div>
+
+    <x-cookieyes-consent-overlay />
 
     @livewire('alpine')
     @filamentScripts

@@ -7,6 +7,28 @@
 @source '../../**/*.blade.php';
 @source '../js/**/*.js';
 
+@font-face {
+  font-family: 'Duo Inter Variable';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 100 900;
+  src: url('/fonts/filament/filament/inter/inter-latin-ext-wght-normal-HA22NDSG.woff2')
+    format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
+    U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113,
+    U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Duo Inter Variable';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 100 900;
+  src: url('/fonts/filament/filament/inter/inter-latin-wght-normal-NRMW37G5.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @theme {
   --color-foreground: theme(colors.slate.700);
   --color-muted-foreground: #64748b;
@@ -47,8 +69,8 @@
   --color-accent-900: theme(colors.rose.900);
   --color-accent-950: theme(colors.rose.950);
 
-  --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-    'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans: 'Duo Inter Variable', 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
   --duo-main-min-width: 1280px;
   --duo-main-max-width: 1360px;
@@ -67,6 +89,10 @@
 }
 
 @layer base {
+  [x-cloak] {
+    display: none !important;
+  }
+
   :root {
     --site-page-gutter: 0;
   }

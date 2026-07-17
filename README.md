@@ -76,6 +76,22 @@ php artisan users:panel-access email@example.com kancelaria crm cms
 php artisan users:panel-access email@example.com crm --revoke
 ```
 
+Odświeżenie lokalnej bazy rozwijanej aplikacji danymi z lokalnych kopii
+`ewidencja` i `preda_app` jest dostępne w panelu Kancelaria:
+`Administracja -> Real data`.
+
+Ten sam mechanizm można sprawdzić z terminala bez zmian w danych:
+
+```sh
+php artisan legacy:import-data --dry-run
+```
+
+Wykonanie importu wymaga jawnego `--force` i działa tylko lokalnie/testowo:
+
+```sh
+php artisan legacy:import-data --force
+```
+
 Podglad kandydatow do kont portalu klienta:
 
 ```sh

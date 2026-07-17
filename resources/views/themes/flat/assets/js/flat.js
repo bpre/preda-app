@@ -1,5 +1,6 @@
 import './bootstrap';
 import '../../../shared/assets/js/lead-attribution';
+import '../../../shared/assets/js/cookieyes-overlay';
 
 const DESKTOP_SMOOTH_SCROLL_QUERY = '(min-width: 1280px) and (prefers-reduced-motion: no-preference)';
 const HERO_PARALLAX_QUERY = '(min-width: 1024px) and (prefers-reduced-motion: no-preference)';

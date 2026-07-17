@@ -3,55 +3,66 @@
 namespace App\Livewire\Website;
 
 use App\Models\User;
-use Livewire\Component;
-use App\Models\Website\Lead;
 use App\Models\Website\Bank;
+use App\Models\Website\Lead;
+use App\Notifications\LeadDocumentsUploadedToAdmin;
+use App\Notifications\NewLeadToAdmin;
+use App\Notifications\NewLeadToClient;
 use App\Services\Website\LeadPotentialMatterService;
 use App\Support\Website\LeadAttribution;
-use Filament\Schemas\Schema;
-use Illuminate\Support\HtmlString;
-use App\Notifications\NewLeadToAdmin;
-use Illuminate\Support\Str;
-use Filament\Forms\Components\Select;
-use App\Notifications\NewLeadToClient;
-use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Actions\Action;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Wizard;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
-use Illuminate\Support\Facades\Blade;
-use Filament\Schemas\Contracts\HasSchemas;
-use Illuminate\Support\Facades\Notification;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
-use App\Notifications\LeadDocumentsUploadedToAdmin;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
+use Livewire\Component;
 
 class AnalysisForm extends Component implements HasSchemas
 {
-
     use InteractsWithSchemas;
 
     private const FORM_WIZARD_KEY = 'analysis-form-wizard';
+
     private const CREDIT_INFORMATION_STEP_KEY = 'analysis-form-credit-information-step';
+
     private const CLIENT_DATA_STEP_KEY = 'analysis-form-client-data-step';
+
     private const UNKNOWN_BANK_OPTION = 'Inny / nie pamiętam';
 
     public ?array $data = [];
+
     public ?array $uploadData = [];
+
     public ?array $attributionData = [];
 
     public string $context = 'page';
 
     public $files = [];
+
     public $content = [];
+
     public bool $no_docs = false;
+
     public bool $hasContract = false;
+
     public bool $documentsUploaded = false;
+
     public bool $documentsSkipped = false;
+
     public ?string $leadToken = null;
+
     public $sent = false;
 
     public function mount(string $context = 'page', mixed $content = null)
@@ -339,9 +350,14 @@ class AnalysisForm extends Component implements HasSchemas
         $this->documentsSkipped = false;
         $this->uploadForm->fill(['files' => []]);
 
-        $this->dispatch('gtm');
-        $this->dispatchAnalysisEvent('analysis_form_submitted');
-        $this->dispatchAnalysisEvent($hasContract ? 'analysis_contract_available_yes' : 'analysis_contract_available_no');
+        $this->dispatchAnalysisEvent('analysis_form_submitted', [
+            'hasContract' => $hasContract,
+            'leadStep' => 'lead_created',
+        ]);
+        $this->dispatchAnalysisEvent($hasContract ? 'analysis_contract_available_yes' : 'analysis_contract_available_no', [
+            'hasContract' => $hasContract,
+            'leadStep' => 'lead_created',
+        ]);
         $this->dispatchSidebarCompletionState(! $hasContract);
     }
 
@@ -374,7 +390,11 @@ class AnalysisForm extends Component implements HasSchemas
         $this->documentsUploaded = true;
         $this->documentsSkipped = false;
 
-        $this->dispatchAnalysisEvent('analysis_documents_uploaded');
+        $this->dispatchAnalysisEvent('analysis_documents_uploaded', [
+            'documentCount' => count($files),
+            'hasContract' => true,
+            'leadStep' => 'documents_uploaded',
+        ]);
         $this->dispatchSidebarCompletionState(true);
     }
 
@@ -391,7 +411,10 @@ class AnalysisForm extends Component implements HasSchemas
         $this->documentsSkipped = true;
         $this->documentsUploaded = false;
 
-        $this->dispatchAnalysisEvent('analysis_documents_skipped');
+        $this->dispatchAnalysisEvent('analysis_documents_skipped', [
+            'hasContract' => $this->hasContract,
+            'leadStep' => 'documents_skipped',
+        ]);
         $this->dispatchSidebarCompletionState(true);
     }
 
@@ -574,18 +597,19 @@ class AnalysisForm extends Component implements HasSchemas
         return 'Zgłoszenie do bezpłatnej analizy kredytu.';
     }
 
-    private function dispatchAnalysisEvent(string $eventName): void
+    private function dispatchAnalysisEvent(string $eventName, array $payload = []): void
     {
-        $this->dispatch('analysis-form-event', eventName: $eventName);
+        $this->dispatch('analysis-form-event', ...array_merge([
+            'eventName' => $eventName,
+            'formLocation' => $this->context,
+        ], $payload));
     }
 
     public function render()
     {
-        if(request()->segment(2) == 'wyslano')
-        {
+        if (request()->segment(2) == 'wyslano') {
             return view('livewire.form-analysis-sent')->layout('components.layouts.form');
-        }
-        else{
+        } else {
             return view('livewire.website.analysis-form');
         }
     }

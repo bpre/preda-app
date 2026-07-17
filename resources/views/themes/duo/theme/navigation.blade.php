@@ -13,7 +13,7 @@
                     <button
                         type="button"
                         @class([
-                            'flex w-full min-w-[min(300px,100%)] max-w-[min(max(50%,300px),100%)] items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left text-base font-semibold text-primary-800 transition-colors duration-200 hover:bg-primary-50 focus-visible:bg-primary-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600',
+                            'flex w-full min-w-[min(300px,100%)] max-w-[min(max(50%,300px),100%)] items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left text-base font-semibold text-primary-800 transition-colors duration-150 hover:text-accent-600 focus-visible:text-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600',
                             '!text-accent-600' => $navi['active'] ?? false,
                         ])
                         @click="open = !open"
@@ -34,7 +34,7 @@
                             <a
                                 href="{{ route($subnavi['route']) }}"
                                 @class([
-                                    'block rounded-lg px-4 py-1.5 text-sm leading-6 text-secondary-600 transition-colors duration-200 hover:bg-secondary-50 focus-visible:bg-secondary-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600',
+                                    'block rounded-lg px-4 py-1.5 text-sm leading-6 text-secondary-600 transition-colors duration-150 hover:text-accent-600 focus-visible:text-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600',
                                     '!text-accent-600' => $subnavi['active'] ?? false,
                                 ])
                                 @if($subnavi['active'] ?? false) aria-current="page" @endif
@@ -47,7 +47,7 @@
                     <a
                         href="{{ route($navi['route']) }}"
                         @class([
-                            'flex w-full min-w-[min(300px,100%)] max-w-[min(max(50%,300px),100%)] items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left text-base font-semibold text-primary-800 transition-colors duration-200 hover:bg-primary-50 focus-visible:bg-primary-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600',
+                            'flex w-full min-w-[min(300px,100%)] max-w-[min(max(50%,300px),100%)] items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left text-base font-semibold text-primary-800 transition-colors duration-150 hover:text-accent-600 focus-visible:text-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600',
                             '!text-accent-600' => $navi['active'] ?? false,
                         ])
                         @if($navi['active'] ?? false) aria-current="page" @endif

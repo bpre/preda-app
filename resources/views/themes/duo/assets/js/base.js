@@ -98,7 +98,8 @@ const registerSiteShell = () => {
                 return;
             }
 
-            this.smoothHeader = this.$refs.smoothContent.querySelector('[data-site-header]');
+            this.smoothHeader = this.$refs.headerLayer.querySelector('[data-site-header]')
+                || this.$refs.smoothContent.querySelector('[data-site-header]');
 
             if (!this.smoothHeaderPlaceholder) {
                 this.smoothHeaderPlaceholder = document.createElement('div');
@@ -115,7 +116,10 @@ const registerSiteShell = () => {
                 return;
             }
 
-            if (!this.smoothHeaderPlaceholder.isConnected) {
+            if (
+                !this.$refs.headerLayer.contains(this.smoothHeader)
+                && !this.smoothHeaderPlaceholder.isConnected
+            ) {
                 this.smoothHeader.before(this.smoothHeaderPlaceholder);
             }
 

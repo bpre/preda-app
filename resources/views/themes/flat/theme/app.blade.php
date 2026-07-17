@@ -96,6 +96,8 @@
         :class="menuEffectsVisible ? 'opacity-100' : 'opacity-0'"
     ></div>
 
+    <x-cookieyes-consent-overlay />
+
     @livewire('alpine')
     @filamentScripts
 

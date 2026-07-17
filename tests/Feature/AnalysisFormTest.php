@@ -189,6 +189,65 @@ class AnalysisFormTest extends TestCase
         $this->assertSame('Google Ads', $lead->attribution_summary);
     }
 
+    public function test_first_step_dispatches_analysis_tracking_events(): void
+    {
+        $this->createPublishedBank();
+        $this->createLeadRecipient();
+
+        $this->fillValidAnalysisForm(Livewire::test(AnalysisForm::class, ['context' => 'sidebar']))
+            ->call('create')
+            ->assertDispatched(
+                'analysis-form-event',
+                eventName: 'analysis_form_submitted',
+                formLocation: 'sidebar',
+                hasContract: true,
+                leadStep: 'lead_created',
+            )
+            ->assertDispatched(
+                'analysis-form-event',
+                eventName: 'analysis_contract_available_yes',
+                formLocation: 'sidebar',
+                hasContract: true,
+                leadStep: 'lead_created',
+            )
+            ->assertNotDispatched('gtm');
+    }
+
+    public function test_document_decisions_dispatch_separate_analysis_tracking_events(): void
+    {
+        $this->createPublishedBank();
+        $this->createLeadRecipient();
+
+        $this->fillValidAnalysisForm(Livewire::test(AnalysisForm::class, ['context' => 'sidebar']))
+            ->call('create')
+            ->set('uploadData.files', ['umowy-do-analizy/test.pdf', 'umowy-do-analizy/regulamin.pdf'])
+            ->call('uploadDocuments')
+            ->assertSet('documentsUploaded', true)
+            ->assertDispatched(
+                'analysis-form-event',
+                eventName: 'analysis_documents_uploaded',
+                formLocation: 'sidebar',
+                documentCount: 2,
+                hasContract: true,
+                leadStep: 'documents_uploaded',
+            );
+
+        $this->fillValidAnalysisForm(
+            Livewire::test(AnalysisForm::class, ['context' => 'sidebar']),
+            email: 'skipped-documents@example.test',
+        )
+            ->call('create')
+            ->call('skipDocuments')
+            ->assertSet('documentsSkipped', true)
+            ->assertDispatched(
+                'analysis-form-event',
+                eventName: 'analysis_documents_skipped',
+                formLocation: 'sidebar',
+                hasContract: true,
+                leadStep: 'documents_skipped',
+            );
+    }
+
     public function test_sidebar_form_resets_only_after_process_is_complete(): void
     {
         $this->createPublishedBank();
@@ -288,8 +347,7 @@ class AnalysisFormTest extends TestCase
         string $hasContract = '1',
         string $email = 'jan@example.test',
         string $postalCode = '67-200',
-    ): mixed
-    {
+    ): mixed {
         return $component
             ->set('data.name', 'Jan Kowalski')
             ->set('data.phone', '500 600 700')

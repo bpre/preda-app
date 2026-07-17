@@ -13,4 +13,9 @@ return [
         'cms' => env('CMS_DOMAIN', 'cms.'.$baseDomain),
         'portal' => env('PORTAL_DOMAIN', 'portal.'.$baseDomain),
     ],
+
+    'legacy_import' => [
+        'kancelaria_source_database' => env('LEGACY_IMPORT_KANCELARIA_SOURCE_DATABASE', 'ewidencja'),
+        'website_source_database' => env('LEGACY_IMPORT_WEBSITE_SOURCE_DATABASE', 'preda_app'),
+    ],
 ];

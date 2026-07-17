@@ -1,5 +1,6 @@
 import './base.js';
 import '../../../shared/assets/js/lead-attribution';
+import '../../../shared/assets/js/cookieyes-overlay';
 
 const DYNAMIC_LOGO_SELECTOR = '[data-duo-dynamic-logo]';
 const SECTION_REVEAL_SELECTOR = '[data-duo-section-reveal]';

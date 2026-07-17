@@ -30,7 +30,7 @@
         class="container relative isolate z-[1] mx-auto flex w-full !min-h-0 flex-col justify-center gap-0 space-y-6 animate-in fade-in-0 slide-in-from-right duration-700 ease-in-out sm:space-y-12"
     >
 
-        <div class="flex flex-col gap-6 pt-[100px] sm:gap-10 lg:gap-12">
+        <div class="flex flex-col gap-6 sm:gap-10 lg:gap-12">
 
 
             @if(isset($subheading) && $displaySubheadingFirst)
@@ -70,12 +70,9 @@
                 <div class="space-y-4 sm:space-y-0 sm:inline-grid sm:grid-cols-2 sm:gap-8">
 
                 @if($buttonOneOpensAnalysisSidebar)
-                    <x-button.primary-link
-                        href="{{ route($button_1_route) }}"
-                        x-on:click="if (window.matchMedia('(min-width: 1600px)').matches && document.querySelector('[data-duo-analysis-sidebar-panel]')) { $event.preventDefault(); window.dispatchEvent(new CustomEvent('site:open-analysis-sidebar')); }"
-                    >
+                    <x-button.analysis-link>
                         {{  $button_1_text }}
-                    </x-button.primary-link>
+                    </x-button.analysis-link>
                 @else
                     <x-button.primary-link href="{{ route($button_1_route) }}">
                         {{  $button_1_text }}

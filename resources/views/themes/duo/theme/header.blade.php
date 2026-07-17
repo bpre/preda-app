@@ -143,14 +143,12 @@
                         <p class="text-xs font-semibold uppercase text-secondary-500">{{ $sidebarButton['eyebrow'] }}</p>
 
                         @if($sidebarButtonOpensAnalysis)
-                            <x-button.primary-link
-                                href="{{ route($sidebarButton['route']) }}"
+                            <x-button.analysis-link
                                 class="mt-3 w-full justify-between"
                                 title="{{ $sidebarButton['text'] }}"
-                                @click.prevent="openAnalysisSidebar()"
                             >
                                 <span>{{ $sidebarButton['text'] }}</span>
-                            </x-button.primary-link>
+                            </x-button.analysis-link>
                         @else
                             <x-button.primary-link
                                 href="{{ route($sidebarButton['route']) }}"

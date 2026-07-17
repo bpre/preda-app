@@ -4,15 +4,74 @@
 
 <div
     x-data="{
+        formLocation: @js($isSidebar ? 'sidebar' : 'page'),
+        formViewTracked: false,
+        formViewObserver: null,
+        trackSidebarFormView: null,
+
         syncAttribution() {
             const attribution = window.PredaLeadAttribution?.get?.() ?? {};
 
             this.$wire.set('attributionData', attribution, false);
         },
+
+        trackFormView() {
+            if (this.formViewTracked) {
+                return;
+            }
+
+            this.formViewTracked = true;
+            window.PredaAnalytics?.trackAnalysisFormViewed?.({
+                formLocation: this.formLocation,
+            });
+        },
+
+        initFormViewTracking() {
+            if (this.formLocation === 'sidebar') {
+                this.trackSidebarFormView = () => {
+                    this.$nextTick(() => this.trackFormView());
+                };
+
+                window.addEventListener('site:open-analysis-sidebar', this.trackSidebarFormView);
+
+                return;
+            }
+
+            const target = this.$refs.formViewTarget ?? this.$el;
+
+            if (! ('IntersectionObserver' in window)) {
+                this.trackFormView();
+
+                return;
+            }
+
+            this.formViewObserver = new IntersectionObserver((entries) => {
+                if (! entries.some((entry) => entry.isIntersecting)) {
+                    return;
+                }
+
+                this.trackFormView();
+                this.formViewObserver?.disconnect();
+                this.formViewObserver = null;
+            }, {
+                threshold: 0.2,
+            });
+
+            this.formViewObserver.observe(target);
+        },
+
+        destroy() {
+            this.formViewObserver?.disconnect();
+
+            if (this.trackSidebarFormView) {
+                window.removeEventListener('site:open-analysis-sidebar', this.trackSidebarFormView);
+            }
+        },
     }"
     x-init="
         syncAttribution();
         window.addEventListener('preda:lead-attribution-updated', () => syncAttribution());
+        initFormViewTracking();
     "
     x-on:submit.capture="syncAttribution()"
     x-on:analysis-sidebar-reset-form.window="$wire.resetAfterSidebarCompletion()"
@@ -20,27 +79,99 @@
 
     @once
     <script>
-        window.addEventListener('gtm', () => {
-            window.dataLayer = window.dataLayer || [];
-            window.dataLayer.push({
-                'event': 'gtm.form_sent',
-                'form_type': 'analiza'
-            });
-        });
-
-        window.addEventListener('analysis-form-event', (event) => {
-            const eventName = event.detail?.eventName;
-
-            if (! eventName) {
+        (() => {
+            if (window.PredaAnalytics?.analysisFormTrackingInitialized) {
                 return;
             }
 
-            window.dataLayer = window.dataLayer || [];
-            window.dataLayer.push({
-                'event': eventName,
-                'form_type': 'analiza'
+            const cleanString = (value) => {
+                if (typeof value !== 'string') {
+                    return null;
+                }
+
+                const cleaned = value.trim();
+
+                return cleaned === '' ? null : cleaned;
+            };
+
+            const cleanNumber = (value) => {
+                const number = Number(value);
+
+                return Number.isFinite(number) ? number : null;
+            };
+
+            const cleanBoolean = (value) => {
+                if ([true, 1, '1', 'true'].includes(value)) {
+                    return true;
+                }
+
+                if ([false, 0, '0', 'false'].includes(value)) {
+                    return false;
+                }
+
+                return null;
+            };
+
+            const normalizeAnalysisPayload = (payload = {}) => {
+                const formLocation = cleanString(payload.formLocation ?? payload.form_location);
+                const leadStep = cleanString(payload.leadStep ?? payload.lead_step);
+                const documentCount = cleanNumber(payload.documentCount ?? payload.document_count);
+                const hasContract = cleanBoolean(payload.hasContract ?? payload.has_contract);
+
+                return {
+                    form_type: 'analiza',
+                    ...(formLocation ? { form_location: formLocation } : {}),
+                    ...(hasContract !== null ? { has_contract: hasContract } : {}),
+                    ...(leadStep ? { lead_step: leadStep } : {}),
+                    ...(documentCount !== null ? { document_count: documentCount } : {}),
+                };
+            };
+
+            const pushToDataLayer = (eventName, payload = {}) => {
+                const cleanedEventName = cleanString(eventName);
+
+                if (! cleanedEventName) {
+                    return;
+                }
+
+                window.dataLayer = window.dataLayer || [];
+                window.dataLayer.push({
+                    event: cleanedEventName,
+                    ...normalizeAnalysisPayload(payload),
+                });
+            };
+
+            window.PredaAnalytics = {
+                ...(window.PredaAnalytics || {}),
+                analysisFormTrackingInitialized: true,
+                trackAnalysisFormViewed(payload = {}) {
+                    pushToDataLayer('analysis_form_viewed', {
+                        ...payload,
+                        leadStep: 'form_viewed',
+                    });
+                },
+                trackAnalysisFormEvent(payload = {}) {
+                    const eventName = cleanString(payload.eventName);
+
+                    if (! eventName) {
+                        return;
+                    }
+
+                    pushToDataLayer(eventName, payload);
+
+                    if (eventName === 'analysis_form_submitted') {
+                        pushToDataLayer('gtm.form_sent', {
+                            ...payload,
+                            leadStep: 'legacy_form_sent',
+                        });
+                    }
+                },
+            };
+
+            window.addEventListener('analysis-form-event', (event) => {
+                window.PredaAnalytics.trackAnalysisFormEvent(event.detail ?? {});
             });
-        });
+        })();
     </script>
     <style>
         #form-analysis-sidebar {
@@ -114,7 +245,9 @@
     @endonce
 
 
-    <div @class([
+    <div
+        x-ref="formViewTarget"
+        @class([
         'col-span-3 py-12 xl:pb-24' => ! $isSidebar,
         'w-full' => $isSidebar,
     ])>
