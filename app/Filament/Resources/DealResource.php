@@ -386,7 +386,9 @@ class DealResource extends Resource
                 Group::make()->schema([
 
                     Section::make('Umowa kredytowa')->schema([
-                        Select::make('credits')->label('')
+                        Select::make('credits')
+                            ->label('Umowa kredytowa')
+                            ->hiddenLabel()
                             ->required()
                             ->createOptionForm(creditForm::form())
                             ->relationship(
@@ -414,7 +416,8 @@ class DealResource extends Resource
                     Section::make('Zleceniodawcy')->schema([
                         Repeater::make('contacts')
                             ->relationship('contactDeal')
-                            ->label('')
+                            ->label('Zleceniodawcy')
+                            ->hiddenLabel()
                             ->required()
                             ->orderColumn('sort')
                             ->addActionLabel('Dodaj zleceniodawcę')
@@ -436,7 +439,8 @@ class DealResource extends Resource
                             ->simple(
 
                                 Select::make('contact_id')
-                                    ->label('')
+                                    ->label('Zleceniodawca')
+                                    ->hiddenLabel()
                                     ->native(false)
                                     ->required()
                                     ->createOptionForm(contactForm('Kredytobiorca'))

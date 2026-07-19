@@ -13,6 +13,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\Website\Lead;
 use App\Support\StageManager;
+use App\Support\Website\LeadFileNames;
 use App\Support\Website\LeadStatuses;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -180,8 +181,14 @@ class LeadPotentialMatterService
 
         $fileNames = is_array($stage->files_names) ? $stage->files_names : [];
 
-        foreach ($files as $file) {
-            $fileNames[$file] ??= basename((string) $file);
+        foreach ($files as $index => $file) {
+            if (isset($lead->files_names[$file])) {
+                $fileNames[$file] = LeadFileNames::stageName($lead, (string) $file, $index);
+
+                continue;
+            }
+
+            $fileNames[$file] ??= LeadFileNames::stageName($lead, (string) $file, $index);
         }
 
         $stage->forceFill([

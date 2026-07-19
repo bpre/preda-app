@@ -22,6 +22,7 @@ use App\Filament\Resources\CHFMatterResource\RelationManagers\CreditsRelationMan
 use App\Filament\Resources\CHFMatterResource\RelationManagers\LettersRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\LawsuitsRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\PaymentsRelationManager;
+use App\Filament\Resources\MatterResource\RelationManagers\ActivitiesRelationManager;
 
 class CHFPaymentMatterResource extends Resource
 {
@@ -67,7 +68,7 @@ class CHFPaymentMatterResource extends Resource
     {
         return [
             StagesRelationManager::class,
-            // ActivitiesRelationManager::class,
+            ActivitiesRelationManager::class,
             CreditsRelationManager::class,
             LettersRelationManager::class,
             LawsuitsRelationManager::class,

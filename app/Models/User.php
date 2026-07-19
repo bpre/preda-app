@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Support\PanelAccess;
+use App\Support\Crm\MarketingAgencyAccess;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -87,6 +88,10 @@ class User extends Authenticatable implements FilamentUser
 
         if (! in_array($panelId, PanelAccess::panelIds(), true)) {
             return false;
+        }
+
+        if ($panelId === 'crm' && MarketingAgencyAccess::canAccessCrmPanel($this)) {
+            return true;
         }
 
         return in_array($panelId, PanelAccess::directPanelsFor($this), true);

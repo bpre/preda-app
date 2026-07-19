@@ -1,108 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\CHFPotentialMatter;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class CHFPotentialMatterPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    
+    public function viewAny(User $authUser): bool
     {
-        return $user->can('view_any_c::h::f::potential::matter');
+        return $authUser->can('view_any_c::h::f::potential::matter');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, CHFPotentialMatter $cHFPotentialMatter): bool
+    public function view(User $authUser, CHFPotentialMatter $cHFPotentialMatter): bool
     {
-        return $user->can('view_c::h::f::potential::matter');
+        return $authUser->can('view_c::h::f::potential::matter');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(User $authUser): bool
     {
-        return $user->can('create_c::h::f::potential::matter');
+        return $authUser->can('create_c::h::f::potential::matter');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, CHFPotentialMatter $cHFPotentialMatter): bool
+    public function update(User $authUser, CHFPotentialMatter $cHFPotentialMatter): bool
     {
-        return $user->can('update_c::h::f::potential::matter');
+        return $authUser->can('update_c::h::f::potential::matter');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, CHFPotentialMatter $cHFPotentialMatter): bool
+    public function delete(User $authUser, CHFPotentialMatter $cHFPotentialMatter): bool
     {
-        return $user->can('delete_c::h::f::potential::matter');
+        return $authUser->can('delete_c::h::f::potential::matter');
     }
 
-    /**
-     * Determine whether the user can bulk delete.
-     */
-    public function deleteAny(User $user): bool
+    public function restore(User $authUser, CHFPotentialMatter $cHFPotentialMatter): bool
     {
-        return $user->can('delete_any_c::h::f::potential::matter');
+        return $authUser->isAdmin();
     }
 
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, CHFPotentialMatter $cHFPotentialMatter): bool
+    public function forceDelete(User $authUser, CHFPotentialMatter $cHFPotentialMatter): bool
     {
-        return $user->can('force_delete_c::h::f::potential::matter');
+        return $authUser->can('force_delete_c::h::f::potential::matter');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function forceDeleteAny(User $authUser): bool
     {
-        return $user->can('force_delete_any_c::h::f::potential::matter');
+        return $authUser->can('force_delete_any_c::h::f::potential::matter');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, CHFPotentialMatter $cHFPotentialMatter): bool
+    public function restoreAny(User $authUser): bool
     {
-        return $user->can('restore_c::h::f::potential::matter');
+        return $authUser->isAdmin();
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
+    public function replicate(User $authUser, CHFPotentialMatter $cHFPotentialMatter): bool
     {
-        return $user->can('restore_any_c::h::f::potential::matter');
+        return $authUser->can('replicate_c::h::f::potential::matter');
     }
 
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, CHFPotentialMatter $cHFPotentialMatter): bool
+    public function reorder(User $authUser): bool
     {
-        return $user->can('replicate_c::h::f::potential::matter');
+        return $authUser->can('reorder_c::h::f::potential::matter');
     }
 
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
-    {
-        return $user->can('reorder_c::h::f::potential::matter');
-    }
 }

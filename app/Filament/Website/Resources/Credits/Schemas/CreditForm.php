@@ -46,6 +46,7 @@ class CreditForm
                     ->columnSpanFull(),
                 Repeater::make('clauses')
                     ->label('Klauzule')
+                    ->addActionLabel('Dodaj klauzulę')
                     ->schema(
                         [
 

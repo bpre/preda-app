@@ -38,6 +38,7 @@ use App\Observers\TaskObserver;
 use App\Observers\Website\ContactObserver as WebsiteContactObserver;
 use App\Observers\Website\SentenceObserver;
 use App\Services\LetterNotificationQueueMonitor;
+use App\Services\UserImpersonationService;
 use App\Services\Website\Seo;
 use App\Support\ShieldPermissionKeys;
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
@@ -49,10 +50,12 @@ use Filament\Support\Facades\FilamentView;
 use Filament\Tables\View\TablesRenderHook;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\View\View as ViewContract;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\View;
@@ -119,7 +122,7 @@ class AppServiceProvider extends ServiceProvider
         );
 
         FilamentView::registerRenderHook(
-            TablesRenderHook::TOOLBAR_COLUMN_MANAGER_TRIGGER_AFTER,
+            TablesRenderHook::TOOLBAR_END,
             fn (): ViewContract => view('filament/hooks/table-width-toggle'),
         );
 
@@ -127,6 +130,15 @@ class AppServiceProvider extends ServiceProvider
             PanelsRenderHook::BODY_START,
             fn (): ViewContract => view('filament/hooks/open-directory'),
         );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::BODY_START,
+            fn (): ViewContract => view('filament/hooks/user-impersonation-banner'),
+        );
+
+        Event::listen(Logout::class, function (): void {
+            app(UserImpersonationService::class)->markCurrentLogEnded();
+        });
 
         $this->registerWebsiteThemeViews();
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies\Website;
 
+use App\Support\Crm\MarketingAgencyAccess;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Website\Lead;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -14,12 +15,14 @@ class LeadPolicy
     
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ViewAny:Lead');
+        return $authUser->can('ViewAny:Lead')
+            || MarketingAgencyAccess::canViewMarketingLeads($authUser);
     }
 
     public function view(AuthUser $authUser, Lead $lead): bool
     {
-        return $authUser->can('View:Lead');
+        return $authUser->can('View:Lead')
+            || MarketingAgencyAccess::canViewMarketingLeads($authUser);
     }
 
     public function create(AuthUser $authUser): bool

@@ -14,10 +14,14 @@ use App\Models\Matter;
 use App\Models\TemplateStage;
 use App\Models\User;
 use App\Models\Website\Lead as WebsiteLead;
+use App\Services\Crm\PotentialMatterWorkflowService;
+use App\Support\Website\LeadFileNames;
+use App\Support\Website\LeadFileStorage;
 use App\Support\Website\PostalCodeLookup;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Actions\RestoreAction;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Builder\Block;
 use Filament\Forms\Components\Checkbox;
@@ -44,6 +48,7 @@ use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\HtmlString;
@@ -340,9 +345,12 @@ class MatterResource extends Resource
 //                             )
                                 ->searchable(),
                         ]),
+                    static::sourceLeadFilesSection((bool) $is_matter),
                     static::sourceLeadFormSection((bool) $is_matter),
                 ]),
                 Group::make()->schema([
+
+                    ...((bool) $is_matter ? [] : [static::potentialCertificateSection()]),
 
                     Section::make('Informacje od klienta')
                         ->collapsible()
@@ -576,6 +584,67 @@ class MatterResource extends Resource
             ]);
     }
 
+    protected static function potentialCertificateSection(): Section
+    {
+        return Section::make('Zaświadczenie')
+            ->collapsible()
+            ->schema([
+                Toggle::make('has_certificate')
+                    ->label('Mamy zaświadczenie?')
+                    ->default(false)
+                    ->inline(false)
+                    ->live()
+                    ->afterStateUpdated(function (Set $set, mixed $state): void {
+                        if ((bool) $state) {
+                            return;
+                        }
+
+                        $set('potential_benefits_amount', null);
+                        $set('future_installments_cancellation_amount', null);
+                        $set('overpayment_refund_amount', null);
+                    }),
+                TextInput::make('potential_benefits_amount')
+                    ->label('Potencjalne korzyści')
+                    ->suffix('zł')
+                    ->stripCharacters(',')
+                    ->numeric()
+                    ->minValue(0)
+                    ->visible(fn (Get $get): bool => (bool) $get('has_certificate'))
+                    ->dehydratedWhenHidden(),
+                TextInput::make('future_installments_cancellation_amount')
+                    ->label('Anulowanie przyszłych rat')
+                    ->suffix('zł')
+                    ->stripCharacters(',')
+                    ->numeric()
+                    ->minValue(0)
+                    ->visible(fn (Get $get): bool => (bool) $get('has_certificate'))
+                    ->dehydratedWhenHidden(),
+                TextInput::make('overpayment_refund_amount')
+                    ->label('Nadpłata do zwrotu')
+                    ->suffix('zł')
+                    ->stripCharacters(',')
+                    ->numeric()
+                    ->minValue(0)
+                    ->visible(fn (Get $get): bool => (bool) $get('has_certificate'))
+                    ->dehydratedWhenHidden(),
+            ])
+            ->columns(2);
+    }
+
+    protected static function sourceLeadFilesSection(bool $isMatter): Section
+    {
+        return Section::make('Pliki przesłane przez klienta')
+            ->collapsible()
+            ->schema([
+                Placeholder::make('source_lead_files')
+                    ->hiddenLabel()
+                    ->content(fn (?Matter $record): HtmlString => self::sourceLeadFilesHtml($record))
+                    ->columnSpanFull(),
+            ])
+            ->visibleOn('edit')
+            ->hidden(fn (?Matter $record): bool => $isMatter || ! self::sourceLeadHasFiles(self::sourceLead($record)));
+    }
+
     protected static function sourceLeadFormSection(bool $isMatter): Section
     {
         return Section::make('Dane z formularza leada')
@@ -624,6 +693,91 @@ class MatterResource extends Resource
     private static function sourceLead(?Matter $matter): ?WebsiteLead
     {
         return $matter?->sourceWebsiteLead;
+    }
+
+    private static function sourceLeadHasFiles(?WebsiteLead $lead): bool
+    {
+        return self::sourceLeadFiles($lead) !== [];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function sourceLeadFiles(?WebsiteLead $lead): array
+    {
+        return collect($lead?->files ?? [])
+            ->filter(fn ($file): bool => is_string($file) && filled($file))
+            ->values()
+            ->all();
+    }
+
+    private static function sourceLeadFilesHtml(?Matter $matter): HtmlString
+    {
+        $lead = self::sourceLead($matter);
+        $files = self::sourceLeadFiles($lead);
+
+        if ($files === [] || ! $matter) {
+            return new HtmlString('');
+        }
+
+        $items = collect($files)
+            ->map(function (string $path, int $index) use ($matter, $lead): string {
+                $filename = e(LeadFileNames::displayName($lead, $path, $index));
+                $technicalFilename = e(basename($path));
+                $extension = e(strtoupper(pathinfo($path, PATHINFO_EXTENSION) ?: 'PLIK'));
+                $size = self::sourceLeadFileSize($path);
+                $isAvailable = app(LeadFileStorage::class)->exists($path);
+                $url = e(route('crm.potential-matter.lead-file.download', [
+                    'matter' => $matter,
+                    'fileIndex' => $index,
+                ]));
+                $tag = $isAvailable ? 'a' : 'div';
+                $href = $isAvailable ? ' href="'.$url.'"' : '';
+                $action = $isAvailable
+                    ? '<span style="display: inline-flex; flex: 0 0 auto; align-items: center; gap: 0.375rem; border-radius: 0.375rem; background: #ffffff; padding: 0.375rem 0.625rem; font-size: 0.75rem; font-weight: 600; line-height: 1rem; color: #374151; box-shadow: inset 0 0 0 1px #e5e7eb;"><svg xmlns="http://www.w3.org/2000/svg" style="height: 0.875rem; width: 0.875rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4.5 19.5h15" /></svg>Pobierz</span>'
+                    : '<span style="display: inline-flex; flex: 0 0 auto; align-items: center; border-radius: 0.375rem; background: #f3f4f6; padding: 0.375rem 0.625rem; font-size: 0.75rem; font-weight: 600; line-height: 1rem; color: #6b7280; box-shadow: inset 0 0 0 1px #e5e7eb;">Niedostępny</span>';
+                $cursor = $isAvailable ? 'pointer' : 'default';
+
+                return <<<HTML
+                    <li style="list-style: none;">
+                        <{$tag}{$href} title="{$technicalFilename}" style="display: flex; width: 100%; cursor: {$cursor}; align-items: center; justify-content: space-between; gap: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background: #f9fafb; padding: 0.625rem 0.75rem; color: inherit; text-decoration: none;">
+                            <span style="display: flex; min-width: 0; align-items: center; gap: 0.75rem;">
+                                <span style="display: inline-flex; height: 2rem; width: 2rem; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: 0.375rem; background: var(--primary-50, #fffbeb); color: var(--primary-600, #d97706);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" style="height: 1rem; width: 1rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-6a2.25 2.25 0 0 0-.659-1.591l-3-3A2.25 2.25 0 0 0 14.25 3H6.75A2.25 2.25 0 0 0 4.5 5.25v13.5A2.25 2.25 0 0 0 6.75 21h10.5a2.25 2.25 0 0 0 2.25-2.25v-4.5Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 3v4.5a.75.75 0 0 0 .75.75h4.5" />
+                                    </svg>
+                                </span>
+                                <span style="min-width: 0;">
+                                    <span style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.875rem; font-weight: 600; line-height: 1.25rem; color: #111827;">{$filename}</span>
+                                    <span style="display: block; margin-top: 0.125rem; font-size: 0.75rem; line-height: 1rem; color: #6b7280;">{$extension}{$size}</span>
+                                </span>
+                            </span>
+                            {$action}
+                        </{$tag}>
+                    </li>
+                HTML;
+            })
+            ->implode('');
+
+        return new HtmlString(<<<HTML
+            <ul style="display: grid; max-width: 42rem; gap: 0.5rem; padding: 0; margin: 0;">
+                {$items}
+            </ul>
+        HTML);
+    }
+
+    private static function sourceLeadFileSize(string $path): string
+    {
+        $size = app(LeadFileStorage::class)->size($path);
+
+        if ($size === null) {
+            return '';
+        }
+
+        $megabytes = round($size / 1024 / 1024, 2);
+
+        return ' · '.$megabytes.' MB';
     }
 
     private static function sourceLeadText(?string $value): string
@@ -783,8 +937,18 @@ class MatterResource extends Resource
             ->visible(fn ($record) => $record && $record->is_matter);
     }
 
-    public static function table(Table $table, $show_created_at = false, $stages_hidden = false): Table
+    public static function table(
+        Table $table,
+        $show_created_at = false,
+        $stages_hidden = false,
+        $show_next_action = false,
+        array $hidden_table_columns = [],
+        bool $show_my_referat_filter = false,
+        bool $my_referat_filter_default = false,
+    ): Table
     {
+        $isColumnHidden = fn (string $column): bool => in_array($column, $hidden_table_columns, true);
+
         return $table
 
             ->columns([
@@ -793,38 +957,69 @@ class MatterResource extends Resource
                     ->size(TextSize::Medium)
                     ->searchable()
                     ->label('Sprawa'),
-                TextColumn::make('currentStage.parent')
-                    ->hidden($stages_hidden)
-                    ->label('Etap')
-                    ->toggleable(),
+                ...(! $isColumnHidden('currentStage.parent') ? [
+                    TextColumn::make('currentStage.parent')
+                        ->hidden($stages_hidden)
+                        ->label('Etap')
+                        ->toggleable(),
+                ] : []),
                 TextColumn::make('currentStage.label')
                     ->hidden($stages_hidden)
                     ->label('Status')
                     ->toggleable(),
+                ...($show_next_action ? [
+                    TextColumn::make('next_action_key')
+                        ->label('Następne działanie')
+                        ->formatStateUsing(fn (?string $state): string => app(PotentialMatterWorkflowService::class)->actionLabel($state))
+                        ->badge()
+                        ->color(fn (?string $state, Matter $record): string => blank($state)
+                            ? 'gray'
+                            : ($record->next_action_due_at?->lte(now()->toDateString()) ? 'danger' : 'warning'))
+                        ->description(fn (Matter $record): ?string => $record->next_action_reason)
+                        ->wrap()
+                        ->extraAttributes(['class' => 'crm-next-action-column'])
+                        ->placeholder('-')
+                        ->toggleable(),
+                    TextColumn::make('next_action_due_at')
+                        ->label('Termin działania')
+                        ->date()
+                        ->sortable()
+                        ->color(fn (Matter $record): string => $record->next_action_due_at?->lte(now()->toDateString()) ? 'danger' : 'gray')
+                        ->placeholder('-')
+                        ->toggleable(),
+                ] : []),
                 TextColumn::make('lawyer.name')
                     ->label('Referat')
                     ->toggleable(isToggledHiddenByDefault: true),
-                ToggleColumn::make('is_matter')
-                    ->label('Sprawa?')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                ToggleColumn::make('is_archived')
-                    ->label('Zarchwizowana?')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                ...(! $isColumnHidden('is_matter') ? [
+                    ToggleColumn::make('is_matter')
+                        ->label('Sprawa?')
+                        ->toggleable(isToggledHiddenByDefault: true),
+                ] : []),
+                ...(! $isColumnHidden('is_archived') ? [
+                    ToggleColumn::make('is_archived')
+                        ->label('Zarchwizowana?')
+                        ->toggleable(isToggledHiddenByDefault: true),
+                ] : []),
                 TextColumn::make('created_at')
                     ->date()
                     ->label('Data utworzenia')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: ! $show_created_at),
-                TextColumn::make('start')
-                    ->date()
-                    ->label('Start')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('end')
-                    ->date()
-                    ->label('Koniec')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                ...(! $isColumnHidden('start') ? [
+                    TextColumn::make('start')
+                        ->date()
+                        ->label('Start')
+                        ->sortable()
+                        ->toggleable(isToggledHiddenByDefault: true),
+                ] : []),
+                ...(! $isColumnHidden('end') ? [
+                    TextColumn::make('end')
+                        ->date()
+                        ->label('Koniec')
+                        ->sortable()
+                        ->toggleable(isToggledHiddenByDefault: true),
+                ] : []),
 
             ])
             ->filters([
@@ -868,6 +1063,17 @@ class MatterResource extends Resource
                     ->placeholder('Wszystkie')
                     ->trueLabel('Tylko sprawy')
                     ->falseLabel('Tylko szanse'),
+                ...($show_next_action ? [
+                    Filter::make('next_action_due')
+                        ->label('Wymagają działania')
+                        ->query(fn (QueryBuilder $query): QueryBuilder => $query
+                            ->whereNotNull('next_action_due_at')
+                            ->whereDate('next_action_due_at', '<=', now()->toDateString())),
+                    SelectFilter::make('next_action_key')
+                        ->label('Następne działanie')
+                        ->options(fn (): array => app(PotentialMatterWorkflowService::class)->actionOptions())
+                        ->native(false),
+                ] : []),
                 // ->toggle()
                 // ->default(true)
                 // ->label('Ukryj szanse')
@@ -883,6 +1089,13 @@ class MatterResource extends Resource
 
                 // Referat
                 SelectFilter::make('lawyer')->label('Referat')->relationship('lawyer', 'name')->native(false),
+                ...($show_my_referat_filter && auth()->user()?->is_lawyer ? [
+                    Filter::make('scopeMine')
+                        ->toggle()
+                        ->default($my_referat_filter_default)
+                        ->label('Tylko mój referat')
+                        ->query(fn (QueryBuilder $query): QueryBuilder => $query->where('lawyer_id', auth()->id())),
+                ] : []),
 
                 TernaryFilter::make('active')
                     ->label('Aktywne')
@@ -895,11 +1108,19 @@ class MatterResource extends Resource
                         false: fn (QueryBuilder $query) => $query->whereNotNull('end'),
                         blank: fn (QueryBuilder $query) => $query,
                     ),
+                TrashedFilter::make()
+                    ->hidden(fn (): bool => ! auth()->user()?->isAdmin()),
 
             ])
             // ->defaultSort('created_at', 'desc')
             ->recordActions([
-                EditAction::make()->iconButton(),
+                EditAction::make()
+                    ->iconButton()
+                    ->hidden(fn (Matter $record): bool => $record->trashed()),
+                RestoreAction::make()
+                    ->iconButton()
+                    ->authorize(fn (Matter $record): bool => auth()->user()?->can('restore', $record) === true)
+                    ->visible(fn (Matter $record): bool => auth()->user()?->isAdmin() === true && $record->trashed()),
             ]);
     }
 

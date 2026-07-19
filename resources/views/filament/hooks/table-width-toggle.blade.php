@@ -32,8 +32,4 @@
         data-filament-table-width-toggle-mode="collapse"
         x-on:click="window.filamentTableWidth?.toggle()"
     />
-
-    <script>
-        window.filamentTableWidth?.markTablePage();
-    </script>
 @endif

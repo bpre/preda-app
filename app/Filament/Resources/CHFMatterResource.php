@@ -70,7 +70,7 @@ class CHFMatterResource extends Resource
     {
         return [
             StagesRelationManager::class,
-            // ActivitiesRelationManager::class,
+            ActivitiesRelationManager::class,
             CreditsRelationManager::class,
             LettersRelationManager::class,
             LawsuitsRelationManager::class,

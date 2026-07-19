@@ -79,7 +79,7 @@ class OtherMatterPolicy
      */
     public function restore(User $user, OtherMatter $otherMatter): bool
     {
-        return $user->can('restore_other::matter');
+        return $user->isAdmin();
     }
 
     /**
@@ -87,7 +87,7 @@ class OtherMatterPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_other::matter');
+        return $user->isAdmin();
     }
 
     /**

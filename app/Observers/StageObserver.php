@@ -3,10 +3,23 @@
 namespace App\Observers;
 
 use App\Models\Stage;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class StageObserver
 {
+    public function saving(Stage $stage): void
+    {
+        if (! Schema::hasColumn($stage->getTable(), 'last_edited_at')) {
+            return;
+        }
+
+        if (! $stage->exists || $stage->isDirty($this->auditedFields())) {
+            $stage->last_edited_by = auth()->id();
+            $stage->last_edited_at = now();
+        }
+    }
+
     public function saved(Stage $stage): void
     {
 
@@ -64,5 +77,26 @@ class StageObserver
                  }
             }
         }
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function auditedFields(): array
+    {
+        return [
+            'label',
+            'description',
+            'files',
+            'files_names',
+            'sort',
+            'parent',
+            'date',
+            'matter_id',
+            'is_current',
+            'stage_id',
+            'current_stage_set_by',
+            'current_stage_set_at',
+        ];
     }
 }

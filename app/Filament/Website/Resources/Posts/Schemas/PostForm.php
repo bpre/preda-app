@@ -77,6 +77,7 @@ class PostForm
 
                         Repeater::make('alternative_slugs')
                             ->label('Alternatywne adresy URL')
+                            ->addActionLabel('Dodaj alternatywny adres')
                             ->simple(
                                 TextInput::make('slug')->label('URL')
                             )

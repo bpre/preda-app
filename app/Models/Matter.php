@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Matter extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $casts = [
         'id' => 'string',
@@ -21,6 +22,15 @@ class Matter extends Model
         'is_matter' => 'boolean',
         'is_archived' => 'boolean',
         'is_chf' => 'boolean',
+        'has_certificate' => 'boolean',
+        'potential_benefits_amount' => 'decimal:2',
+        'future_installments_cancellation_amount' => 'decimal:2',
+        'overpayment_refund_amount' => 'decimal:2',
+        'current_stage_set_at' => 'datetime',
+        'offer_sent_at' => 'datetime',
+        'offer_sent_conditionally' => 'boolean',
+        'next_action_due_at' => 'date',
+        'next_action_generated_at' => 'datetime',
         'start' => 'date',
         'end' => 'date',
     ];
@@ -29,7 +39,10 @@ class Matter extends Model
 
     protected $fillable = ['label', 'lawyer_id', 'category', 'gdrive', 'status', 'is_archived', 'userinfo',
         'is_matter', 'branch', 'branch_id', 'opponent_lawfirm_id', 'opponent_departamant_id', 'start', 'end',
-        'current_template_stage_id'];
+        'current_template_stage_id', 'current_stage_set_by', 'current_stage_set_at', 'has_certificate', 'potential_benefits_amount',
+        'future_installments_cancellation_amount', 'overpayment_refund_amount', 'offer_sent_at', 'offer_sent_by',
+        'offer_sent_conditionally', 'next_action_key', 'next_action_due_at', 'next_action_reason',
+        'next_action_generated_at'];
 
     // RELACJE
 
@@ -116,9 +129,19 @@ class Matter extends Model
         return $this->hasMany(Stage::class, 'matter_id');
     }
 
+    public function crmClientMessages(): HasMany
+    {
+        return $this->hasMany(CrmClientMessage::class, 'matter_id');
+    }
+
     public function currentStage(): BelongsTo
     {
         return $this->belongsTo(TemplateStage::class, 'current_template_stage_id');
+    }
+
+    public function currentStageSetter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'current_stage_set_by');
     }
 
     public function currentStageRecord()

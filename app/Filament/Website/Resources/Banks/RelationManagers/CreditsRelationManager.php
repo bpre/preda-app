@@ -65,6 +65,7 @@ class CreditsRelationManager extends RelationManager
 
                 Repeater::make('clauses')
                     ->label('Klauzule')
+                    ->addActionLabel('Dodaj klauzulę')
                     ->schema(
                         [
 

@@ -79,7 +79,7 @@ class BankMatterPolicy
      */
     public function restore(User $user, BankMatter $bankMatter): bool
     {
-        return $user->can('restore_bank::matter');
+        return $user->isAdmin();
     }
 
     /**
@@ -87,7 +87,7 @@ class BankMatterPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_bank::matter');
+        return $user->isAdmin();
     }
 
     /**

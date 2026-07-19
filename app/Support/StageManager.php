@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Matter;
 use App\Models\Stage;
 use App\Models\TemplateStage;
+use App\Services\Crm\PotentialMatterNextActionService;
 use App\Services\Website\LeadPotentialMatterService;
 use Illuminate\Support\Carbon;
 
@@ -63,12 +64,10 @@ class StageManager
             return null;
         }
 
-        Stage::query()
-            ->where('matter_id', $matter->getKey())
-            ->update(['is_current' => false]);
-
         if (! $templateStage) {
-            $matter->forceFill(['current_template_stage_id' => null])->save();
+            self::markStagesNotCurrent($matter);
+            $matter->forceFill(self::clearedCurrentStageAttributes())->save();
+            self::refreshPotentialMatterNextAction($matter->refresh());
 
             return null;
         }
@@ -84,12 +83,25 @@ class StageManager
             self::syncStageTemplateData($stageRecord, $templateStage);
         }
 
+        $shouldAuditCurrentSet = self::shouldAuditCurrentSet($matter, $templateStage, $stageRecord);
+
+        self::markStagesNotCurrent(
+            $matter,
+            $stageRecord->exists ? $stageRecord->getKey() : null,
+        );
+
         $stageRecord->is_current = true;
         $stageRecord->date = $date ? Carbon::parse($date)->toDateString() : ($stageRecord->date ?? now()->toDateString());
+
+        if ($shouldAuditCurrentSet) {
+            self::fillCurrentStageAudit($stageRecord);
+        }
+
         $stageRecord->save();
 
-        $matter->forceFill(['current_template_stage_id' => $templateStage->getKey()])->save();
+        $matter->forceFill(self::currentStageAttributes($templateStage, $shouldAuditCurrentSet))->save();
         app(LeadPotentialMatterService::class)->syncStatusFromPotentialMatter($matter->refresh());
+        self::refreshPotentialMatterNextAction($matter->refresh());
 
         return $stageRecord;
     }
@@ -124,22 +136,32 @@ class StageManager
         }
 
         $isCurrent = (bool) ($data['is_current'] ?? false);
+        $wasCurrentForMatter = self::stageIsCurrentForMatter($matter, $templateStage, $stageRecord);
 
         if ($isCurrent && ($templateStage->is_active || $stageRecord->is_current)) {
-            Stage::query()
-                ->where('matter_id', $matter->getKey())
-                ->where('stage_id', '!=', $templateStage->getKey())
-                ->update(['is_current' => false]);
+            self::markStagesNotCurrent(
+                $matter,
+                $stageRecord->exists ? $stageRecord->getKey() : null,
+            );
 
             $stageRecord->is_current = true;
             $stageRecord->date ??= now()->toDateString();
-            $matter->forceFill(['current_template_stage_id' => $templateStage->getKey()])->save();
+
+            $shouldAuditCurrentSet = ! $wasCurrentForMatter
+                || blank($matter->current_stage_set_at)
+                || blank($stageRecord->current_stage_set_at);
+
+            if ($shouldAuditCurrentSet) {
+                self::fillCurrentStageAudit($stageRecord);
+            }
+
+            $matter->forceFill(self::currentStageAttributes($templateStage, $shouldAuditCurrentSet))->save();
             app(LeadPotentialMatterService::class)->syncStatusFromPotentialMatter($matter->refresh());
         } else {
             $stageRecord->is_current = false;
 
             if ($matter->current_template_stage_id === $templateStage->getKey()) {
-                $matter->forceFill(['current_template_stage_id' => null])->save();
+                $matter->forceFill(self::clearedCurrentStageAttributes())->save();
             }
         }
 
@@ -148,10 +170,13 @@ class StageManager
                 $stageRecord->delete();
             }
 
+            self::refreshPotentialMatterNextAction($matter->refresh());
+
             return null;
         }
 
         $stageRecord->save();
+        self::refreshPotentialMatterNextAction($matter->refresh());
 
         return $stageRecord;
     }
@@ -168,15 +193,14 @@ class StageManager
             $stageId = $stage;
         }
 
-        Stage::query()
-            ->where('matter_id', $matter->getKey())
-            ->when($stageId, fn ($query) => $query->where('stage_id', $stageId))
-            ->update(['is_current' => false]);
+        self::markStagesNotCurrent($matter, stageId: $stageId);
 
         if (! $stageId || $matter->current_template_stage_id === $stageId) {
-            $matter->forceFill(['current_template_stage_id' => null])->save();
+            $matter->forceFill(self::clearedCurrentStageAttributes())->save();
             app(LeadPotentialMatterService::class)->syncStatusFromPotentialMatter($matter->refresh());
         }
+
+        self::refreshPotentialMatterNextAction($matter->refresh());
     }
 
     public static function stageFor(Matter $matter, TemplateStage | string $templateStage): ?Stage
@@ -221,5 +245,91 @@ class StageManager
             || filled(strip_tags((string) $stage->description))
             || filled($stage->files)
             || filled($stage->files_names);
+    }
+
+    protected static function shouldAuditCurrentSet(Matter $matter, TemplateStage $templateStage, Stage $stageRecord): bool
+    {
+        return ! self::stageIsCurrentForMatter($matter, $templateStage, $stageRecord)
+            || blank($matter->current_stage_set_at)
+            || blank($stageRecord->current_stage_set_at);
+    }
+
+    protected static function stageIsCurrentForMatter(Matter $matter, TemplateStage $templateStage, Stage $stageRecord): bool
+    {
+        return $stageRecord->exists
+            && $stageRecord->is_current
+            && ((string) $matter->current_template_stage_id === (string) $templateStage->getKey());
+    }
+
+    protected static function markStagesNotCurrent(
+        Matter $matter,
+        int | string | null $exceptStageRecordId = null,
+        string | null $stageId = null,
+    ): void
+    {
+        Stage::query()
+            ->where('matter_id', $matter->getKey())
+            ->where('is_current', true)
+            ->when(
+                filled($exceptStageRecordId),
+                fn ($query) => $query->whereKeyNot($exceptStageRecordId),
+            )
+            ->when(
+                filled($stageId),
+                fn ($query) => $query->where('stage_id', $stageId),
+            )
+            ->update(self::stageNotCurrentAttributes());
+    }
+
+    protected static function fillCurrentStageAudit(Stage $stage): void
+    {
+        $stage->current_stage_set_by = auth()->id();
+        $stage->current_stage_set_at = now();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected static function currentStageAttributes(TemplateStage $templateStage, bool $includeAudit): array
+    {
+        $attributes = [
+            'current_template_stage_id' => $templateStage->getKey(),
+        ];
+
+        if ($includeAudit) {
+            $attributes['current_stage_set_by'] = auth()->id();
+            $attributes['current_stage_set_at'] = now();
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected static function clearedCurrentStageAttributes(): array
+    {
+        return [
+            'current_template_stage_id' => null,
+            'current_stage_set_by' => null,
+            'current_stage_set_at' => null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected static function stageNotCurrentAttributes(): array
+    {
+        return [
+            'is_current' => false,
+            'last_edited_by' => auth()->id(),
+            'last_edited_at' => now(),
+        ];
+    }
+
+    protected static function refreshPotentialMatterNextAction(Matter $matter): void
+    {
+        app(PotentialMatterNextActionService::class)->refresh($matter);
     }
 }

@@ -136,7 +136,26 @@ class RoleResource extends ShieldRoleResource
                 ->collapsible();
         }
 
+        if (($group['customPermissions'] ?? []) !== []) {
+            $schema[] = Section::make(static::getCustomPermissionsSectionLabel($group))
+                ->schema([
+                    static::getCheckboxListFormComponent(
+                        name: "{$group['id']}_custom_permissions_tab",
+                        options: $group['customPermissions'],
+                    ),
+                ])
+                ->collapsible();
+        }
+
         return $schema;
+    }
+
+    protected static function getCustomPermissionsSectionLabel(array $group): string
+    {
+        return match ($group['id']) {
+            'crm' => 'Dostęp marketingowy',
+            default => 'Narzędzia administracyjne',
+        };
     }
 
     protected static function getResourcePermissionSection(array $resource): Section

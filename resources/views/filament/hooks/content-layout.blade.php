@@ -150,7 +150,23 @@
 
         const hasTableWidthPageMarker = () => Boolean(document.querySelector('[data-filament-table-width-page]'));
         const hasTableWidthToggle = () => Boolean(document.querySelector('[data-filament-table-width-toggle]'));
-        const isTableWidthPage = () => isTablePageForced || hasTableWidthPageMarker();
+        const markTableWidthPage = () => {
+            isTablePageForced = true;
+
+            return true;
+        };
+
+        const isTableWidthPage = () => {
+            if (isTablePageForced) {
+                return true;
+            }
+
+            if (hasTableWidthPageMarker() || hasTableWidthToggle()) {
+                return markTableWidthPage();
+            }
+
+            return false;
+        };
 
         const getContainedWidth = () => {
             if (! document.body) {
@@ -173,12 +189,17 @@
             return (main?.parentElement ?? main)?.getBoundingClientRect().width ?? window.innerWidth;
         };
 
-        const canChangeTableWidth = (isTablePage) => (
-            isTablePage &&
-            tableToggleEnabled &&
-            hasTableWidthToggle() &&
-            (getAvailableContentWidth() > (getContainedWidth() + 1))
-        );
+        const canChangeTableWidth = (isTablePage) => {
+            if (! isTablePage || ! tableToggleEnabled) {
+                return false;
+            }
+
+            if (! hasTableWidthToggle()) {
+                return root.dataset.filamentTableWidthCanToggle === 'true';
+            }
+
+            return getAvailableContentWidth() > (getContainedWidth() + 1);
+        };
 
         const syncButtons = (isTablePage = isTablePageFromServer) => {
             const mode = getMode();
@@ -210,7 +231,7 @@
 
         window.filamentTableWidth = {
             markTablePage: () => {
-                isTablePageForced = true;
+                markTableWidthPage();
                 applyMode(true);
             },
             toggle: () => {
@@ -223,22 +244,43 @@
 
         applyMode();
 
+        let applyModeFrame = null;
+        let mutationObserver = null;
+
+        const scheduleApplyMode = () => {
+            if (applyModeFrame) {
+                cancelAnimationFrame(applyModeFrame);
+            }
+
+            applyModeFrame = requestAnimationFrame(() => {
+                applyModeFrame = null;
+                applyMode(isTableWidthPage());
+            });
+        };
+
+        const startMutationObserver = () => {
+            if (mutationObserver || ! document.body) {
+                return;
+            }
+
+            mutationObserver = new MutationObserver(() => {
+                scheduleApplyMode();
+            });
+
+            mutationObserver.observe(document.body, { childList: true, subtree: true });
+        };
+
+        startMutationObserver();
+
         document.addEventListener('livewire:navigated', () => {
             isTablePageForced = false;
 
-            requestAnimationFrame(() => applyMode(isTableWidthPage()));
+            scheduleApplyMode();
         });
 
         document.addEventListener('DOMContentLoaded', () => {
             applyMode(isTableWidthPage());
-
-            if (! document.body) {
-                return;
-            }
-
-            new MutationObserver(() => {
-                applyMode(isTableWidthPage());
-            }).observe(document.body, { childList: true, subtree: true });
+            startMutationObserver();
         });
 
         let resizeFrame = null;

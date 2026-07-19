@@ -79,7 +79,7 @@ class CHFMatterPolicy
      */
     public function restore(User $user, CHFMatter $cHFMatter): bool
     {
-        return $user->can('restore_c::h::f::matter');
+        return $user->isAdmin();
     }
 
     /**
@@ -87,7 +87,7 @@ class CHFMatterPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_c::h::f::matter');
+        return $user->isAdmin();
     }
 
     /**

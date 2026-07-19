@@ -7,9 +7,11 @@ use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Filament\Resources\UserResource\RelationManagers\TasksAssignedToRelationManager;
 use App\Models\User;
+use App\Services\UserImpersonationService;
 use App\Support\PanelAccess;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -24,6 +26,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
 
 class UserResource extends Resource
 {
@@ -186,6 +189,7 @@ class UserResource extends Resource
                 //
             ])
             ->recordActions([
+                static::impersonateAction(iconButton: true),
                 Action::make('Zmiana hasła')
                     ->icon('heroicon-m-key')
                     ->iconButton()
@@ -217,6 +221,34 @@ class UserResource extends Resource
                     ),
                 EditAction::make()->iconButton(),
             ]);
+    }
+
+    public static function impersonateAction(bool $iconButton = false): Action
+    {
+        $action = Action::make('impersonate')
+            ->label('Działaj jako')
+            ->tooltip('Działaj jako ten użytkownik')
+            ->icon('heroicon-m-eye')
+            ->color('info')
+            ->requiresConfirmation()
+            ->modalHeading(fn (User $record): string => 'Działać jako '.$record->name.'?')
+            ->modalDescription('Zostaniesz przełączony na konto tego pracownika i zobaczysz aplikację z jego uprawnieniami. Na ekranie pojawi się pasek umożliwiający powrót do Twojego konta.')
+            ->modalSubmitActionLabel('Rozpocznij')
+            ->hidden(fn (User $record): bool => ! app(UserImpersonationService::class)->canStart(auth()->user(), $record))
+            ->action(function (User $record): mixed {
+                $actor = auth()->user();
+
+                abort_unless($actor instanceof User, 403);
+
+                $panelId = Filament::getCurrentPanel()?->getId() ?? 'kancelaria';
+                $routeName = "impersonation.start.{$panelId}";
+
+                abort_unless(Route::has($routeName), 404);
+
+                return redirect()->to(route($routeName, ['user' => $record]));
+            });
+
+        return $iconButton ? $action->iconButton() : $action;
     }
 
     public static function getRelations(): array

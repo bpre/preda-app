@@ -13,7 +13,19 @@ class TemplateStage extends Model
 
     protected $table = 'template_stages';
 
-    protected $fillable = ['id', 'category', 'label', 'parent', 'sort', 'parent_sort', 'is_lead_default', 'is_chf_default', 'is_active'];
+    protected $fillable = [
+        'id',
+        'key',
+        'preferred_action_key',
+        'category',
+        'label',
+        'parent',
+        'sort',
+        'parent_sort',
+        'is_lead_default',
+        'is_chf_default',
+        'is_active',
+    ];
 
     protected $casts = [
         'is_lead_default' => 'boolean',

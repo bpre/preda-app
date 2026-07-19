@@ -15,6 +15,7 @@ use App\Filament\Website\Resources\Leads\Pages\CreateLead;
 use App\Filament\Website\Resources\Leads\Schemas\LeadForm;
 use App\Filament\Website\Resources\Leads\Tables\LeadsTable;
 use App\Filament\Website\Resources\Leads\RelationManagers\StatusChangesRelationManager;
+use App\Support\Crm\MarketingAgencyAccess;
 
 class LeadResource extends Resource
 {
@@ -46,6 +47,10 @@ class LeadResource extends Resource
 
     public static function getRelations(): array
     {
+        if (MarketingAgencyAccess::usesRestrictedLeadView()) {
+            return [];
+        }
+
         return [
             StatusChangesRelationManager::class,
         ];

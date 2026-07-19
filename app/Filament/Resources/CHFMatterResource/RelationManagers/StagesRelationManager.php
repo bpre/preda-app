@@ -62,6 +62,18 @@ class StagesRelationManager extends RelationManager
                     ->label('Data')
                     ->date()
                     ->placeholder('-'),
+                TextColumn::make('current_stage_set_at')
+                    ->label('Ustawiono jako aktualny')
+                    ->dateTime('Y-m-d H:i')
+                    ->description(fn (Stage $record): ?string => $record->currentStageSetter?->name)
+                    ->placeholder('-')
+                    ->toggleable(),
+                TextColumn::make('last_edited_at')
+                    ->label('Ostatnia edycja')
+                    ->dateTime('Y-m-d H:i')
+                    ->description(fn (Stage $record): ?string => $record->lastEditor?->name)
+                    ->placeholder('-')
+                    ->toggleable(),
             ])
             ->defaultGroup('parent')
             ->groupingSettingsHidden()
@@ -131,7 +143,8 @@ class StagesRelationManager extends RelationManager
         return Stage::query()
             ->where('matter_id', $this->ownerRecord->getKey())
             ->whereNotNull('stage_id')
-            ->whereNotNull('date');
+            ->whereNotNull('date')
+            ->with(['currentStageSetter', 'lastEditor']);
     }
 
     protected function datedStageIdsQuery(): Builder
@@ -190,6 +203,26 @@ class StagesRelationManager extends RelationManager
                 : null;
     }
 
+    protected function defaultAddableStageParent(): ?string
+    {
+        $defaultStageParent = $this->defaultStageParent();
+
+        if (filled($defaultStageParent)) {
+            return $defaultStageParent;
+        }
+
+        $options = $this->addableStageParentOptions();
+
+        return count($options) === 1
+            ? array_key_first($options)
+            : null;
+    }
+
+    protected function hasMultipleAddableStageParents(): bool
+    {
+        return count($this->addableStageParentOptions()) > 1;
+    }
+
     protected function stageDetailsForm(bool $includeTemplateStageSelect = false): array
     {
         $fieldsetSchema = [];
@@ -201,7 +234,9 @@ class StagesRelationManager extends RelationManager
                 ->searchable()
                 ->native(false)
                 ->live()
-                ->default(fn (): ?string => $this->defaultStageParent())
+                ->default(fn (): ?string => $this->defaultAddableStageParent())
+                ->visible(fn (): bool => $this->hasMultipleAddableStageParents())
+                ->dehydratedWhenHidden()
                 ->afterStateUpdated(fn (Set $set) => $set('stage_id', null))
                 ->required();
 

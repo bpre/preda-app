@@ -113,7 +113,9 @@ class StageResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->whereNotNull('date'))
+            ->modifyQueryUsing(fn (Builder $query) => $query
+                ->whereNotNull('date')
+                ->with(['currentStageSetter', 'lastEditor', 'matter']))
             ->recordTitleAttribute('label')
             ->columns([
                 TextColumn::make('label')->label('Status'),
@@ -122,20 +124,32 @@ class StageResource extends Resource
                 // TextColumn::make('parent')->label('Kategoria'),
                 ToggleColumn::make('is_current')
                 ->updateStateUsing(function (Stage $record, bool $state): bool {
+                    if (! $record->matter) {
+                        return false;
+                    }
+
                     if ($state) {
                         return StageManager::setCurrentStage($record->matter, $record, $record->date ?? now()) !== null;
                     }
 
-                    $record->update(['is_current' => false]);
-
-                    if ($record->matter?->current_template_stage_id === $record->stage_id) {
-                        $record->matter->forceFill(['current_template_stage_id' => null])->save();
-                    }
+                    StageManager::clearCurrentStage($record->matter, $record);
 
                     return false;
                 })
                 ->label('Aktualny etap?'),
                 TextColumn::make('date')->label('Data')->placeholder('-'),
+                TextColumn::make('current_stage_set_at')
+                    ->label('Ustawiono jako aktualny')
+                    ->dateTime('Y-m-d H:i')
+                    ->description(fn (Stage $record): ?string => $record->currentStageSetter?->name)
+                    ->placeholder('-')
+                    ->toggleable(),
+                TextColumn::make('last_edited_at')
+                    ->label('Ostatnia edycja')
+                    ->dateTime('Y-m-d H:i')
+                    ->description(fn (Stage $record): ?string => $record->lastEditor?->name)
+                    ->placeholder('-')
+                    ->toggleable(),
             ])
             // ->reorderable('sort')
             ->defaultGroup('parent')
@@ -158,26 +172,13 @@ class StageResource extends Resource
             // ])
             ->recordActions([
                 EditAction::make()->iconButton()->slideOver()->modalWidth('7xl')->using(function (Stage $record, array $data): Stage {
-                    $wasCurrent = $record->is_current;
-                    $isCurrent = (bool) ($data['is_current'] ?? false);
+                    if ($record->matter && $record->templateStage) {
+                        StageManager::saveStageDetails($record->matter, $record->templateStage, $data);
 
-                    if($isCurrent && $record->templateStage?->is_active) {
-                        Stage::where('matter_id', $record->matter_id)->whereNot('id', $record->id)
-                        ->update(['is_current' => false]);
-
-                        $data['date'] ??= $record->date ?? now()->toDateString();
-                    } elseif ($isCurrent) {
-                        $data['is_current'] = false;
-                        $isCurrent = false;
+                        return $record->refresh();
                     }
 
                     $record->update($data);
-
-                    if ($isCurrent) {
-                        $record->matter?->forceFill(['current_template_stage_id' => $record->stage_id])->save();
-                    } elseif ($wasCurrent && ($record->matter?->current_template_stage_id === $record->stage_id)) {
-                        $record->matter->forceFill(['current_template_stage_id' => null])->save();
-                    }
 
                     return $record;
                 }),

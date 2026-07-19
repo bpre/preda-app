@@ -17,6 +17,7 @@ use App\Filament\Resources\CHFMatterResource\RelationManagers\DealsRelationManag
 use App\Filament\Resources\CHFMatterResource\RelationManagers\LettersRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\LawsuitsRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\PaymentsRelationManager;
+use App\Filament\Resources\MatterResource\RelationManagers\ActivitiesRelationManager;
 
 class BankMatterResource extends Resource
 {
@@ -71,6 +72,7 @@ class BankMatterResource extends Resource
         return [
             // StagesRelationManager::class,
             // CreditsRelationManager::class,
+            ActivitiesRelationManager::class,
             LettersRelationManager::class,
             LawsuitsRelationManager::class,
             RelationGroup::make('Zlecenia', [

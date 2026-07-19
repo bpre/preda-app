@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Crm\Resources\CHFPotentialMatterResource as CrmPotentialMatterResource;
+use App\Filament\Crm\Pages\Dashboard as CrmDashboard;
 use App\Filament\Website\Resources\Leads\LeadResource as WebsiteLeadResource;
 use App\Http\Middleware\IsActiveUser;
 use Filament\Enums\ThemeMode;
@@ -16,14 +17,11 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use RalphJSmit\Filament\Notifications\FilamentNotifications;
 
@@ -36,10 +34,9 @@ class CrmPanelProvider extends PanelProvider
             ->domain(config('preda.domains.crm'))
             ->path('')
             ->sidebarFullyCollapsibleOnDesktop()
-            ->homeUrl(fn (): string => self::homeUrl())
-            ->authenticatedRoutes(function (): void {
-                Route::get('/', fn () => redirect(self::homeUrl()))->name('home');
-            })
+            ->homeUrl(fn (): string => CrmDashboard::hasVisibleWidgets()
+                ? CrmDashboard::getUrl(panel: 'crm')
+                : CrmPotentialMatterResource::getUrl(panel: 'crm'))
             ->globalSearch(false)
             ->brandLogo(fn () => view('logo'))
             ->login()
@@ -55,10 +52,7 @@ class CrmPanelProvider extends PanelProvider
             ])
             ->discoverPages(in: app_path('Filament/Crm/Pages'), for: 'App\\Filament\\Crm\\Pages')
             ->discoverWidgets(in: app_path('Filament/Crm/Widgets'), for: 'App\\Filament\\Crm\\Widgets')
-            ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
-            ])
+            ->widgets([])
             ->navigationItems([
                 NavigationItem::make('Potencjalne sprawy')
                     ->icon('heroicon-o-rectangle-stack')
@@ -93,12 +87,4 @@ class CrmPanelProvider extends PanelProvider
             ]);
     }
 
-    private static function homeUrl(): string
-    {
-        if (auth()->user()?->can('ViewAny:Lead') === true) {
-            return WebsiteLeadResource::getUrl(panel: 'crm');
-        }
-
-        return CrmPotentialMatterResource::getUrl(panel: 'crm');
-    }
 }

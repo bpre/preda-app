@@ -82,6 +82,14 @@ trait InteractsWithAdvancedTablePresetTabs
         return $this->appendAdvancedTableActiveTabToSessionKey(parent::getHasReorderedTableColumnsSessionKey());
     }
 
+    protected function loadTableColumnsFromSession(): array
+    {
+        $state = parent::loadTableColumnsFromSession();
+        $sanitizedState = $this->sanitizeAdvancedTableColumnState($state);
+
+        return $sanitizedState === [] ? $this->getDefaultTableColumnState() : $sanitizedState;
+    }
+
     protected function getActiveAdvancedTablePresetTab(): ?PresetTab
     {
         $activeTab = filled($this->activeTab) ? $this->activeTab : $this->getDefaultActiveTab();
@@ -171,6 +179,40 @@ trait InteractsWithAdvancedTablePresetTabs
     protected function shouldPersistAdvancedTableActiveTabInSession(): bool
     {
         return $this->getAdvancedTablesPlugin()?->persistsActiveViewInSession() ?? false;
+    }
+
+    /**
+     * @param  array<int, mixed>  $state
+     * @return array<int, array<string, mixed>>
+     */
+    protected function sanitizeAdvancedTableColumnState(array $state): array
+    {
+        return collect($state)
+            ->map(fn (mixed $item): ?array => is_array($item) ? $this->sanitizeAdvancedTableColumnStateItem($item) : null)
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>|null
+     */
+    protected function sanitizeAdvancedTableColumnStateItem(array $item): ?array
+    {
+        if (! is_string($item['type'] ?? null) || ! array_key_exists('name', $item)) {
+            return null;
+        }
+
+        if (($item['type'] ?? null) === 'group' && isset($item['columns'])) {
+            if (! is_array($item['columns'])) {
+                return null;
+            }
+
+            $item['columns'] = $this->sanitizeAdvancedTableColumnState($item['columns']);
+        }
+
+        return $item;
     }
 
     protected function getAdvancedTablesPlugin(): ?AdvancedTablesPlugin

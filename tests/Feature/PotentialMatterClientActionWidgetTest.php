@@ -3,8 +3,11 @@
 namespace Tests\Feature;
 
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\Widgets\PotentialMatterActionWidget;
+use App\Models\Activity;
 use App\Models\CHFPotentialMatter;
+use App\Models\CrmMailPlaceholder;
 use App\Models\CrmMailTemplate;
+use App\Models\CrmWorkflowOffer;
 use App\Models\MatterGeneratedDocument;
 use App\Models\TemplateStage;
 use App\Models\User;
@@ -30,16 +33,32 @@ class PotentialMatterClientActionWidgetTest extends TestCase
         $matter = $this->createPotentialMatterOnDefaultStage();
         $workflow = app(PotentialMatterWorkflowService::class);
 
+        $this->assertSame(
+            PotentialMatterWorkflowService::REVIEW_NEW_POTENTIAL_MATTER,
+            $matter->next_action_key,
+        );
+        $this->assertSame(now()->toDateString(), $matter->next_action_due_at?->toDateString());
+        $this->assertSame(
+            'Nowa potencjalna sprawa wymaga weryfikacji i wyboru pierwszego działania.',
+            $matter->next_action_reason,
+        );
+
         $this->assertSame([
+            PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS => 'Wyślij analizę umowy',
             PotentialMatterClientActionService::CONFIRM_QUALIFICATION => 'Wyślij potwierdzenie kwalifikacji sprawy',
             PotentialMatterClientActionService::REQUEST_ADDITIONAL_INFO => 'Wyślij prośbę o dodatkowe informacje',
-            PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS => 'Wyślij analizę umowy',
         ], $workflow->availableOptions($matter));
+
+        $this->actingAsMatterLawyer($matter);
 
         Livewire::test(PotentialMatterActionWidget::class, ['record' => $matter])
             ->assertSee('Podejmij działanie')
             ->assertSee('Wyślij analizę umowy')
             ->assertSee('Przygotuj maila')
+            ->assertSee('rgb(254 242 242)', false)
+            ->assertDontSee('Następny krok')
+            ->assertDontSee('Termin')
+            ->assertDontSee('Powód')
             ->assertDontSee('Potwierdź')
             ->assertFormFieldExists(
                 'selectedAction',
@@ -54,8 +73,9 @@ class PotentialMatterClientActionWidgetTest extends TestCase
         StageManager::setCurrentStage($matter->refresh(), $confirmationSentStage);
 
         $this->assertSame([
-            PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS => 'Wyślij analizę umowy',
             PotentialMatterClientActionService::FOLLOW_UP_AFTER_QUALIFICATION => 'Wyślij follow-up po kwalifikacji',
+            PotentialMatterClientActionService::REQUEST_ADDITIONAL_INFO => 'Wyślij prośbę o dodatkowe informacje',
+            PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS => 'Wyślij analizę umowy',
             PotentialMatterClientActionService::SEND_OFFER => 'Wyślij ofertę',
         ], $workflow->availableOptions($matter->refresh()));
 
@@ -82,9 +102,8 @@ class PotentialMatterClientActionWidgetTest extends TestCase
         StageManager::setCurrentStage($matter->refresh(), $additionalInfoRequestedStage);
 
         $this->assertSame([
-            PotentialMatterClientActionService::CONFIRM_QUALIFICATION => 'Wyślij potwierdzenie kwalifikacji sprawy',
             PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS => 'Wyślij analizę umowy',
-            PotentialMatterClientActionService::FOLLOW_UP_AFTER_INFO_REQUEST => 'Wyślij follow-up po prośbie o informacje',
+            PotentialMatterClientActionService::SEND_OFFER => 'Wyślij ofertę',
         ], $workflow->availableOptions($matter->refresh()));
 
         Livewire::test(PotentialMatterActionWidget::class, ['record' => $matter->refresh()])
@@ -98,8 +117,8 @@ class PotentialMatterClientActionWidgetTest extends TestCase
         StageManager::setCurrentStage($matter->refresh(), $infoRequestFollowUpStage);
 
         $this->assertSame([
-            PotentialMatterClientActionService::CONFIRM_QUALIFICATION => 'Wyślij potwierdzenie kwalifikacji sprawy',
             PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS => 'Wyślij analizę umowy',
+            PotentialMatterClientActionService::SEND_OFFER => 'Wyślij ofertę',
         ], $workflow->availableOptions($matter->refresh()));
 
         $analysisSentStage = TemplateStage::query()
@@ -135,7 +154,9 @@ class PotentialMatterClientActionWidgetTest extends TestCase
 
         StageManager::setCurrentStage($matter->refresh(), $offerSentStage);
 
-        $this->assertSame([], $workflow->availableOptions($matter->refresh()));
+        $this->assertSame([
+            PotentialMatterClientActionService::FOLLOW_UP_AFTER_OFFER => 'Wyślij follow-up po ofercie',
+        ], $workflow->availableOptions($matter->refresh()));
 
         $meetingStage = TemplateStage::query()
             ->where('category', 'Potencjalna')
@@ -145,14 +166,49 @@ class PotentialMatterClientActionWidgetTest extends TestCase
         StageManager::setCurrentStage($matter->refresh(), $meetingStage);
 
         $this->assertSame([
+            PotentialMatterClientActionService::REQUEST_CERTIFICATE => 'Wyślij prośbę o zaświadczenie',
             PotentialMatterClientActionService::FOLLOW_UP_AFTER_MEETING => 'Wyślij follow-up po spotkaniu',
         ], $workflow->availableOptions($matter->refresh()));
 
         StageManager::setCurrentStage($matter->refresh(), $offerSentStage);
 
         $this->assertSame([
-            PotentialMatterClientActionService::FOLLOW_UP_AFTER_MEETING => 'Wyślij follow-up po spotkaniu',
+            PotentialMatterClientActionService::FOLLOW_UP_AFTER_OFFER => 'Wyślij follow-up po ofercie',
         ], $workflow->availableOptions($matter->refresh()));
+    }
+
+    public function test_widget_is_hidden_for_user_outside_potential_matter_referat(): void
+    {
+        $matter = $this->createPotentialMatterOnDefaultStage();
+        $otherLawyer = User::factory()->create([
+            'is_active' => true,
+            'is_employee' => true,
+            'is_lawyer' => true,
+        ]);
+
+        $this->actingAs($otherLawyer);
+
+        Livewire::test(PotentialMatterActionWidget::class, ['record' => $matter])
+            ->assertDontSee('Podejmij działanie')
+            ->assertDontSee('Aktualny stan')
+            ->assertDontSee('Wyślij analizę umowy')
+            ->assertActionDisabled('sendClientMessage')
+            ->assertActionHidden('archivePotentialMatter');
+    }
+
+    public function test_new_potential_matter_review_due_date_uses_stage_date(): void
+    {
+        $matter = $this->createPotentialMatterOnDefaultStage();
+        $defaultStage = app(PotentialMatterWorkflowService::class)
+            ->stageForKey(PotentialMatterWorkflowService::NEW_CONTRACT_STAGE);
+
+        StageManager::setCurrentStage($matter->refresh(), $defaultStage, now()->subDays(20));
+
+        $this->assertSame(
+            PotentialMatterWorkflowService::REVIEW_NEW_POTENTIAL_MATTER,
+            $matter->refresh()->next_action_key,
+        );
+        $this->assertSame(now()->subDays(20)->toDateString(), $matter->next_action_due_at?->toDateString());
     }
 
     public function test_action_mail_uses_recipient_summary(): void
@@ -267,6 +323,42 @@ class PotentialMatterClientActionWidgetTest extends TestCase
         $this->assertStringContainsString('wracam po naszym spotkaniu', $meetingFollowUpPayload['body']);
     }
 
+    public function test_mail_placeholders_can_be_configured_from_database(): void
+    {
+        $matter = $this->createPotentialMatterOnDefaultStage();
+        $this->createLead($matter);
+
+        $matter->forceFill([
+            'has_certificate' => true,
+            'potential_benefits_amount' => 12345.67,
+            'future_installments_cancellation_amount' => 5000,
+            'overpayment_refund_amount' => 7345.67,
+        ])->save();
+
+        CrmMailTemplate::query()
+            ->where('action', PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS)
+            ->update([
+                'body' => '<p>{{akapit_o_korzysciach}}</p>',
+            ]);
+
+        CrmMailPlaceholder::query()
+            ->where('key', CrmMailPlaceholder::BENEFITS)
+            ->firstOrFail()
+            ->update([
+                'variants' => [
+                    CrmMailPlaceholder::BENEFITS_WITH_AMOUNTS => 'Konfigurowany akapit: {{podsumowanie_korzysci}}.',
+                    CrmMailPlaceholder::BENEFITS_WITHOUT_AMOUNTS => 'Konfigurowany akapit bez kwot.',
+                ],
+            ]);
+
+        $payload = app(PotentialMatterClientActionService::class)->defaultPayload(
+            $matter->refresh(),
+            PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS,
+        );
+
+        $this->assertStringContainsString('Konfigurowany akapit: potencjalne korzyści: 12 345,67 zł; anulowanie przyszłych rat: 5 000,00 zł; nadpłata do zwrotu: 7 345,67 zł.', $payload['body']);
+    }
+
     public function test_follow_up_action_updates_current_stage_to_follow_up_stage(): void
     {
         Notification::fake();
@@ -306,9 +398,20 @@ class PotentialMatterClientActionWidgetTest extends TestCase
     public function test_send_offer_action_updates_current_stage_to_offer_sent_stage(): void
     {
         Notification::fake();
+        Storage::fake('local');
 
         $matter = $this->createPotentialMatterOnDefaultStage();
         $lead = $this->createLead($matter);
+
+        Storage::disk('local')->put('crm/workflow-offers/oferta.pdf', '%PDF-offer');
+        $workflowOffer = CrmWorkflowOffer::create([
+            'label' => 'standardowa oferta',
+            'disk' => 'local',
+            'path' => 'crm/workflow-offers/oferta.pdf',
+            'original_name' => 'Oferta standardowa.pdf',
+            'is_active' => true,
+            'sort' => 1,
+        ]);
 
         $analysisSentStage = TemplateStage::query()
             ->where('category', 'Potencjalna')
@@ -328,12 +431,23 @@ class PotentialMatterClientActionWidgetTest extends TestCase
             LeadGeneratedMessage::class,
             fn (LeadGeneratedMessage $notification, array $channels, object $notifiable): bool => $channels === ['mail']
                 && $notifiable->routes['mail'] === $lead->email
-                && $notification->subject === 'Oferta współpracy',
+                && $notification->subject === 'Oferta współpracy'
+                && count($notification->attachments) === 1
+                && $notification->attachments[0]['as'] === 'Oferta standardowa.pdf',
         );
 
         $this->assertSame('Wysłano ofertę', $stage->label);
         $this->assertSame($stage->getKey(), $matter->refresh()->current_template_stage_id);
-        $this->assertSame([], app(PotentialMatterWorkflowService::class)->availableOptions($matter->refresh()));
+        $this->assertDatabaseHas('crm_client_messages', [
+            'matter_id' => $matter->getKey(),
+            'action' => PotentialMatterClientActionService::SEND_OFFER,
+            'crm_workflow_offer_id' => $workflowOffer->getKey(),
+            'crm_workflow_offer_label' => 'standardowa oferta',
+            'default_offer_filename' => 'Oferta standardowa.pdf',
+        ]);
+        $this->assertSame([
+            PotentialMatterClientActionService::FOLLOW_UP_AFTER_OFFER => 'Wyślij follow-up po ofercie',
+        ], app(PotentialMatterWorkflowService::class)->availableOptions($matter->refresh()));
     }
 
     public function test_follow_up_after_meeting_depends_on_completed_meeting_stage(): void
@@ -353,15 +467,13 @@ class PotentialMatterClientActionWidgetTest extends TestCase
             ->where('category', 'Potencjalna')
             ->where('label', 'Spotkanie z potencjalnym klientem')
             ->firstOrFail();
-        $offerSentStage = TemplateStage::query()
-            ->where('category', 'Potencjalna')
-            ->where('label', 'Wysłano ofertę')
-            ->firstOrFail();
 
         StageManager::setCurrentStage($matter->refresh(), $meetingStage);
-        StageManager::setCurrentStage($matter->refresh(), $offerSentStage);
 
         $this->assertSame([
+            PotentialMatterClientActionService::REQUEST_CERTIFICATE => 'Wyślij prośbę o zaświadczenie',
+            PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS => 'Wyślij analizę umowy',
+            PotentialMatterClientActionService::SEND_OFFER => 'Wyślij ofertę',
             PotentialMatterClientActionService::FOLLOW_UP_AFTER_MEETING => 'Wyślij follow-up po spotkaniu',
         ], $workflow->availableOptions($matter->refresh()));
 
@@ -431,6 +543,8 @@ class PotentialMatterClientActionWidgetTest extends TestCase
             'is_lawyer' => true,
         ]);
 
+        $matter->forceFill(['lawyer_id' => $sender->getKey()])->save();
+
         $this->actingAs($sender);
 
         Storage::disk('local')->put("matter-generated-documents/{$matter->getKey()}/analysis.pdf", '%PDF-test');
@@ -480,6 +594,256 @@ class PotentialMatterClientActionWidgetTest extends TestCase
             'label' => 'Wysłano prośbę o dodatkowe informacje',
             'is_current' => true,
         ]);
+    }
+
+    public function test_workflow_offer_attachment_is_sent_and_recorded(): void
+    {
+        Notification::fake();
+        Storage::fake('local');
+
+        $matter = $this->createPotentialMatterOnDefaultStage();
+        $lead = $this->createLead($matter);
+
+        Storage::disk('local')->put('crm/workflow-offers/oferta.pdf', '%PDF-offer');
+        $workflowOffer = CrmWorkflowOffer::create([
+            'label' => 'dla kredytów do 85k PLN',
+            'disk' => 'local',
+            'path' => 'crm/workflow-offers/oferta.pdf',
+            'original_name' => 'Oferta kancelarii.pdf',
+            'is_active' => true,
+            'sort' => 1,
+        ]);
+
+        $stage = app(PotentialMatterClientActionService::class)->send(
+            matter: $matter->refresh(),
+            action: PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS,
+            subject: 'Analiza i oferta',
+            body: '<p>Przesyłam analizę oraz ofertę.</p>',
+            workflowOfferId: $workflowOffer->getKey(),
+        );
+
+        Notification::assertSentOnDemand(
+            LeadGeneratedMessage::class,
+            fn (LeadGeneratedMessage $notification, array $channels, object $notifiable): bool => $channels === ['mail']
+                && $notifiable->routes['mail'] === $lead->email
+                && $notification->subject === 'Analiza i oferta'
+                && count($notification->attachments) === 1
+                && $notification->attachments[0]['as'] === 'Oferta kancelarii.pdf',
+        );
+
+        $offerStage = TemplateStage::query()
+            ->where('category', 'Potencjalna')
+            ->where('key', 'offer_presented')
+            ->firstOrFail();
+
+        $this->assertSame('Wysłano analizę umowy', $stage->label);
+        $this->assertSame($stage->getKey(), $matter->refresh()->current_template_stage_id);
+        $this->assertNotNull($matter->offer_sent_at);
+        $this->assertFalse($matter->offer_sent_conditionally);
+        $this->assertDatabaseHas('stages', [
+            'matter_id' => $matter->getKey(),
+            'stage_id' => $offerStage->getKey(),
+            'is_current' => false,
+        ]);
+        $this->assertDatabaseHas('crm_client_messages', [
+            'matter_id' => $matter->getKey(),
+            'action' => PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS,
+            'default_offer_attached' => true,
+            'crm_workflow_offer_id' => $workflowOffer->getKey(),
+            'crm_workflow_offer_label' => 'dla kredytów do 85k PLN',
+            'default_offer_path' => 'crm/workflow-offers/oferta.pdf',
+            'default_offer_filename' => 'Oferta kancelarii.pdf',
+        ]);
+        $this->assertSame(
+            PotentialMatterClientActionService::FOLLOW_UP_AFTER_OFFER,
+            $matter->refresh()->next_action_key,
+        );
+    }
+
+    public function test_widget_sends_selected_workflow_offer(): void
+    {
+        Notification::fake();
+        Storage::fake('local');
+
+        $matter = $this->createPotentialMatterOnDefaultStage();
+        $lead = $this->createLead($matter);
+
+        Storage::disk('local')->put('crm/workflow-offers/oferta-premium.pdf', '%PDF-offer');
+        $workflowOffer = CrmWorkflowOffer::create([
+            'label' => 'premium dla kredytów powyżej 85k PLN',
+            'disk' => 'local',
+            'path' => 'crm/workflow-offers/oferta-premium.pdf',
+            'original_name' => 'Oferta premium.pdf',
+            'is_active' => true,
+            'sort' => 1,
+        ]);
+
+        $this->actingAsMatterLawyer($matter);
+
+        Livewire::test(PotentialMatterActionWidget::class, ['record' => $matter])
+            ->set('data.selectedAction', PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS)
+            ->callAction('sendClientMessage', data: [
+                'subject' => 'Analiza i oferta',
+                'body' => '<p>Przesyłam analizę i ofertę.</p>',
+                'generated_document_ids' => [],
+                'crm_workflow_offer_id' => $workflowOffer->getKey(),
+            ])
+            ->assertHasNoActionErrors();
+
+        Notification::assertSentOnDemand(
+            LeadGeneratedMessage::class,
+            fn (LeadGeneratedMessage $notification, array $channels, object $notifiable): bool => $channels === ['mail']
+                && $notifiable->routes['mail'] === $lead->email
+                && count($notification->attachments) === 1
+                && $notification->attachments[0]['as'] === 'Oferta premium.pdf',
+        );
+
+        $this->assertDatabaseHas('crm_client_messages', [
+            'matter_id' => $matter->getKey(),
+            'crm_workflow_offer_id' => $workflowOffer->getKey(),
+            'crm_workflow_offer_label' => 'premium dla kredytów powyżej 85k PLN',
+            'default_offer_filename' => 'Oferta premium.pdf',
+        ]);
+    }
+
+    public function test_next_action_is_recalculated_when_manual_stage_changes(): void
+    {
+        $matter = $this->createPotentialMatterOnDefaultStage();
+
+        $analysisSentStage = TemplateStage::query()
+            ->where('category', 'Potencjalna')
+            ->where('label', 'Wysłano analizę umowy')
+            ->firstOrFail();
+
+        StageManager::setCurrentStage($matter->refresh(), $analysisSentStage, now()->subDays(6));
+
+        $this->assertSame(
+            PotentialMatterClientActionService::FOLLOW_UP_AFTER_ANALYSIS,
+            $matter->refresh()->next_action_key,
+        );
+        $this->assertSame(now()->subDay()->toDateString(), $matter->next_action_due_at?->toDateString());
+
+        $meetingScheduledStage = TemplateStage::query()
+            ->where('category', 'Potencjalna')
+            ->where('label', 'Umówiono spotkanie')
+            ->firstOrFail();
+
+        StageManager::setCurrentStage($matter->refresh(), $meetingScheduledStage);
+
+        $this->assertNull($matter->refresh()->next_action_key);
+        $this->assertNull($matter->next_action_due_at);
+    }
+
+    public function test_final_follow_up_is_preferred_after_first_follow_up_when_due(): void
+    {
+        $matter = $this->createPotentialMatterOnDefaultStage();
+
+        $qualificationFollowUpStage = TemplateStage::query()
+            ->where('category', 'Potencjalna')
+            ->where('key', PotentialMatterWorkflowService::QUALIFICATION_FOLLOW_UP_SENT_STAGE)
+            ->firstOrFail();
+
+        StageManager::setCurrentStage($matter->refresh(), $qualificationFollowUpStage, now()->subDays(20));
+
+        $this->assertSame(
+            PotentialMatterWorkflowService::FINAL_FOLLOW_UP_BEFORE_CLOSING,
+            $matter->refresh()->next_action_key,
+        );
+
+        $this->assertSame([
+            PotentialMatterClientActionService::FINAL_FOLLOW_UP_BEFORE_CLOSING => 'Wyślij ostatni follow-up',
+            PotentialMatterClientActionService::SEND_CONTRACT_ANALYSIS => 'Wyślij analizę umowy',
+            PotentialMatterClientActionService::SEND_OFFER => 'Wyślij ofertę',
+        ], app(PotentialMatterWorkflowService::class)->availableOptions($matter->refresh()));
+    }
+
+    public function test_widget_shows_current_state_when_no_action_is_available(): void
+    {
+        $matter = $this->createPotentialMatterOnDefaultStage();
+
+        $meetingScheduledStage = TemplateStage::query()
+            ->where('category', 'Potencjalna')
+            ->where('label', 'Umówiono spotkanie')
+            ->firstOrFail();
+
+        StageManager::setCurrentStage($matter->refresh(), $meetingScheduledStage);
+
+        $this->actingAsMatterLawyer($matter);
+
+        Livewire::test(PotentialMatterActionWidget::class, ['record' => $matter->refresh()])
+            ->assertSee('Aktualny stan')
+            ->assertSee('Brak akcji')
+            ->assertSee('rgb(240 253 244)', false)
+            ->assertSee('Workflow nie przewiduje teraz żadnego działania dla aktualnego etapu.')
+            ->assertSee('Umówiono spotkanie')
+            ->assertDontSee('Podejmij działanie')
+            ->assertDontSee('Przygotuj maila');
+    }
+
+    public function test_certificate_request_follow_up_uses_longer_delay(): void
+    {
+        $matter = $this->createPotentialMatterOnDefaultStage();
+
+        $certificateRequestStage = TemplateStage::query()
+            ->where('category', 'Potencjalna')
+            ->where('label', 'Wniosek o wydanie zaświadczenia')
+            ->firstOrFail();
+
+        StageManager::setCurrentStage($matter->refresh(), $certificateRequestStage, now()->subDays(34));
+
+        $this->assertSame(
+            PotentialMatterClientActionService::FOLLOW_UP_AFTER_CERTIFICATE_REQUEST,
+            $matter->refresh()->next_action_key,
+        );
+        $this->assertSame(now()->addDay()->toDateString(), $matter->next_action_due_at?->toDateString());
+    }
+
+    public function test_widget_archives_potential_matter_after_final_follow_up_is_due(): void
+    {
+        $operator = User::factory()->create([
+            'is_active' => true,
+            'is_employee' => true,
+            'is_lawyer' => true,
+        ]);
+
+        $matter = $this->createPotentialMatterOnDefaultStage();
+        $matter->forceFill(['lawyer_id' => $operator->getKey()])->save();
+        $this->actingAs($operator);
+
+        $finalFollowUpStage = app(PotentialMatterWorkflowService::class)
+            ->stageForKey(PotentialMatterWorkflowService::FINAL_FOLLOW_UP_SENT_STAGE);
+
+        StageManager::setCurrentStage($matter->refresh(), $finalFollowUpStage, now()->subDays(15));
+
+        $this->assertSame(
+            PotentialMatterWorkflowService::ARCHIVE_POTENTIAL_MATTER,
+            $matter->refresh()->next_action_key,
+        );
+        $this->assertSame(now()->subDay()->toDateString(), $matter->next_action_due_at?->toDateString());
+
+        Livewire::test(PotentialMatterActionWidget::class, ['record' => $matter->refresh()])
+            ->callAction('archivePotentialMatter', data: [
+                'closed_at' => now()->toDateString(),
+                'note' => 'Brak odpowiedzi po ostatnim follow-upie.',
+            ])
+            ->assertHasNoActionErrors();
+
+        $matter->refresh();
+
+        $this->assertTrue($matter->is_archived);
+        $this->assertSame('Zamknięta', $matter->status);
+        $this->assertSame(now()->toDateString(), $matter->end?->toDateString());
+        $this->assertNull($matter->next_action_key);
+        $this->assertNull($matter->next_action_due_at);
+
+        $activity = Activity::query()
+            ->where('matter_id', $matter->getKey())
+            ->firstOrFail();
+
+        $this->assertSame(Activity::TYPE_NOTE, $activity->type);
+        $this->assertSame($operator->getKey(), $activity->created_by);
+        $this->assertStringContainsString('Zamknięto potencjalną sprawę po ostatnim follow-upie.', $activity->description);
+        $this->assertStringContainsString('Brak odpowiedzi po ostatnim follow-upie.', $activity->description);
     }
 
     public function test_client_action_service_rejects_actions_unavailable_on_current_stage(): void
@@ -545,14 +909,8 @@ class PotentialMatterClientActionWidgetTest extends TestCase
             'consultation_url' => 'https://calendar.example.test/jan',
         ]);
 
-        $defaultStage = TemplateStage::create([
-            'category' => 'Potencjalna',
-            'label' => 'Nowy lead',
-            'parent' => 'Pozyskanie klienta',
-            'sort' => 1,
-            'is_chf_default' => true,
-            'is_active' => true,
-        ]);
+        $defaultStage = app(PotentialMatterWorkflowService::class)
+            ->stageForKey(PotentialMatterWorkflowService::NEW_CONTRACT_STAGE);
 
         $matter = CHFPotentialMatter::create([
             'label' => 'Kowalski Jan / Bank Testowy',
@@ -565,6 +923,15 @@ class PotentialMatterClientActionWidgetTest extends TestCase
         StageManager::setCurrentStage($matter, $defaultStage);
 
         return $matter->refresh();
+    }
+
+    private function actingAsMatterLawyer(CHFPotentialMatter $matter): User
+    {
+        $lawyer = User::query()->findOrFail($matter->lawyer_id);
+
+        $this->actingAs($lawyer);
+
+        return $lawyer;
     }
 
     /**

@@ -141,6 +141,7 @@ class LeadPotentialMatterServiceTest extends TestCase
 
         $lead->forceFill([
             'files' => ['umowy-do-analizy/test/document.pdf'],
+            'files_names' => ['umowy-do-analizy/test/document.pdf' => 'Umowa klienta.pdf'],
         ])->save();
 
         app(LeadPotentialMatterService::class)->syncLeadFilesToPotentialMatter($lead->refresh());
@@ -151,7 +152,7 @@ class LeadPotentialMatterServiceTest extends TestCase
             ->firstOrFail();
 
         $this->assertSame(['umowy-do-analizy/test/document.pdf'], $stage->files);
-        $this->assertSame('document.pdf', $stage->files_names['umowy-do-analizy/test/document.pdf']);
+        $this->assertSame('Umowa klienta.pdf', $stage->files_names['umowy-do-analizy/test/document.pdf']);
     }
 
     public function test_crm_lead_record_action_creates_and_opens_potential_matter(): void

@@ -5,6 +5,7 @@ namespace App\Models\Website;
 use App\Models\Matter;
 use App\Models\User;
 use App\Support\Website\LeadStatuses;
+use App\Support\Website\LeadTypes;
 use App\Support\Website\PostalCodeLookup;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,6 +19,7 @@ class Lead extends Model
 
     protected $casts = [
         'files' => 'array',
+        'files_names' => 'array',
         'has_contract' => 'boolean',
         'documents_uploaded_at' => 'datetime',
         'documents_skipped_at' => 'datetime',
@@ -40,6 +42,7 @@ class Lead extends Model
         'rejection_reason',
         'rejection_note',
         'email',
+        'lead_type',
         'postal_code',
         'postal_voivodeship',
         'postal_county',
@@ -52,6 +55,7 @@ class Lead extends Model
         'has_contract',
         'additional_info',
         'files',
+        'files_names',
         'upload_token',
         'documents_uploaded_at',
         'documents_skipped_at',
@@ -80,6 +84,10 @@ class Lead extends Model
         });
 
         static::creating(function (Lead $lead): void {
+            if (Schema::hasColumn($lead->getTable(), 'lead_type')) {
+                $lead->lead_type = LeadTypes::normalize($lead->lead_type);
+            }
+
             if (! Schema::hasColumn($lead->getTable(), 'status')) {
                 return;
             }

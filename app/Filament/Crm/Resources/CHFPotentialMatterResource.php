@@ -5,12 +5,14 @@ namespace App\Filament\Crm\Resources;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages\CreateCHFPotentialMatter;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages\EditCHFPotentialMatter;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages\ListCHFPotentialMatters;
+use App\Filament\Crm\Resources\CHFPotentialMatterResource\RelationManagers\ClientMessagesRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\CreditsRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\DealsRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\StagesRelationManager;
 use App\Filament\Resources\MatterResource;
 use App\Filament\Resources\MatterResource\RelationManagers\ActivitiesRelationManager;
 use App\Models\CHFPotentialMatter;
+use App\Support\Crm\ClientAcquisitionAccess;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -47,18 +49,61 @@ class CHFPotentialMatterResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return MatterResource::table($table, true)
-            ->defaultSort(fn (Builder $query): Builder => $query
-                ->orderByRaw('COALESCE(current_stage_sort, -1)')
+        $canUseClientAcquisition = ClientAcquisitionAccess::canUse();
+
+        $table = MatterResource::table(
+            $table,
+            show_created_at: true,
+            stages_hidden: false,
+            show_next_action: $canUseClientAcquisition,
+            hidden_table_columns: [
+                'currentStage.parent',
+                'is_matter',
+                'is_archived',
+                'start',
+                'end',
+            ],
+            show_my_referat_filter: true,
+            my_referat_filter_default: $canUseClientAcquisition,
+        );
+
+        if (! $canUseClientAcquisition) {
+            return $table->defaultSort(fn (Builder $query): Builder => $query
+                ->orderByDesc('created_at')
+                ->orderByDesc('id'));
+        }
+
+        return $table->defaultSort(function (Builder $query): Builder {
+            $today = now()->toDateString();
+
+            return $query
+                ->orderByRaw(
+                    <<<'SQL'
+                        CASE
+                            WHEN next_action_due_at IS NOT NULL AND DATE(next_action_due_at) < ? THEN 0
+                            WHEN next_action_due_at IS NOT NULL AND DATE(next_action_due_at) = ? THEN 1
+                            WHEN next_action_due_at IS NOT NULL AND DATE(next_action_due_at) > ? THEN 2
+                            ELSE 3
+                        END
+                        SQL,
+                    [$today, $today, $today],
+                )
+                ->orderBy('next_action_due_at')
+                ->orderByRaw('COALESCE(current_stage_sort, 999999)')
+                ->orderByDesc('created_at')
                 ->orderBy('label')
-                ->orderBy('id'));
+                ->orderBy('id');
+        });
     }
 
     public static function getRelations(): array
     {
         return [
             StagesRelationManager::class,
-            // ActivitiesRelationManager::class,
+            ...(ClientAcquisitionAccess::canUse() ? [
+                ClientMessagesRelationManager::class,
+            ] : []),
+            ActivitiesRelationManager::class,
             CreditsRelationManager::class,
             DealsRelationManager::class,
         ];

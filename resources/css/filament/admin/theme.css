@@ -17,3 +17,14 @@
     height: 40px !important;
     margin-top: -5px;
 }
+
+.crm-dashboard-date-range-picker .fi-fo-field-label-content {
+    white-space: nowrap;
+}
+
+.crm-next-action-column > .fi-ta-text-description,
+.crm-compact-description-column > .fi-ta-text-description {
+    font-size: var(--text-xs);
+    line-height: var(--text-xs--line-height);
+    white-space: normal;
+}

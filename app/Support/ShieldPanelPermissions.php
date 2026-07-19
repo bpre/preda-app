@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use App\Services\Crm\LeadStatsService;
+use App\Services\UserImpersonationService;
+use App\Support\Crm\MarketingAgencyAccess;
 use BezhanSalleh\FilamentShield\FilamentShield;
 use Filament\Facades\Filament;
 use Filament\Panel;
@@ -31,6 +34,11 @@ class ShieldPanelPermissions
                     $seenPermissionKeys,
                 );
 
+                $customPermissions = self::uniquePermissionOptions(
+                    self::customPermissionOptionsForPanel($panelId),
+                    $seenPermissionKeys,
+                );
+
                 return [
                     $panelId => [
                         'id' => $panelId,
@@ -38,9 +46,11 @@ class ShieldPanelPermissions
                         'resources' => $resources,
                         'pages' => $pages,
                         'widgets' => $widgets,
+                        'customPermissions' => $customPermissions,
                         'count' => collect($resources)->sum(fn (array $resource): int => count($resource['permissionOptions']))
                             + count($pages)
-                            + count($widgets),
+                            + count($widgets)
+                            + count($customPermissions),
                     ],
                 ];
             })
@@ -105,6 +115,21 @@ class ShieldPanelPermissions
                 ])
                 ->all())
             ->all();
+    }
+
+    private static function customPermissionOptionsForPanel(string $panelId): array
+    {
+        return match ($panelId) {
+            'crm' => [
+                MarketingAgencyAccess::VIEW_LEAD_STATS_PERMISSION => 'Statystyki leadów',
+                MarketingAgencyAccess::VIEW_MARKETING_LEADS_PERMISSION => 'Leady - widok marketingowy',
+                LeadStatsService::EXPORT_PERMISSION => 'Eksport statystyk leadów',
+            ],
+            'kancelaria' => [
+                UserImpersonationService::PERMISSION => 'Działanie jako inny użytkownik',
+            ],
+            default => [],
+        };
     }
 
     private static function uniquePermissionOptions(array $options, array &$seenPermissionKeys): array

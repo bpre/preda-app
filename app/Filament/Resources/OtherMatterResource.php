@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\TextSize;
 use Filament\Actions\EditAction;
+use Filament\Actions\RestoreAction;
 use App\Filament\Resources\OtherMatterResource\Pages\ListOtherMatters;
 use App\Filament\Resources\OtherMatterResource\Pages\CreateOtherMatter;
 use App\Filament\Resources\OtherMatterResource\Pages\EditOtherMatter;
@@ -14,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use App\Filament\Resources\OtherMatterResource\Pages;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\LettersRelationManager;
@@ -85,11 +87,19 @@ class OtherMatterResource extends Resource
         ->filters([
 
             // Referat
-            SelectFilter::make('lawyer')->label('Referat')->relationship('lawyer', 'name')->native(false)
+            SelectFilter::make('lawyer')->label('Referat')->relationship('lawyer', 'name')->native(false),
+            TrashedFilter::make()
+                ->hidden(fn (): bool => ! auth()->user()?->isAdmin()),
 
         ])
         ->recordActions([
-            EditAction::make()->iconButton(),
+            EditAction::make()
+                ->iconButton()
+                ->hidden(fn (OtherMatter $record): bool => $record->trashed()),
+            RestoreAction::make()
+                ->iconButton()
+                ->authorize(fn (OtherMatter $record): bool => auth()->user()?->can('restore', $record) === true)
+                ->visible(fn (OtherMatter $record): bool => auth()->user()?->isAdmin() === true && $record->trashed()),
         ]);
     }
 

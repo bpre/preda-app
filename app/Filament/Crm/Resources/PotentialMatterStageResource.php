@@ -4,6 +4,7 @@ namespace App\Filament\Crm\Resources;
 
 use App\Filament\Crm\Resources\PotentialMatterStageResource\Pages\ListPotentialMatterStages;
 use App\Models\TemplateStage;
+use App\Services\Crm\PotentialMatterWorkflowService;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Hidden;
@@ -87,13 +88,28 @@ class PotentialMatterStageResource extends Resource
                 Select::make('parent')
                     ->label('Kategoria')
                     ->options(fn (): array => self::categories())
-                    ->default('Pozyskanie klienta')
+                    ->default(fn (): ?string => self::defaultCategory())
+                    ->visible(fn (): bool => self::hasMultipleCategories())
+                    ->dehydratedWhenHidden()
                     ->native(false)
                     ->required()
                     ->columnSpanFull(),
                 TextInput::make('label')
                     ->label('Nazwa etapu')
                     ->required()
+                    ->columnSpanFull(),
+                TextInput::make('key')
+                    ->label('Klucz techniczny')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->placeholder('Brak - etap ręczny')
+                    ->columnSpanFull(),
+                Select::make('preferred_action_key')
+                    ->label('Najbardziej oczekiwana akcja')
+                    ->options(fn (): array => app(PotentialMatterWorkflowService::class)->actionOptions(includeNonMailActions: false))
+                    ->placeholder('Brak')
+                    ->native(false)
+                    ->searchable()
                     ->columnSpanFull(),
                 Toggle::make('is_active')
                     ->label('Aktywny?')
@@ -115,6 +131,19 @@ class PotentialMatterStageResource extends Resource
                 TextColumn::make('label')
                     ->label('Nazwa')
                     ->searchable(),
+                TextColumn::make('key')
+                    ->label('Klucz techniczny')
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('preferred_action_key')
+                    ->label('Najbardziej oczekiwana akcja')
+                    ->formatStateUsing(fn (?string $state): string => $state
+                        ? app(PotentialMatterWorkflowService::class)->actionLabel($state)
+                        : '-')
+                    ->badge()
+                    ->color('info')
+                    ->placeholder('-')
+                    ->toggleable(),
                 TextColumn::make('parent')
                     ->label('Kategoria'),
                 ToggleColumn::make('is_active')
@@ -162,7 +191,7 @@ class PotentialMatterStageResource extends Resource
                     ->modalWidth('md'),
                 DeleteAction::make()
                     ->iconButton()
-                    ->hidden(fn (TemplateStage $record): bool => $record->stages()->exists()),
+                    ->hidden(fn (TemplateStage $record): bool => filled($record->key) || $record->stages()->exists()),
             ])
             ->reorderable('sort')
             ->defaultSort('sort')
@@ -174,6 +203,16 @@ class PotentialMatterStageResource extends Resource
         return [
             'Pozyskanie klienta' => 'Pozyskanie klienta',
         ];
+    }
+
+    public static function hasMultipleCategories(): bool
+    {
+        return count(self::categories()) > 1;
+    }
+
+    public static function defaultCategory(): ?string
+    {
+        return array_key_first(self::categories());
     }
 
     private static function userCan(string $permission): bool

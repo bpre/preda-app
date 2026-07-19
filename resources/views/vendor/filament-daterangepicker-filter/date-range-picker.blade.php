@@ -193,6 +193,20 @@
                                             ></button>
                                         </li>
                                     </template>
+                                    <template x-if="!config.disableCustomRange">
+                                        <li>
+                                            <button
+                                                type="button"
+                                                @click="viewDate = selection.start || viewDate"
+                                                class="fi-daterangepicker-range-btn"
+                                                :class="{
+                                                    'fi-active': selection.start && selection.end && !Object.keys(config.ranges || {}).some((label) => isActiveRange(label))
+                                                }"
+                                                role="option"
+                                                x-text="config.labels.customRange"
+                                            ></button>
+                                        </li>
+                                    </template>
                                 </ul>
                             </div>
                         </template>

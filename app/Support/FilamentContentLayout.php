@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\User;
+use Filament\Pages\Page as FilamentPage;
 use Filament\Resources\Pages\Concerns\HasRelationManagers;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Pages\ManageRelatedRecords;
@@ -288,21 +289,69 @@ class FilamentContentLayout
     {
         $route = request()->route();
 
-        if (! $route) {
+        if ($route) {
+            $action = $route->getAction('controller') ?? $route->getAction('uses') ?? $route->getActionName();
+
+            if (is_string($action)) {
+                $class = str_contains($action, '@')
+                    ? strstr($action, '@', true)
+                    : $action;
+
+                if (class_exists($class) && is_a($class, FilamentPage::class, true)) {
+                    return $class;
+                }
+            }
+        }
+
+        return self::currentLivewireComponentClass();
+    }
+
+    protected static function currentLivewireComponentClass(): ?string
+    {
+        try {
+            $component = app('livewire')->current();
+        } catch (Throwable) {
+            $component = null;
+        }
+
+        if (is_object($component)) {
+            return $component::class;
+        }
+
+        $components = request()->input('components');
+
+        if (! is_array($components)) {
             return null;
         }
 
-        $action = $route->getAction('controller') ?? $route->getAction('uses') ?? $route->getActionName();
+        foreach ($components as $componentPayload) {
+            if (! is_array($componentPayload) || ! is_string($componentPayload['snapshot'] ?? null)) {
+                continue;
+            }
 
-        if (! is_string($action)) {
-            return null;
+            try {
+                $snapshot = json_decode($componentPayload['snapshot'], true, 512, JSON_THROW_ON_ERROR);
+                $componentName = data_get($snapshot, 'memo.name');
+            } catch (Throwable) {
+                continue;
+            }
+
+            if (! is_string($componentName) || blank($componentName)) {
+                continue;
+            }
+
+            try {
+                $componentClass = app('livewire.factory')->resolveComponentClass($componentName);
+            } catch (Throwable) {
+                continue;
+            }
+
+            if (class_exists($componentClass)) {
+                return $componentClass;
+            }
         }
 
-        $class = str_contains($action, '@')
-            ? strstr($action, '@', true)
-            : $action;
-
-        return class_exists($class) ? $class : null;
+        return null;
     }
 
     protected static function resourcePageHasActiveRelationManager(string $pageClass): bool

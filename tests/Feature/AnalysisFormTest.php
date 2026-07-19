@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Website\Bank;
 use App\Models\Website\Lead;
 use App\Support\Website\LeadStatuses;
+use App\Support\Website\LeadTypes;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -26,7 +27,7 @@ class AnalysisFormTest extends TestCase
             ->set('data.email', 'jan@example.test')
             ->set('data.postal_code', '67-200')
             ->set('data.bank', 'Bank Testowy')
-            ->set('data.contract_year_range', '2007-2009')
+            ->set('data.contract_year_range', '2007')
             ->set('data.credit_currency', 'CHF')
             ->set('data.credit_amount_range', 'od 85.000 do 300.000 PLN')
             ->set('data.credit_status', 'nadal spłacam')
@@ -54,12 +55,13 @@ class AnalysisFormTest extends TestCase
         $this->assertDatabaseHas('website_leads', [
             'name' => 'Jan Kowalski',
             'email' => 'jan@example.test',
+            'lead_type' => LeadTypes::FORM,
             'postal_code' => '67-200',
             'postal_voivodeship' => 'dolnośląskie',
             'postal_county' => 'głogowski',
             'phone' => '500 600 700',
             'bank' => 'Bank Testowy',
-            'contract_year_range' => '2007-2009',
+            'contract_year_range' => '2007',
             'credit_currency' => 'CHF',
             'credit_amount_range' => 'od 85.000 do 300.000 PLN',
             'credit_status' => 'nadal spłacam',
@@ -133,6 +135,26 @@ class AnalysisFormTest extends TestCase
         $this->fillValidAnalysisForm(Livewire::test(AnalysisForm::class), postalCode: '12345')
             ->call('create')
             ->assertHasErrors(['data.postal_code' => 'regex']);
+    }
+
+    public function test_contract_year_options_use_single_years_from_2002_to_2012(): void
+    {
+        $this->assertSame([
+            'przed 2002' => 'przed 2002',
+            2002 => '2002',
+            2003 => '2003',
+            2004 => '2004',
+            2005 => '2005',
+            2006 => '2006',
+            2007 => '2007',
+            2008 => '2008',
+            2009 => '2009',
+            2010 => '2010',
+            2011 => '2011',
+            2012 => '2012',
+            'po 2012' => 'po 2012',
+            'nie pamiętam' => 'nie pamiętam',
+        ], $this->contractYearRangeOptions());
     }
 
     public function test_first_step_saves_marketing_attribution_data(): void
@@ -221,6 +243,10 @@ class AnalysisFormTest extends TestCase
         $this->fillValidAnalysisForm(Livewire::test(AnalysisForm::class, ['context' => 'sidebar']))
             ->call('create')
             ->set('uploadData.files', ['umowy-do-analizy/test.pdf', 'umowy-do-analizy/regulamin.pdf'])
+            ->set('uploadData.files_names', [
+                'umowy-do-analizy/test.pdf' => 'Umowa kredytowa.pdf',
+                'umowy-do-analizy/regulamin.pdf' => 'Regulamin kredytu.pdf',
+            ])
             ->call('uploadDocuments')
             ->assertSet('documentsUploaded', true)
             ->assertDispatched(
@@ -231,6 +257,11 @@ class AnalysisFormTest extends TestCase
                 hasContract: true,
                 leadStep: 'documents_uploaded',
             );
+
+        $this->assertSame([
+            'umowy-do-analizy/test.pdf' => 'Umowa kredytowa.pdf',
+            'umowy-do-analizy/regulamin.pdf' => 'Regulamin kredytu.pdf',
+        ], Lead::query()->where('email', 'jan@example.test')->firstOrFail()->files_names);
 
         $this->fillValidAnalysisForm(
             Livewire::test(AnalysisForm::class, ['context' => 'sidebar']),
@@ -354,7 +385,7 @@ class AnalysisFormTest extends TestCase
             ->set('data.email', $email)
             ->set('data.postal_code', $postalCode)
             ->set('data.bank', 'Bank Testowy')
-            ->set('data.contract_year_range', '2007-2009')
+            ->set('data.contract_year_range', '2007')
             ->set('data.credit_currency', 'CHF')
             ->set('data.credit_amount_range', 'od 85.000 do 300.000 PLN')
             ->set('data.credit_status', 'nadal spłacam')
@@ -369,5 +400,14 @@ class AnalysisFormTest extends TestCase
         $method->setAccessible(true);
 
         return $method->invoke($component, $search);
+    }
+
+    private function contractYearRangeOptions(): array
+    {
+        $component = app(AnalysisForm::class);
+        $method = new \ReflectionMethod($component, 'contractYearRangeOptions');
+        $method->setAccessible(true);
+
+        return $method->invoke($component);
     }
 }

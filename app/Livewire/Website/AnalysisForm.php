@@ -10,6 +10,8 @@ use App\Notifications\NewLeadToAdmin;
 use App\Notifications\NewLeadToClient;
 use App\Services\Website\LeadPotentialMatterService;
 use App\Support\Website\LeadAttribution;
+use App\Support\Website\LeadFileNames;
+use App\Support\Website\LeadTypes;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
@@ -143,6 +145,7 @@ class AnalysisForm extends Component implements HasSchemas
                     'image/heif',
                 ])
                 ->directory('umowy-do-analizy')
+                ->storeFileNamesIn('files_names')
                 ->columnSpanFull(),
         ];
 
@@ -330,6 +333,7 @@ class AnalysisForm extends Component implements HasSchemas
 
         $state['has_contract'] = $hasContract;
         $state['upload_token'] = (string) Str::uuid();
+        $state['lead_type'] = LeadTypes::FORM;
         $state['message'] = $this->buildLeadMessage($state, $additionalInfo);
         $state['additional_info'] = $additionalInfo !== '' ? $additionalInfo : null;
         $state = array_merge($state, LeadAttribution::fromPayload($this->attributionData, request()));
@@ -369,6 +373,7 @@ class AnalysisForm extends Component implements HasSchemas
 
         $state = $this->uploadForm->getState();
         $files = $state['files'] ?? [];
+        $fileNames = LeadFileNames::mapForFiles($files, $state['files_names'] ?? []);
 
         $lead = $this->currentLead();
 
@@ -378,6 +383,7 @@ class AnalysisForm extends Component implements HasSchemas
 
         $lead->forceFill([
             'files' => $files,
+            'files_names' => $fileNames,
             'documents_uploaded_at' => now(),
             'documents_skipped_at' => null,
         ])->save();
@@ -489,11 +495,11 @@ class AnalysisForm extends Component implements HasSchemas
 
     private function contractYearRangeOptions(): array
     {
+        $yearOptions = array_combine(range(2002, 2012), array_map('strval', range(2002, 2012)));
+
         return [
-            'przed 2004' => 'przed 2004',
-            '2004-2006' => '2004–2006',
-            '2007-2009' => '2007–2009',
-            '2010-2012' => '2010–2012',
+            'przed 2002' => 'przed 2002',
+        ] + $yearOptions + [
             'po 2012' => 'po 2012',
             'nie pamiętam' => 'nie pamiętam',
         ];
@@ -584,10 +590,8 @@ class AnalysisForm extends Component implements HasSchemas
         $year = (int) $matches[0];
 
         return match (true) {
-            $year < 2004 => 'przed 2004',
-            $year <= 2006 => '2004-2006',
-            $year <= 2009 => '2007-2009',
-            $year <= 2012 => '2010-2012',
+            $year < 2002 => 'przed 2002',
+            $year <= 2012 => (string) $year,
             default => 'po 2012',
         };
     }

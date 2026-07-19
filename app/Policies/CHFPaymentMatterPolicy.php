@@ -79,7 +79,7 @@ class CHFPaymentMatterPolicy
      */
     public function restore(User $user, CHFPaymentMatter $cHFPaymentMatter): bool
     {
-        return $user->can('restore_c::h::f::payment::matter');
+        return $user->isAdmin();
     }
 
     /**
@@ -87,7 +87,7 @@ class CHFPaymentMatterPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_c::h::f::payment::matter');
+        return $user->isAdmin();
     }
 
     /**

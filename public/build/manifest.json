@@ -4,22 +4,22 @@
     "name": "index"
   },
   "resources/css/app.css": {
-    "file": "assets/app-Cq47NYMi.css",
+    "file": "assets/app-DGRWMIhZ.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/css/filament/admin/theme.css": {
-    "file": "assets/theme-CxJ6u-wV.css",
+    "file": "assets/theme-Ja-GSPJB.css",
     "src": "resources/css/filament/admin/theme.css",
     "isEntry": true
   },
   "resources/css/filament/kancelaria/theme.css": {
-    "file": "assets/theme-By8ioQyg.css",
+    "file": "assets/theme-CVNWtmdX.css",
     "src": "resources/css/filament/kancelaria/theme.css",
     "isEntry": true
   },
   "resources/css/filament/portal/theme.css": {
-    "file": "assets/theme-URYXtayS.css",
+    "file": "assets/theme-BAU77ezr.css",
     "src": "resources/css/filament/portal/theme.css",
     "isEntry": true
   },
@@ -39,7 +39,7 @@
     ]
   },
   "resources/views/themes/duo/assets/css/duo.css": {
-    "file": "assets/duo-4o4qHcdc.css",
+    "file": "assets/duo-x41uVAWG.css",
     "src": "resources/views/themes/duo/assets/css/duo.css",
     "isEntry": true
   },

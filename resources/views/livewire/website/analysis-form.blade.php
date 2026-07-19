@@ -340,7 +340,40 @@
                                     'w-full' => $isSidebar,
                                 ])
                             >
-                                Załącz dokumenty
+                                <span wire:loading.remove wire:target="uploadDocuments">
+                                    Załącz dokumenty
+                                </span>
+
+                                <span
+                                    wire:loading.flex
+                                    wire:target="uploadDocuments"
+                                    aria-live="polite"
+                                    style="align-items: center; gap: 0.5rem;"
+                                >
+                                    <svg
+                                        aria-hidden="true"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <g>
+                                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" opacity="0.25" />
+                                            <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                                            <animateTransform
+                                                attributeName="transform"
+                                                type="rotate"
+                                                from="0 12 12"
+                                                to="360 12 12"
+                                                dur="0.8s"
+                                                repeatCount="indefinite"
+                                            />
+                                        </g>
+                                    </svg>
+
+                                    <span>Wysyłanie...</span>
+                                </span>
                             </x-button.primary-link>
                         </div>
                     </form>
@@ -348,7 +381,9 @@
                     <button
                         type="button"
                         wire:click="skipDocuments"
-                        class="mt-5 ml-auto block w-fit text-sm font-semibold text-secondary-600 transition-colors duration-200 hover:text-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
+                        wire:loading.attr="disabled"
+                        wire:target="uploadDocuments"
+                        class="mt-5 ml-auto block w-fit text-sm font-semibold text-secondary-600 transition-colors duration-200 hover:text-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:pointer-events-none disabled:opacity-60"
                     >
                         Pomiń na razie ten krok
                     </button>

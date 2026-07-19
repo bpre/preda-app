@@ -9,7 +9,7 @@ return [
     'th' =>"Czw",
     'fr' =>"Pt",
     'sa' =>"So",
-    'custom' =>"Własny",
+    'custom' =>"Własny zakres",
     'apply' =>"Zastosuj",
     'cancel' =>"Anuluj",
     'from' =>"Od",

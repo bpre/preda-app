@@ -14,9 +14,14 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use App\Filament\Website\Resources\Leads\LeadResource;
 use App\Filament\Resources\MatterResource;
-use App\Support\Website\PostalCodeLookup;
+use App\Support\Crm\MarketingAgencyAccess;
+use App\Support\Website\LeadFileNames;
+use App\Support\Website\LeadFileStorage;
 use App\Support\Website\LeadStatuses;
+use App\Support\Website\LeadTypes;
+use App\Support\Website\PostalCodeLookup;
 use Illuminate\Support\HtmlString;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LeadsTable
@@ -24,34 +29,56 @@ class LeadsTable
 
     public static function configure(Table $table): Table
     {
+        $isRestrictedMarketingView = MarketingAgencyAccess::usesRestrictedLeadView();
+
         return $table
             ->columns([
                 TextColumn::make('name')
                     ->label('Kontakt')
+                    ->getStateUsing(fn (Lead $record): string => $isRestrictedMarketingView
+                        ? MarketingAgencyAccess::hiddenValue()
+                        : ($record->name ?: '-'))
                     ->weight('bold')
                     ->size(TextSize::Medium)
-                    ->description(fn (Lead $record): ?HtmlString => self::contactDescription($record))
-                    ->searchable(['name', 'email', 'phone', 'postal_code', 'postal_voivodeship', 'postal_county']),
-                TextColumn::make('status')
-                    ->label('Status')
+                    ->description(fn (Lead $record): ?HtmlString => self::contactDescription($record, $isRestrictedMarketingView))
+                    ->extraAttributes(['class' => 'crm-compact-description-column'])
+                    ->searchable($isRestrictedMarketingView
+                        ? ['postal_code', 'postal_voivodeship', 'postal_county']
+                        : ['name', 'email', 'phone', 'postal_code', 'postal_voivodeship', 'postal_county']),
+                TextColumn::make('lead_type')
+                    ->label('Typ')
                     ->badge()
-                    ->color(fn (?string $state): string => LeadStatuses::color($state))
-                    ->description(fn (Lead $record): ?string => self::leadStatusDescription($record))
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('potentialMatter.label')
-                    ->label('Potencjalna sprawa')
-                    ->placeholder('Brak')
-                    ->description(fn (Lead $record): ?string => self::potentialMatterDescription($record))
-                    ->url(fn (Lead $record): ?string => $record->potentialMatter
-                        ? MatterResource::getEditUrlForMatter($record->potentialMatter)
-                        : null)
-                    ->openUrlInNewTab(false),
+                    ->formatStateUsing(fn (?string $state): string => LeadTypes::label($state) ?? '-')
+                    ->color(fn (?string $state): string => match ($state) {
+                        LeadTypes::FORM => 'info',
+                        LeadTypes::EMAIL => 'success',
+                        LeadTypes::PHONE => 'warning',
+                        default => 'gray',
+                    })
+                    ->sortable(),
+                ...(! $isRestrictedMarketingView ? [
+                    TextColumn::make('status')
+                        ->label('Status')
+                        ->badge()
+                        ->color(fn (?string $state): string => LeadStatuses::color($state))
+                        ->description(fn (Lead $record): ?string => self::leadStatusDescription($record))
+                        ->sortable()
+                        ->searchable(),
+                    TextColumn::make('potentialMatter.label')
+                        ->label('Potencjalna sprawa')
+                        ->placeholder('Brak')
+                        ->description(fn (Lead $record): ?string => self::potentialMatterDescription($record))
+                        ->url(fn (Lead $record): ?string => $record->potentialMatter
+                            ? MatterResource::getEditUrlForMatter($record->potentialMatter)
+                            : null)
+                        ->openUrlInNewTab(false),
+                ] : []),
                 TextColumn::make('attribution_channel')
                     ->label('Źródło')
                     ->badge()
                     ->getStateUsing(fn (Lead $record): string => $record->attribution_summary)
                     ->description(fn (Lead $record): ?string => $record->attribution_description)
+                    ->extraAttributes(['class' => 'crm-compact-description-column'])
                     ->color(fn (Lead $record): string => match ($record->attribution_channel) {
                         'google_ads', 'meta_ads', 'remarketing' => 'success',
                         'organic_search' => 'info',
@@ -70,15 +97,21 @@ class LeadsTable
                 TextColumn::make('created_at')
                     ->label('Data zgłoszenia')
                     ->dateTime('Y-m-d H:i')
+                    ->sortable()
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                SelectFilter::make('status')
-                    ->label('Status')
-                    ->options(LeadStatuses::options()),
-                SelectFilter::make('rejection_reason')
-                    ->label('Powód odrzucenia')
-                    ->options(LeadStatuses::rejectionReasons()),
+                ...(! $isRestrictedMarketingView ? [
+                    SelectFilter::make('status')
+                        ->label('Status')
+                        ->options(LeadStatuses::options()),
+                    SelectFilter::make('rejection_reason')
+                        ->label('Powód odrzucenia')
+                        ->options(LeadStatuses::rejectionReasons()),
+                ] : []),
+                SelectFilter::make('lead_type')
+                    ->label('Typ')
+                    ->options(LeadTypes::options()),
                 SelectFilter::make('attribution_channel')
                     ->label('Źródło')
                     ->options([
@@ -103,34 +136,38 @@ class LeadsTable
                 LeadResource::getUrl('view', ['record' => $record])
             )
             ->recordActions([
-                Action::make('downloadFiles')
-                    ->label(fn (Lead $record): string => 'Pliki ('.count($record->files ?? []).')')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('success')
-                    ->visible(fn ($record) => !empty($record->files))
-                    ->action(function ($record) {
-                        return self::downloadAllFiles($record);
-                    }),
-                EditAction::make()->iconButton(),
+                ...(! $isRestrictedMarketingView ? [
+                    Action::make('downloadFiles')
+                        ->label(fn (Lead $record): string => 'Pliki ('.count($record->files ?? []).')')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('success')
+                        ->visible(fn ($record) => !empty($record->files))
+                        ->action(function ($record) {
+                            return self::downloadAllFiles($record);
+                        }),
+                    EditAction::make()->iconButton(),
+                ] : []),
             ])
-            ->toolbarActions([
+            ->toolbarActions($isRestrictedMarketingView ? [] : [
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
             ]);
     }
 
-    private static function contactDescription(Lead $lead): ?HtmlString
+    private static function contactDescription(Lead $lead, bool $isRestrictedMarketingView): ?HtmlString
     {
         $lines = [];
 
-        $contact = collect([
-            $lead->email,
-            $lead->phone,
-        ])->filter()->implode(' / ');
+        if (! $isRestrictedMarketingView) {
+            $contact = collect([
+                $lead->email,
+                $lead->phone,
+            ])->filter()->implode(' / ');
 
-        if ($contact !== '') {
-            $lines[] = e($contact);
+            if ($contact !== '') {
+                $lines[] = e($contact);
+            }
         }
 
         $postalLocation = app(PostalCodeLookup::class)->postalLocationLabel($lead);
@@ -178,7 +215,7 @@ class LeadsTable
 
 
 
-    protected static function downloadAllFiles(Lead $lead): StreamedResponse|\Illuminate\Http\Response
+    protected static function downloadAllFiles(Lead $lead): BinaryFileResponse|StreamedResponse|\Illuminate\Http\Response
     {
         // Wyłącz PHP warnings dla ZIP (ZIP jest wbudowane, ale php.ini ma błędną konfigurację)
         $originalErrorReporting = error_reporting();
@@ -233,18 +270,10 @@ class LeadsTable
 
                     \Log::info("Looking for file: $filePath");
 
-                    $fullPath = null;
-                    foreach ($possiblePaths as $pathIndex => $path) {
-                        \Log::info("  Checking path $pathIndex: $path - " . (file_exists($path) ? 'EXISTS' : 'NOT EXISTS'));
-                        if (file_exists($path) && is_file($path)) {
-                            $fullPath = $path;
-                            \Log::info("  ✓ Found file at: $path");
-                            break;
-                        }
-                    }
+                    $fullPath = app(LeadFileStorage::class)->resolvePath((string) $filePath);
 
                     if ($fullPath && is_readable($fullPath)) {
-                        $fileName = basename($filePath);
+                        $fileName = LeadFileNames::downloadName($lead, (string) $filePath, $index);
                         if (empty($fileName) || $fileName === '.' || $fileName === '..') {
                             $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
                             $fileName = "file-" . ($index + 1) . ($extension ? '.' . $extension : '');
@@ -369,21 +398,14 @@ class LeadsTable
     }
 
     // Metoda fallback dla pojedynczego pliku
-    protected static function downloadFirstFile(Lead $lead): \Illuminate\Http\Response
+    protected static function downloadFirstFile(Lead $lead): BinaryFileResponse|\Illuminate\Http\Response
     {
         $filePath = $lead->files[0];
 
-        $possiblePaths = [
-            storage_path('app/private/' . $filePath), // Główna ścieżka - private storage
-            storage_path('app/' . $filePath),         // Bez private prefix
-            storage_path('app/public/' . $filePath),  // Public storage
-            public_path('storage/' . $filePath),      // Symlink public/storage
-        ];
+        $resolvedPath = app(LeadFileStorage::class)->resolvePath((string) $filePath);
 
-        foreach ($possiblePaths as $path) {
-            if (file_exists($path) && is_file($path)) {
-                return response()->download($path);
-            }
+        if ($resolvedPath) {
+            return response()->download($resolvedPath, LeadFileNames::downloadName($lead, (string) $filePath, 0));
         }
 
         return response('Plik nie został znaleziony', 404);
