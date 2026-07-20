@@ -7,6 +7,9 @@ const TRACKED_PARAMS = [
     'utm_id',
     'utm_term',
     'utm_content',
+    'gad',
+    'gad_source',
+    'gad_campaignid',
     'gclid',
     'gbraid',
     'wbraid',
@@ -18,6 +21,7 @@ const TRACKED_PARAMS = [
     'campaign',
     'campaignid',
     'adgroupid',
+    'assetgroupid',
     'keyword',
     'matchtype',
     'network',
@@ -25,6 +29,15 @@ const TRACKED_PARAMS = [
     'creative',
     'targetid',
     'placement',
+    'adposition',
+    'feeditemid',
+    'extensionid',
+    'adtype',
+    'loc_physical_ms',
+    'loc_interest_ms',
+    'product_channel',
+    'product_id',
+    'merchant_id',
 ];
 
 const MAX_VALUE_LENGTH = 1000;
@@ -79,7 +92,7 @@ const currentParams = () => {
 
     searchParams.forEach((value, rawKey) => {
         const key = rawKey.toLowerCase();
-        const shouldTrack = key.startsWith('utm_') || TRACKED_PARAMS.includes(key);
+        const shouldTrack = key.startsWith('utm_') || key.startsWith('gad_') || TRACKED_PARAMS.includes(key);
         const cleanedValue = cleanValue(value);
 
         if (shouldTrack && cleanedValue) {

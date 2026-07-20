@@ -4,6 +4,7 @@ namespace App\Support\Website;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class LeadAttribution
@@ -17,6 +18,16 @@ class LeadAttribution
         'dclid',
         'ttclid',
         'li_fat_id',
+    ];
+
+    private const GOOGLE_AD_SIGNAL_PARAMS = [
+        'gclid',
+        'gbraid',
+        'wbraid',
+        'dclid',
+        'gad',
+        'gad_source',
+        'gad_campaignid',
     ];
 
     private const STRING_LIMIT = 1000;
@@ -42,12 +53,13 @@ class LeadAttribution
             ?: self::cleanString($request?->headers->get('referer'));
 
         $source = self::resolveSource($params, $referrer);
-        $campaign = self::firstParam($params, ['utm_campaign', 'campaign', 'campaignid']);
+        $campaign = self::firstParam($params, ['utm_campaign', 'campaign', 'campaignid', 'gad_campaignid', 'utm_id']);
         $term = self::firstParam($params, ['utm_term', 'keyword', 'term']);
         $content = self::firstParam($params, ['utm_content', 'content', 'creative', 'ad_id', 'ad']);
         $channel = self::resolveChannel($source['source'], $source['medium'], $campaign, $params);
+        $googleAdsCampaignId = GoogleAdsAttribution::campaignIdFromPayload($payload);
 
-        return [
+        $attribution = [
             'attribution_channel' => $channel,
             'attribution_source' => $source['source'],
             'attribution_medium' => $source['medium'],
@@ -62,6 +74,12 @@ class LeadAttribution
             'attribution_click_ids' => self::clickIds($params),
             'attribution_data' => self::cleanArray($payload),
         ];
+
+        if (Schema::hasColumn('website_leads', 'google_ads_campaign_id')) {
+            $attribution['google_ads_campaign_id'] = $googleAdsCampaignId;
+        }
+
+        return $attribution;
     }
 
     private static function resolveSource(array $params, ?string $referrer): array
@@ -183,7 +201,7 @@ class LeadAttribution
     private static function sourceFromClickIds(array $params): ?string
     {
         return match (true) {
-            self::hasAny($params, ['gclid', 'gbraid', 'wbraid', 'dclid']) => 'google',
+            self::hasAny($params, self::GOOGLE_AD_SIGNAL_PARAMS) => 'google',
             self::hasAny($params, ['fbclid']) => 'meta',
             self::hasAny($params, ['msclkid']) => 'microsoft',
             self::hasAny($params, ['ttclid']) => 'tiktok',
@@ -195,7 +213,7 @@ class LeadAttribution
     private static function mediumFromClickIds(array $params): ?string
     {
         return match (true) {
-            self::hasAny($params, ['gclid', 'gbraid', 'wbraid', 'dclid', 'msclkid']) => 'cpc',
+            self::hasAny($params, [...self::GOOGLE_AD_SIGNAL_PARAMS, 'msclkid']) => 'cpc',
             self::hasAny($params, ['fbclid', 'ttclid', 'li_fat_id']) => 'social',
             default => null,
         };

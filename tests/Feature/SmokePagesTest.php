@@ -10,6 +10,9 @@ use App\Filament\Crm\Pages\Dashboard as CrmDashboard;
 use App\Filament\Crm\Resources\CrmMailPlaceholderResource;
 use App\Filament\Crm\Resources\CrmMailTemplateResource;
 use App\Filament\Crm\Resources\CrmWorkflowOfferResource;
+use App\Filament\Crm\Resources\GoogleAdsCampaignResource;
+use App\Filament\Crm\Resources\GoogleAdsCampaignResource\Pages\ViewGoogleAdsCampaign;
+use App\Filament\Crm\Resources\GoogleAdsCampaignResource\RelationManagers\MonthlyMetricsRelationManager;
 use App\Filament\Crm\Widgets\LeadStatsWidget;
 use App\Filament\Crm\Widgets\PotentialMattersRequiringActionWidget;
 use App\Filament\Portal\Resources\CHFMatterResource as PortalCHFMatterResource;
@@ -47,6 +50,8 @@ use App\Models\Matter;
 use App\Models\PortalUser;
 use App\Models\User;
 use App\Models\Website\Lead;
+use App\Models\Website\GoogleAdsCampaign;
+use App\Models\Website\GoogleAdsCampaignMonthlyMetric;
 use App\Models\Website\Post;
 use App\Services\Crm\LeadStatsService;
 use App\Services\Crm\PotentialMatterWorkflowService;
@@ -677,6 +682,121 @@ class SmokePagesTest extends TestCase
             ->assertDontSee('Potencjalne sprawy');
     }
 
+    public function test_marketing_agency_role_can_open_google_ads_campaigns_resource(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+            'is_employee' => true,
+        ]);
+
+        $user->assignRole(Role::findOrCreate(MarketingAgencyAccess::ROLE, 'web'));
+
+        $campaign = GoogleAdsCampaign::query()->create([
+            'customer_id' => '2299394554',
+            'campaign_id' => '23332662670',
+            'name' => '[TXT] Głogów - EUR',
+            'status' => 'ENABLED',
+            'advertising_channel_type' => 'SEARCH',
+            'currency_code' => 'PLN',
+            'clicks' => 12,
+            'cost_micros' => 42000000,
+            'conversions' => 2,
+            'last_synced_at' => now(),
+        ]);
+        $juneMetric = GoogleAdsCampaignMonthlyMetric::query()->create([
+            'google_ads_campaign_id' => $campaign->getKey(),
+            'month' => '2026-06-01',
+            'currency_code' => 'PLN',
+            'clicks' => 10,
+            'impressions' => 500,
+            'cost_micros' => 123450000,
+            'conversions' => 1,
+            'last_synced_at' => now(),
+        ]);
+        $mayMetric = GoogleAdsCampaignMonthlyMetric::query()->create([
+            'google_ads_campaign_id' => $campaign->getKey(),
+            'month' => '2026-05-01',
+            'currency_code' => 'PLN',
+            'clicks' => 12,
+            'impressions' => 600,
+            'cost_micros' => 200000000,
+            'conversions' => 2,
+            'last_synced_at' => now(),
+        ]);
+        $juneLead = Lead::query()->create([
+            'name' => 'Lead Czerwcowy',
+            'email' => 'lead-czerwcowy@example.test',
+            'phone' => '500 100 001',
+            'google_ads_campaign_id' => '23332662670',
+        ]);
+        $juneLead->forceFill([
+            'created_at' => '2026-06-15 10:00:00',
+            'updated_at' => '2026-06-15 10:00:00',
+        ])->save();
+        $firstMayLead = Lead::query()->create([
+            'name' => 'Lead Majowy Pierwszy',
+            'email' => 'lead-majowy-1@example.test',
+            'phone' => '500 100 002',
+            'google_ads_campaign_id' => '23332662670',
+        ]);
+        $firstMayLead->forceFill([
+            'created_at' => '2026-05-12 10:00:00',
+            'updated_at' => '2026-05-12 10:00:00',
+        ])->save();
+        $secondMayLead = Lead::query()->create([
+            'name' => 'Lead Majowy Drugi',
+            'email' => 'lead-majowy-2@example.test',
+            'phone' => '500 100 003',
+            'google_ads_campaign_id' => '23332662670',
+        ]);
+        $secondMayLead->forceFill([
+            'created_at' => '2026-05-20 10:00:00',
+            'updated_at' => '2026-05-20 10:00:00',
+        ])->save();
+
+        $this
+            ->actingAs($user)
+            ->get(GoogleAdsCampaignResource::getUrl(panel: 'crm'))
+            ->assertOk()
+            ->assertSee('Kampanie Google Ads')
+            ->assertSee('[TXT] Głogów - EUR')
+            ->assertSee('23332662670');
+
+        $this
+            ->actingAs($user)
+            ->get(GoogleAdsCampaignResource::getUrl('view', ['record' => $campaign], panel: 'crm'))
+            ->assertOk()
+            ->assertSee('[TXT] Głogów - EUR')
+            ->assertSee('Kliknięcia')
+            ->assertSee('Koszt')
+            ->assertSee('Aktywna')
+            ->assertSee('Sieć wyszukiwania')
+            ->assertSee('Wydatki miesięczne')
+            ->assertDontSee('Monthly metrics')
+            ->assertDontSee('Customer ID')
+            ->assertSee('2026-06')
+            ->assertSee('123,45 PLN');
+
+        Filament::setCurrentPanel('crm');
+
+        Livewire::test(MonthlyMetricsRelationManager::class, [
+            'ownerRecord' => $campaign,
+            'pageClass' => ViewGoogleAdsCampaign::class,
+        ])
+            ->assertTableColumnExists('month')
+            ->assertTableColumnExists('cost_micros')
+            ->assertTableColumnExists('crm_leads_count')
+            ->assertCanSeeTableRecords([$juneMetric, $mayMetric], inOrder: true)
+            ->sortTable('month', 'asc')
+            ->assertCanSeeTableRecords([$mayMetric, $juneMetric], inOrder: true)
+            ->sortTable('cost_micros', 'desc')
+            ->assertCanSeeTableRecords([$mayMetric, $juneMetric], inOrder: true)
+            ->sortTable('crm_leads_count', 'desc')
+            ->assertCanSeeTableRecords([$mayMetric, $juneMetric], inOrder: true)
+            ->sortTable('cost_per_crm_lead', 'desc')
+            ->assertCanSeeTableRecords([$juneMetric, $mayMetric], inOrder: true);
+    }
+
     public function test_crm_role_form_exposes_marketing_access_permissions(): void
     {
         $permissions = ShieldPanelPermissions::groups()['crm']['customPermissions'] ?? [];
@@ -725,6 +845,19 @@ class SmokePagesTest extends TestCase
 
         $user->assignRole(Role::findOrCreate(MarketingAgencyAccess::ROLE, 'web'));
 
+        GoogleAdsCampaign::query()->create([
+            'customer_id' => '2299394554',
+            'campaign_id' => '23332662670',
+            'name' => '[TXT] Głogów - EUR',
+            'status' => 'ENABLED',
+            'advertising_channel_type' => 'SEARCH',
+            'currency_code' => 'PLN',
+            'clicks' => 42,
+            'cost_micros' => 210000000,
+            'conversions' => 3,
+            'last_synced_at' => now(),
+        ]);
+
         $lead = Lead::create([
             'name' => 'Jan Tajny',
             'email' => 'jan.tajny@example.test',
@@ -747,7 +880,7 @@ class SmokePagesTest extends TestCase
             'attribution_campaign' => 'kampania-testowa',
             'attribution_term' => 'kredyt frankowy',
             'attribution_content' => 'reklama-a',
-            'attribution_landing_page' => 'https://preda.info/analiza',
+            'attribution_landing_page' => 'https://preda.info/analiza?gad_campaignid=23332662670',
             'attribution_conversion_page' => 'https://preda.info/analiza#formularz',
             'attribution_referrer' => 'https://google.example.test',
             'message' => 'Dodatkowe informacje: Tajna treść wiadomości.',
@@ -789,6 +922,11 @@ class SmokePagesTest extends TestCase
             ->assertSee('google')
             ->assertSee('cpc')
             ->assertSee('kampania-testowa')
+            ->assertSee('23332662670')
+            ->assertSee('[TXT] Głogów - EUR')
+            ->assertDontSee('status: ENABLED')
+            ->assertDontSee('typ: SEARCH')
+            ->assertSee('kliknięcia: 42')
             ->assertSee('Formularz')
             ->assertSee('67-200, powiat głogowski, województwo dolnośląskie')
             ->assertSee('Bank Testowy')
@@ -875,6 +1013,46 @@ class SmokePagesTest extends TestCase
             ->filterTable('lead_type', LeadTypes::EMAIL)
             ->assertCanSeeTableRecords([$emailLead])
             ->assertCanNotSeeTableRecords([$formLead]);
+    }
+
+    public function test_crm_leads_display_names_in_title_case(): void
+    {
+        $user = $this->makeSuperAdmin();
+
+        $uppercaseLead = Lead::create([
+            'name' => 'JAN KOWALSKI',
+            'email' => 'jan.kowalski@example.test',
+            'phone' => '500 100 100',
+        ]);
+
+        Lead::create([
+            'name' => 'anna-maria łÓDŹ',
+            'email' => 'anna.lodz@example.test',
+            'phone' => '500 200 200',
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->get(WebsiteLeadResource::getUrl(panel: 'crm'))
+            ->assertOk()
+            ->assertSeeText('Jan Kowalski')
+            ->assertSeeText('Anna-Maria Łódź')
+            ->assertDontSeeText('JAN KOWALSKI')
+            ->assertDontSeeText('anna-maria łÓDŹ');
+
+        $this
+            ->actingAs($user)
+            ->get(WebsiteLeadResource::getUrl('view', ['record' => $uppercaseLead], panel: 'crm'))
+            ->assertOk()
+            ->assertSeeText('Jan Kowalski')
+            ->assertDontSeeText('JAN KOWALSKI');
+
+        $this
+            ->actingAs($user)
+            ->get(WebsiteLeadResource::getUrl('edit', ['record' => $uppercaseLead], panel: 'crm'))
+            ->assertOk()
+            ->assertSeeText('Jan Kowalski')
+            ->assertDontSeeText('JAN KOWALSKI');
     }
 
     public function test_crm_dashboard_requiring_action_widget_respects_lawyer_referat(): void

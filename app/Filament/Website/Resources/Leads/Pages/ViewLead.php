@@ -24,7 +24,8 @@ class ViewLead extends ViewRecord
             return 'Lead #'.$this->getRecord()->getKey();
         }
 
-        return $this->getRecord()->{static::$resource::getRecordTitleAttribute()};
+        return $this->getRecord()->display_name
+            ?: $this->getRecord()->{static::$resource::getRecordTitleAttribute()};
     }
 
     public function getRecordTitle(): string|Htmlable
@@ -33,7 +34,8 @@ class ViewLead extends ViewRecord
             return 'Lead #'.$this->getRecord()->getKey();
         }
 
-        return parent::getRecordTitle();
+        return $this->getRecord()->display_name
+            ?: parent::getRecordTitle();
     }
 
     public function getBreadcrumb(): string
@@ -42,7 +44,8 @@ class ViewLead extends ViewRecord
             return 'Lead #'.$this->getRecord()->getKey();
         }
 
-        return parent::getBreadcrumb();
+        return $this->getRecord()->display_name
+            ?: parent::getBreadcrumb();
     }
 
     protected function mutateFormDataBeforeFill(array $data): array
@@ -67,6 +70,7 @@ class ViewLead extends ViewRecord
             'attribution_source',
             'attribution_medium',
             'attribution_campaign',
+            'google_ads_campaign_id',
             'attribution_term',
             'attribution_content',
             'attribution_landing_page',

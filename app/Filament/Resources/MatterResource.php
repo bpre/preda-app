@@ -652,7 +652,7 @@ class MatterResource extends Resource
             ->schema([
                 Placeholder::make('source_lead_name')
                     ->label('Imię i nazwisko')
-                    ->content(fn (?Matter $record): string => self::sourceLeadText(self::sourceLead($record)?->name)),
+                    ->content(fn (?Matter $record): string => self::sourceLeadText(self::sourceLead($record)?->display_name)),
                 Placeholder::make('source_lead_email')
                     ->label('E-mail')
                     ->content(fn (?Matter $record): string => self::sourceLeadText(self::sourceLead($record)?->email)),

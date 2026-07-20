@@ -211,6 +211,56 @@ class AnalysisFormTest extends TestCase
         $this->assertSame('Google Ads', $lead->attribution_summary);
     }
 
+    public function test_first_step_saves_google_ads_campaign_id_from_gad_params(): void
+    {
+        $this->createPublishedBank();
+        $this->createLeadRecipient();
+
+        $landingUrl = 'https://preda.info/kredyt-euro-kancelaria-glogow?gad_source=1&gad_campaignid=23332662670&gclid=test-gclid';
+
+        $this->fillValidAnalysisForm(Livewire::test(AnalysisForm::class))
+            ->set('attributionData', [
+                'first_touch' => [
+                    'url' => $landingUrl,
+                    'path' => '/kredyt-euro-kancelaria-glogow?gad_source=1&gad_campaignid=23332662670&gclid=test-gclid',
+                    'referrer' => 'https://www.google.com/',
+                    'params' => [
+                        'gad_source' => '1',
+                        'gad_campaignid' => '23332662670',
+                        'gclid' => 'test-gclid',
+                    ],
+                    'captured_at' => '2026-07-10T10:00:00+00:00',
+                ],
+                'last_touch' => [
+                    'url' => $landingUrl,
+                    'path' => '/kredyt-euro-kancelaria-glogow?gad_source=1&gad_campaignid=23332662670&gclid=test-gclid',
+                    'referrer' => 'https://www.google.com/',
+                    'params' => [
+                        'gad_source' => '1',
+                        'gad_campaignid' => '23332662670',
+                        'gclid' => 'test-gclid',
+                    ],
+                    'captured_at' => '2026-07-10T10:05:00+00:00',
+                ],
+                'current_page' => [
+                    'url' => 'https://preda.info/analiza',
+                    'path' => '/analiza',
+                    'captured_at' => '2026-07-10T10:06:00+00:00',
+                ],
+            ])
+            ->call('create')
+            ->assertSet('sent', true);
+
+        $lead = Lead::query()->firstOrFail();
+
+        $this->assertSame('google_ads', $lead->attribution_channel);
+        $this->assertSame('google', $lead->attribution_source);
+        $this->assertSame('cpc', $lead->attribution_medium);
+        $this->assertSame('23332662670', $lead->attribution_campaign);
+        $this->assertSame('23332662670', $lead->google_ads_campaign_id);
+        $this->assertSame(['gclid' => 'test-gclid'], $lead->attribution_click_ids);
+    }
+
     public function test_first_step_dispatches_analysis_tracking_events(): void
     {
         $this->createPublishedBank();

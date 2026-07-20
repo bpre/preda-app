@@ -49,6 +49,15 @@ return [
         'reviews_url' => env('GOOGLE_REVIEWS_URL'),
     ],
 
+    'google_ads' => [
+        'developer_token' => env('GOOGLE_ADS_DEVELOPER_TOKEN'),
+        'client_id' => env('GOOGLE_ADS_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_ADS_CLIENT_SECRET'),
+        'refresh_token' => env('GOOGLE_ADS_REFRESH_TOKEN'),
+        'customer_id' => env('GOOGLE_ADS_CUSTOMER_ID'),
+        'login_customer_id' => env('GOOGLE_ADS_LOGIN_CUSTOMER_ID'),
+    ],
+
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'sentence_generator_ai_enabled' => filter_var(env('OPENAI_SENTENCE_GENERATOR_AI_ENABLED', false), FILTER_VALIDATE_BOOLEAN),

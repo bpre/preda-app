@@ -4,6 +4,7 @@ namespace App\Models\Website;
 
 use App\Models\Matter;
 use App\Models\User;
+use App\Support\Website\GoogleAdsAttribution;
 use App\Support\Website\LeadStatuses;
 use App\Support\Website\LeadTypes;
 use App\Support\Website\PostalCodeLookup;
@@ -65,6 +66,7 @@ class Lead extends Model
         'attribution_source',
         'attribution_medium',
         'attribution_campaign',
+        'google_ads_campaign_id',
         'attribution_term',
         'attribution_content',
         'attribution_landing_page',
@@ -80,6 +82,13 @@ class Lead extends Model
     protected static function booted(): void
     {
         static::saving(function (Lead $lead): void {
+            if (
+                Schema::hasColumn($lead->getTable(), 'google_ads_campaign_id')
+                && blank($lead->google_ads_campaign_id)
+            ) {
+                $lead->google_ads_campaign_id = GoogleAdsAttribution::campaignIdFromLead($lead);
+            }
+
             app(PostalCodeLookup::class)->fillLeadRegion($lead);
         });
 
@@ -134,6 +143,27 @@ class Lead extends Model
     public function rejectionUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function googleAdsCampaign(): BelongsTo
+    {
+        return $this->belongsTo(GoogleAdsCampaign::class, 'google_ads_campaign_id', 'campaign_id');
+    }
+
+    public function getDisplayNameAttribute(): ?string
+    {
+        return self::normalizeDisplayName($this->name);
+    }
+
+    public static function normalizeDisplayName(?string $name): ?string
+    {
+        $name = trim((string) preg_replace('/\s+/u', ' ', (string) $name));
+
+        if ($name === '') {
+            return null;
+        }
+
+        return mb_convert_case(mb_strtolower($name, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
     }
 
     public function qualify(bool $automatic = false, Carbon|string|null $changedAt = null, ?int $userId = null, ?string $note = null): LeadStatusChange

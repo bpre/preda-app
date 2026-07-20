@@ -2,6 +2,7 @@
 
 namespace App\Filament\Website\Resources\Leads\Schemas;
 
+use App\Filament\Crm\Resources\GoogleAdsCampaignResource;
 use App\Models\Website\Lead;
 use App\Support\Crm\MarketingAgencyAccess;
 use App\Support\Website\LeadStatuses;
@@ -34,7 +35,7 @@ class LeadForm
                     ->schema([
                         Placeholder::make('name_info')
                             ->label('Imię i nazwisko')
-                            ->content(fn (?Lead $record): string => self::restrictedText($record?->name)),
+                            ->content(fn (?Lead $record): string => self::restrictedText($record?->display_name)),
                         Placeholder::make('email_info')
                             ->label('E-mail')
                             ->content(fn (?Lead $record): string => self::restrictedText($record?->email)),
@@ -161,6 +162,18 @@ class LeadForm
                 Placeholder::make('attribution_campaign_info')
                     ->label('Kampania')
                     ->content(fn (?Lead $record): string => self::text($record?->attribution_campaign)),
+                Placeholder::make('google_ads_campaign_id_info')
+                    ->label('ID kampanii Google Ads')
+                    ->content(fn (?Lead $record): string => self::text($record?->google_ads_campaign_id))
+                    ->visible(fn (?Lead $record): bool => self::hasGoogleAdsAttribution($record)),
+                Placeholder::make('google_ads_campaign_info')
+                    ->label('Kampania Google Ads')
+                    ->content(fn (?Lead $record): HtmlString|string => self::googleAdsCampaignLabel($record))
+                    ->visible(fn (?Lead $record): bool => self::hasGoogleAdsAttribution($record)),
+                Placeholder::make('google_ads_campaign_metrics_info')
+                    ->label('Metryki kampanii')
+                    ->content(fn (?Lead $record): string => self::googleAdsCampaignMetrics($record))
+                    ->visible(fn (?Lead $record): bool => self::hasGoogleAdsAttribution($record)),
                 Placeholder::make('attribution_term_info')
                     ->label('Fraza / keyword')
                     ->content(fn (?Lead $record): string => self::text($record?->attribution_term)),
@@ -281,6 +294,65 @@ class LeadForm
     private static function text(?string $value): string
     {
         return filled($value) ? $value : '-';
+    }
+
+    private static function hasGoogleAdsAttribution(?Lead $lead): bool
+    {
+        return filled($lead?->google_ads_campaign_id)
+            || $lead?->attribution_channel === 'google_ads';
+    }
+
+    private static function googleAdsCampaignLabel(?Lead $lead): HtmlString|string
+    {
+        if (! $lead) {
+            return '-';
+        }
+
+        $campaign = $lead->googleAdsCampaign;
+
+        if (! $campaign) {
+            return filled($lead->google_ads_campaign_id)
+                ? 'Nie znaleziono kampanii w lokalnej bazie'
+                : 'Brak ID kampanii w danych leada';
+        }
+
+        $url = GoogleAdsCampaignResource::getUrl('view', ['record' => $campaign], panel: 'crm');
+
+        return new HtmlString('<a href="'.e($url).'" class="text-primary-600 hover:text-primary-500 underline underline-offset-2">'.e($campaign->name).'</a>');
+    }
+
+    private static function googleAdsCampaignMetrics(?Lead $lead): string
+    {
+        $campaign = $lead?->googleAdsCampaign;
+
+        if (! $campaign) {
+            return '-';
+        }
+
+        return collect([
+            'kliknięcia: '.self::number($campaign->clicks),
+            'koszt: '.self::moneyMicros($campaign->cost_micros, $campaign->currency_code),
+            'konwersje: '.self::number($campaign->conversions, 2),
+            $campaign->last_synced_at ? 'sync: '.$campaign->last_synced_at->format('Y-m-d H:i') : null,
+        ])->filter()->implode(' | ');
+    }
+
+    private static function moneyMicros(mixed $value, ?string $currency): string
+    {
+        if (! is_numeric($value)) {
+            return '-';
+        }
+
+        return number_format(((float) $value) / 1_000_000, 2, ',', ' ').' '.($currency ?: 'PLN');
+    }
+
+    private static function number(mixed $value, int $decimals = 0): string
+    {
+        if (! is_numeric($value)) {
+            return '-';
+        }
+
+        return number_format((float) $value, $decimals, ',', ' ');
     }
 
     private static function restrictedText(?string $value): string

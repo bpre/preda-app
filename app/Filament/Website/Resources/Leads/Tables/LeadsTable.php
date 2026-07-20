@@ -37,7 +37,7 @@ class LeadsTable
                     ->label('Kontakt')
                     ->getStateUsing(fn (Lead $record): string => $isRestrictedMarketingView
                         ? MarketingAgencyAccess::hiddenValue()
-                        : ($record->name ?: '-'))
+                        : ($record->display_name ?: '-'))
                     ->weight('bold')
                     ->size(TextSize::Medium)
                     ->description(fn (Lead $record): ?HtmlString => self::contactDescription($record, $isRestrictedMarketingView))
@@ -90,6 +90,7 @@ class LeadsTable
                         'attribution_source',
                         'attribution_medium',
                         'attribution_campaign',
+                        'google_ads_campaign_id',
                         'attribution_term',
                         'attribution_content',
                         'attribution_referrer',
