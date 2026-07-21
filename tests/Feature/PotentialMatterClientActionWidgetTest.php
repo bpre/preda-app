@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\Widgets\PotentialMatterActionWidget;
 use App\Models\Activity;
 use App\Models\CHFPotentialMatter;
+use App\Models\CrmClientMessage;
 use App\Models\CrmMailPlaceholder;
 use App\Models\CrmMailTemplate;
 use App\Models\CrmWorkflowOffer;
@@ -380,11 +381,23 @@ class PotentialMatterClientActionWidgetTest extends TestCase
             body: '<p>Wracam do wiadomości.</p>',
         );
 
+        $clientMessage = CrmClientMessage::query()
+            ->where('matter_id', $matter->getKey())
+            ->where('action', PotentialMatterClientActionService::FOLLOW_UP_AFTER_QUALIFICATION)
+            ->firstOrFail();
+
         Notification::assertSentOnDemand(
             LeadGeneratedMessage::class,
             fn (LeadGeneratedMessage $notification, array $channels, object $notifiable): bool => $channels === ['mail']
                 && $notifiable->routes['mail'] === $lead->email
-                && $notification->subject === 'Przypomnienie',
+                && $notification->subject === 'Przypomnienie'
+                && in_array('crm-client-message', $notification->mailTags, true)
+                && in_array('crm-action-'.PotentialMatterClientActionService::FOLLOW_UP_AFTER_QUALIFICATION, $notification->mailTags, true)
+                && ($notification->mailMetadata['crm_client_message_id'] ?? null) === $clientMessage->getKey()
+                && ($notification->mailMetadata['matter_id'] ?? null) === (string) $matter->getKey()
+                && ($notification->mailMetadata['website_lead_id'] ?? null) === $lead->getKey()
+                && ($notification->mailMetadata['crm_action'] ?? null) === PotentialMatterClientActionService::FOLLOW_UP_AFTER_QUALIFICATION
+                && ($notification->mailMetadata['recipient_email'] ?? null) === $lead->email,
         );
 
         $this->assertSame('Follow-up (po kwalifikacji)', $stage->label);

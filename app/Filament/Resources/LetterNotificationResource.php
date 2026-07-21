@@ -2,48 +2,49 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Illuminate\Support\Carbon;
-use Filament\Schemas\Components\Group;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Actions;
-use Filament\Actions\Action;
-use Filament\Support\Enums\Width;
-use Throwable;
-use Closure;
-use Filament\Actions\ActionGroup;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
 use App\Filament\Resources\LetterNotificationResource\Pages\ListLetterNotifications;
 use App\Models\LetterNotification;
 use App\Models\LetterNotificationTemplate;
+use App\Models\MailgunEvent;
 use App\Services\LetterNotificationSender;
+use Closure;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Livewire\Component as Livewire;
-use App\Filament\Resources\LetterNotificationResource\Pages;
+use Throwable;
 
 class LetterNotificationResource extends Resource
 {
     protected static ?string $model = LetterNotification::class;
+
     protected static ?string $slug = 'powiadomienia-o-pismach';
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-envelope';
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-envelope';
 
     protected static ?string $navigationLabel = 'Powiadomienia o pismach';
 
@@ -96,10 +97,10 @@ class LetterNotificationResource extends Resource
                                 ];
 
                                 $html = collect($rows)
-                                    ->map(fn ($value, $label) => '<div><strong>' . e($label) . ':</strong> ' . e((string) $value) . '</div>')
+                                    ->map(fn ($value, $label) => '<div><strong>'.e($label).':</strong> '.e((string) $value).'</div>')
                                     ->implode('');
 
-                                return new HtmlString('<div class="space-y-1 text-sm">' . $html . '</div>');
+                                return new HtmlString('<div class="space-y-1 text-sm">'.$html.'</div>');
                             }),
                     ])
                     ->columnSpanFull(),
@@ -255,6 +256,7 @@ class LetterNotificationResource extends Resource
 
                             if (! $state) {
                                 $set('selected_attachments', []);
+
                                 return;
                             }
 
@@ -285,7 +287,7 @@ class LetterNotificationResource extends Resource
                                     if (Storage::disk('local')->exists($path)) {
                                         $sizeBytes = (int) Storage::disk('local')->size($path);
                                         $sizeMb = round($sizeBytes / 1024 / 1024, 2);
-                                        $sizeLabel = ' (' . $sizeMb . ' MB)';
+                                        $sizeLabel = ' ('.$sizeMb.' MB)';
                                     }
                                 } catch (Throwable $e) {
                                 }
@@ -340,7 +342,7 @@ class LetterNotificationResource extends Resource
                                 if ($totalBytes > $maxBytes) {
                                     $totalMb = static::formatBytesToMb($totalBytes);
 
-                                    $fail("Łączny rozmiar wybranych załączników wynosi {$totalMb} MB i przekracza " . LetterNotification::MAX_ATTACHMENTS_SIZE_MB . " MB.");
+                                    $fail("Łączny rozmiar wybranych załączników wynosi {$totalMb} MB i przekracza ".LetterNotification::MAX_ATTACHMENTS_SIZE_MB.' MB.');
                                 }
                             };
                         }),
@@ -360,12 +362,12 @@ class LetterNotificationResource extends Resource
 
                             if ($totalBytes > $maxBytes) {
                                 return new HtmlString(
-                                    '<span class="font-bold text-danger-600">Łączny rozmiar wybranych załączników: ' . e((string) $totalMb) . ' MB. Przekracza ' . e((string) LetterNotification::MAX_ATTACHMENTS_SIZE_MB) . ' MB.</span>'
+                                    '<span class="font-bold text-danger-600">Łączny rozmiar wybranych załączników: '.e((string) $totalMb).' MB. Przekracza '.e((string) LetterNotification::MAX_ATTACHMENTS_SIZE_MB).' MB.</span>'
                                 );
                             }
 
                             return new HtmlString(
-                                '<span class="text-success-600">Łączny rozmiar wybranych załączników: ' . e((string) $totalMb) . ' MB.</span>'
+                                '<span class="text-success-600">Łączny rozmiar wybranych załączników: '.e((string) $totalMb).' MB.</span>'
                             );
                         })
                         ->visible(fn (Get $get) => $get('with_attachments')),
@@ -375,24 +377,24 @@ class LetterNotificationResource extends Resource
                             ->label(new HtmlString('<span style="font-size: 0.75rem; color: #6b7280; font-weight: 500;">Status</span>'))
                             ->content(fn ($record) => new HtmlString(
                                 '<span style="font-size: 0.875rem; color: #111827;">'
-                                . e($record ? (LetterNotification::STATUS_LABELS[$record->status] ?? $record->status) : '—')
-                                . '</span>'
+                                .e($record ? (LetterNotification::STATUS_LABELS[$record->status] ?? $record->status) : '—')
+                                .'</span>'
                             )),
 
                         Placeholder::make('sent_at_info')
                             ->label(new HtmlString('<span style="font-size: 0.75rem; color: #6b7280; font-weight: 500;">Data wysłania</span>'))
                             ->content(fn ($record) => new HtmlString(
                                 '<span style="font-size: 0.875rem; color: #111827;">'
-                                . e(filled($record?->sent_at) ? $record->sent_at->format('d.m.Y H:i') : '—')
-                                . '</span>'
+                                .e(filled($record?->sent_at) ? $record->sent_at->format('d.m.Y H:i') : '—')
+                                .'</span>'
                             )),
 
                         Placeholder::make('prepared_by_info')
                             ->label(new HtmlString('<span style="font-size: 0.75rem; color: #6b7280; font-weight: 500;">Przygotowane przez</span>'))
                             ->content(fn ($record) => new HtmlString(
                                 '<span style="font-size: 0.875rem; color: #111827;">'
-                                . e($record?->preparedBy?->name ?: '—')
-                                . '</span>'
+                                .e($record?->preparedBy?->name ?: '—')
+                                .'</span>'
                             )),
                     ])
                         ->extraAttributes([
@@ -430,7 +432,7 @@ class LetterNotificationResource extends Resource
                         } else {
                             $clientName = $record->contact?->sort_name ?: 'Brak przypisanego odbiorcy';
                             $email = $record->recipient_email;
-                            $clientLabel = filled($email) ? $clientName . ' (' . $email . ')' : $clientName;
+                            $clientLabel = filled($email) ? $clientName.' ('.$email.')' : $clientName;
                         }
 
                         $typeIcon = match ($letterType) {
@@ -441,13 +443,13 @@ class LetterNotificationResource extends Resource
 
                         return new HtmlString(
                             '<div class="leading-5">'
-                                . '<div class="inline-flex items-center gap-2 fi-ta-text-item">'
-                                    . $typeIcon
-                                    . '<div class="font-bold">' . e($letterLabel) . '</div>'
-                                . '</div>'
-                                . '<div>' . e($matterLabel) . '</div>'
-                                . '<div class="text-xs text-gray-600">' . e($clientLabel) . '</div>'
-                            . '</div>'
+                                .'<div class="inline-flex items-center gap-2 fi-ta-text-item">'
+                                    .$typeIcon
+                                    .'<div class="font-bold">'.e($letterLabel).'</div>'
+                                .'</div>'
+                                .'<div>'.e($matterLabel).'</div>'
+                                .'<div class="text-xs text-gray-600">'.e($clientLabel).'</div>'
+                            .'</div>'
                         );
                     }),
 
@@ -472,6 +474,17 @@ class LetterNotificationResource extends Resource
                         default => 'info',
                     }),
 
+                TextColumn::make('mailgun_status')
+                    ->label('Dostarczenie')
+                    ->state(fn (LetterNotification $record): ?string => MailgunEvent::mostRelevantFrom(
+                        $record->mailgunEvents()->get(['id', 'event', 'occurred_at', 'created_at'])
+                    )?->event)
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => MailgunEvent::labelFor($state))
+                    ->color(fn (?string $state): string => MailgunEvent::colorFor($state))
+                    ->placeholder('—')
+                    ->toggleable(),
+
                 IconColumn::make('with_attachments')
                     ->label('Wyślij załączniki')
                     ->boolean()
@@ -488,15 +501,15 @@ class LetterNotificationResource extends Resource
 
                         return new HtmlString(
                             '<div class="leading-5">'
-                                . '<div>'
-                                    . '<span class="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md fi-badge fi-color-info gap-x-1 ring-1 ring-inset">'
-                                        . e((string) $attachmentsCount) .
+                                .'<div>'
+                                    .'<span class="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md fi-badge fi-color-info gap-x-1 ring-1 ring-inset">'
+                                        .e((string) $attachmentsCount).
                                     '</span>'
-                                . '</div>'
-                                . '<div class="mt-1 text-xs text-gray-600">'
-                                    . 'Wybrane: ' . e((string) $selectedCount) .
+                                .'</div>'
+                                .'<div class="mt-1 text-xs text-gray-600">'
+                                    .'Wybrane: '.e((string) $selectedCount).
                                 '</div>'
-                            . '</div>'
+                            .'</div>'
                         );
                     }),
 
@@ -752,7 +765,6 @@ class LetterNotificationResource extends Resource
         return [];
     }
 
-
     protected static function getRestoredStatusForIgnoredNotification(LetterNotification $record): string
     {
         if (! filled($record->contact_id)) {
@@ -790,7 +802,6 @@ class LetterNotificationResource extends Resource
             || count($selectedAttachments) > 0;
     }
 
-
     protected static function shouldConfirmTemplateReplacement(?string $subject, ?string $message): bool
     {
         return static::hasMeaningfulFormContent($subject) || static::hasMeaningfulFormContent($message);
@@ -812,16 +823,16 @@ class LetterNotificationResource extends Resource
     protected static function getAttachmentOptionLabel(string $path, string $name, string $sizeLabel = ''): HtmlString
     {
         $previewUrl = e(static::getAttachmentPreviewUrl($path));
-        $label = e($name . $sizeLabel);
+        $label = e($name.$sizeLabel);
         $icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="-mt-1 size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>';
 
         return new HtmlString(
             '<span class="inline-flex items-center gap-4">'
-            . '<span>' . $label . '</span>'
-            . '<a href="' . $previewUrl . '" target="_blank" rel="noopener noreferrer" title="Podejrzyj załącznik" class="inline-flex items-center text-gray-500 hover:text-gray-700" onclick="event.stopPropagation();" onmousedown="event.stopPropagation();">'
-            . $icon
-            . '</a>'
-            . '</span>'
+            .'<span>'.$label.'</span>'
+            .'<a href="'.$previewUrl.'" target="_blank" rel="noopener noreferrer" title="Podejrzyj załącznik" class="inline-flex items-center text-gray-500 hover:text-gray-700" onclick="event.stopPropagation();" onmousedown="event.stopPropagation();">'
+            .$icon
+            .'</a>'
+            .'</span>'
         );
     }
 
@@ -832,7 +843,7 @@ class LetterNotificationResource extends Resource
             ->map(fn (string $segment): string => rawurlencode($segment))
             ->implode('/');
 
-        return '/z/' . $encodedPath;
+        return '/z/'.$encodedPath;
     }
 
     protected static function applyTemplateToForm(string|int $templateId, LetterNotification $record, callable $set): void
@@ -957,7 +968,7 @@ class LetterNotificationResource extends Resource
             if ($totalBytes > $maxBytes) {
                 $totalMb = static::formatBytesToMb($totalBytes);
 
-                return "Łączny rozmiar wybranych załączników wynosi {$totalMb} MB i przekracza " . LetterNotification::MAX_ATTACHMENTS_SIZE_MB . ' MB.';
+                return "Łączny rozmiar wybranych załączników wynosi {$totalMb} MB i przekracza ".LetterNotification::MAX_ATTACHMENTS_SIZE_MB.' MB.';
             }
         }
 

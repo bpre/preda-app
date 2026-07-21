@@ -1,11 +1,15 @@
 <?php
 
-use App\Http\Controllers\MatterGeneratedDocumentDownloadController;
 use App\Http\Controllers\CrmLeadStatsExportController;
 use App\Http\Controllers\CrmPotentialMatterLeadFileDownloadController;
+use App\Http\Controllers\MailgunWebhookController;
+use App\Http\Controllers\MatterGeneratedDocumentDownloadController;
 use App\Http\Controllers\UserImpersonationController;
 use App\Http\Middleware\IsActiveUser;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/webhooks/mailgun/events', MailgunWebhookController::class)
+    ->name('webhooks.mailgun.events');
 
 Route::domain(config('preda.domains.public'))
     ->group(base_path('routes/public.php'));

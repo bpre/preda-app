@@ -32,6 +32,7 @@ class GenerateLeadResponseAction
                             name: 'sendInitialLeadResponse',
                             subjectField: 'initial_subject',
                             bodyField: 'initial_body',
+                            responseType: 'pierwsza-wiadomosc',
                         ),
                     ])
                     ->schema([
@@ -55,6 +56,7 @@ class GenerateLeadResponseAction
                             name: 'sendFollowUpLeadResponse',
                             subjectField: 'follow_up_subject',
                             bodyField: 'follow_up_body',
+                            responseType: 'follow_up',
                         ),
                     ])
                     ->schema([
@@ -77,7 +79,7 @@ class GenerateLeadResponseAction
             ->modalCancelActionLabel('Zamknij');
     }
 
-    private static function sendMailAction(string $name, string $subjectField, string $bodyField): Action
+    private static function sendMailAction(string $name, string $subjectField, string $bodyField, string $responseType): Action
     {
         return Action::make($name)
             ->label('Wyślij maila')
@@ -88,11 +90,12 @@ class GenerateLeadResponseAction
                     lead: $record,
                     subject: $schemaGet($subjectField),
                     body: $schemaGet($bodyField),
+                    responseType: $responseType,
                 );
             });
     }
 
-    private static function sendMail(Lead $lead, mixed $subject, mixed $body): void
+    private static function sendMail(Lead $lead, mixed $subject, mixed $body, string $responseType): void
     {
         $subject = trim((string) $subject);
         $body = trim((string) $body);
@@ -118,7 +121,20 @@ class GenerateLeadResponseAction
         }
 
         Notification::route('mail', $lead->email)
-            ->notify(new LeadGeneratedMessage($subject, $body));
+            ->notify(new LeadGeneratedMessage(
+                subject: $subject,
+                body: $body,
+                mailTags: [
+                    'website-lead-response',
+                    'website-lead-response-'.$responseType,
+                ],
+                mailMetadata: [
+                    'website_lead_id' => $lead->getKey(),
+                    'matter_id' => $lead->potential_matter_id,
+                    'lead_response_type' => $responseType,
+                    'recipient_email' => $lead->email,
+                ],
+            ));
 
         FilamentNotification::make()
             ->success()

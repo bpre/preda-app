@@ -130,6 +130,7 @@ class PotentialMatterClientActionService
         $template = $this->activeTemplate($action);
         $email = $this->recipientEmail($matter);
         $recipientName = $this->recipientName($matter);
+        $sourceLead = $matter->sourceWebsiteLead()->first(['id']);
         $subject = trim((string) $subject);
         $body = trim((string) $body);
         $analysisWasCompleted = $workflow->matterHasStageKey($matter, PotentialMatterWorkflowService::ANALYSIS_SENT_STAGE);
@@ -164,6 +165,8 @@ class PotentialMatterClientActionService
             ...($workflowOfferAttachment ? [$workflowOfferAttachment] : []),
         ];
 
+        $clientMessageId = (string) Str::uuid();
+
         Notification::route('mail', $email)
             ->notify(new LeadGeneratedMessage(
                 subject: $subject,
@@ -171,6 +174,17 @@ class PotentialMatterClientActionService
                 attachments: $attachments,
                 replyToEmail: $sender?->email,
                 replyToName: $sender?->name,
+                mailTags: [
+                    'crm-client-message',
+                    'crm-action-'.$action,
+                ],
+                mailMetadata: [
+                    'crm_client_message_id' => $clientMessageId,
+                    'matter_id' => (string) $matter->getKey(),
+                    'website_lead_id' => $sourceLead?->getKey(),
+                    'crm_action' => $action,
+                    'recipient_email' => $email,
+                ],
             ));
 
         $stage = $workflow->targetStageForAction($action);
@@ -191,7 +205,7 @@ class PotentialMatterClientActionService
             );
         }
 
-        CrmClientMessage::create([
+        $clientMessage = new CrmClientMessage([
             'matter_id' => $matter->getKey(),
             'crm_mail_template_id' => $template?->getKey(),
             'action' => $action,
@@ -210,6 +224,9 @@ class PotentialMatterClientActionService
             'sent_by' => $sender?->getKey(),
             'sent_at' => now(),
         ]);
+
+        $clientMessage->id = $clientMessageId;
+        $clientMessage->save();
 
         app(PotentialMatterNextActionService::class)->refresh($matter->refresh());
 

@@ -6,6 +6,7 @@ use App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages\CreateCHFPotenti
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages\EditCHFPotentialMatter;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages\ListCHFPotentialMatters;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\RelationManagers\ClientMessagesRelationManager;
+use App\Filament\Crm\Resources\CHFPotentialMatterResource\RelationManagers\MailgunEventsRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\CreditsRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\DealsRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\StagesRelationManager;
@@ -102,6 +103,7 @@ class CHFPotentialMatterResource extends Resource
             StagesRelationManager::class,
             ...(ClientAcquisitionAccess::canUse() ? [
                 ClientMessagesRelationManager::class,
+                MailgunEventsRelationManager::class,
             ] : []),
             ActivitiesRelationManager::class,
             CreditsRelationManager::class,

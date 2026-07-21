@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Crm\Pages\Dashboard as CrmDashboard;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource as CrmPotentialMatterResource;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages\EditCHFPotentialMatter;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\Pages\ListCHFPotentialMatters;
 use App\Filament\Crm\Resources\CHFPotentialMatterResource\RelationManagers\ClientMessagesRelationManager;
-use App\Filament\Crm\Pages\Dashboard as CrmDashboard;
+use App\Filament\Crm\Resources\CHFPotentialMatterResource\RelationManagers\MailgunEventsRelationManager as CrmMailgunEventsRelationManager;
 use App\Filament\Crm\Resources\CrmMailPlaceholderResource;
 use App\Filament\Crm\Resources\CrmMailTemplateResource;
 use App\Filament\Crm\Resources\CrmWorkflowOfferResource;
@@ -29,9 +30,9 @@ use App\Filament\Resources\CHFMatterResource\RelationManagers\LettersRelationMan
 use App\Filament\Resources\CHFMatterResource\RelationManagers\OffersRelationManager;
 use App\Filament\Resources\CHFMatterResource\RelationManagers\PaymentsRelationManager;
 use App\Filament\Resources\CHFPaymentMatterResource as KancelariaCHFPaymentMatterResource;
-use App\Filament\Resources\MatterResource\RelationManagers\ActivitiesRelationManager;
 use App\Filament\Resources\ContactResource as KancelariaContactResource;
 use App\Filament\Resources\LetterResource as KancelariaLetterResource;
+use App\Filament\Resources\MatterResource\RelationManagers\ActivitiesRelationManager;
 use App\Filament\Resources\TaskResource as KancelariaTaskResource;
 use App\Filament\Resources\UserResource as KancelariaUserResource;
 use App\Filament\Website\Resources\Leads\LeadResource as WebsiteLeadResource;
@@ -49,9 +50,9 @@ use App\Models\Letter;
 use App\Models\Matter;
 use App\Models\PortalUser;
 use App\Models\User;
-use App\Models\Website\Lead;
 use App\Models\Website\GoogleAdsCampaign;
 use App\Models\Website\GoogleAdsCampaignMonthlyMetric;
+use App\Models\Website\Lead;
 use App\Models\Website\Post;
 use App\Services\Crm\LeadStatsService;
 use App\Services\Crm\PotentialMatterWorkflowService;
@@ -1589,6 +1590,7 @@ class SmokePagesTest extends TestCase
         $this->assertNotContains(PaymentsRelationManager::class, $potentialMatterRelations);
         $this->assertNotContains(OffersRelationManager::class, $potentialMatterRelations);
         $this->assertNotContains(ClientMessagesRelationManager::class, $potentialMatterRelations);
+        $this->assertNotContains(CrmMailgunEventsRelationManager::class, $potentialMatterRelations);
         $this->assertContains(DealsRelationManager::class, $potentialMatterRelations);
         $this->assertContains(ActivitiesRelationManager::class, $potentialMatterRelations);
         $this->assertFalse(collect($potentialMatterRelations)->contains(
@@ -1598,6 +1600,7 @@ class SmokePagesTest extends TestCase
         $this->assignPartnerRole($user);
 
         $this->assertContains(ClientMessagesRelationManager::class, CrmPotentialMatterResource::getRelations());
+        $this->assertContains(CrmMailgunEventsRelationManager::class, CrmPotentialMatterResource::getRelations());
 
         $acceptedMatterRelations = KancelariaCHFMatterResource::getRelations();
 
@@ -1621,6 +1624,11 @@ class SmokePagesTest extends TestCase
         $this->actingAs($user);
 
         $this->assertFalse(ClientMessagesRelationManager::canViewForRecord(
+            $potentialMatter,
+            EditCHFPotentialMatter::class,
+        ));
+
+        $this->assertFalse(CrmMailgunEventsRelationManager::canViewForRecord(
             $potentialMatter,
             EditCHFPotentialMatter::class,
         ));

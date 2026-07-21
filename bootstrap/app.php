@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             RememberWebsitePracticeContext::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/mailgun/events',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

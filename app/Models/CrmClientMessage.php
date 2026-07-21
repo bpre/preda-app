@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CrmClientMessage extends Model
 {
@@ -64,5 +65,12 @@ class CrmClientMessage extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sent_by');
+    }
+
+    public function mailgunEvents(): HasMany
+    {
+        return $this->hasMany(MailgunEvent::class, 'crm_client_message_id')
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('created_at');
     }
 }

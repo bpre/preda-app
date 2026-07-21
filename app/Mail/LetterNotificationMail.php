@@ -18,8 +18,7 @@ class LetterNotificationMail extends Mailable
 
     public function __construct(
         public LetterNotification $notification
-    ) {
-    }
+    ) {}
 
     public function build(): static
     {
@@ -46,6 +45,12 @@ class LetterNotificationMail extends Mailable
             ]);
 
         $letter = $this->notification->letter;
+
+        $mail->tag('letter-notification');
+
+        foreach ($this->mailgunMetadata($letter) as $key => $value) {
+            $mail->metadata($key, $value);
+        }
 
         $allowedAttachments = is_array($letter?->files)
             ? array_values(array_filter($letter->files))
@@ -79,6 +84,23 @@ class LetterNotificationMail extends Mailable
         return $mail;
     }
 
+    /**
+     * @return array<string, string>
+     */
+    protected function mailgunMetadata(?object $letter): array
+    {
+        return collect([
+            'letter_notification_id' => $this->notification->getKey(),
+            'letter_id' => $letter?->getKey(),
+            'matter_id' => $letter?->matter_id,
+            'contact_id' => $this->notification->contact_id,
+            'recipient_email' => $this->notification->recipient_email,
+        ])
+            ->filter(fn ($value): bool => is_scalar($value) && filled((string) $value))
+            ->map(fn ($value): string => (string) $value)
+            ->all();
+    }
+
     protected function normalizeMessage(?string $message): string
     {
         return Str::of((string) $message)
@@ -101,7 +123,7 @@ class LetterNotificationMail extends Mailable
                     ->map(fn (string $line): string => e(rtrim($line)))
                     ->implode('<br>');
 
-                return '<p style="margin: 0 0 16px;">' . $formattedParagraph . '</p>';
+                return '<p style="margin: 0 0 16px;">'.$formattedParagraph.'</p>';
             },
             array_filter($paragraphs, fn (string $paragraph): bool => trim($paragraph) !== '')
         );

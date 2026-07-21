@@ -2,15 +2,16 @@
 
 namespace App\Models\Website;
 
+use App\Models\MailgunEvent;
 use App\Models\Matter;
 use App\Models\User;
 use App\Support\Website\GoogleAdsAttribution;
 use App\Support\Website\LeadStatuses;
 use App\Support\Website\LeadTypes;
 use App\Support\Website\PostalCodeLookup;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 
@@ -76,7 +77,7 @@ class Lead extends Model
         'attribution_last_touch_at',
         'attribution_click_ids',
         'attribution_data',
-        'message'
+        'message',
     ];
 
     protected static function booted(): void
@@ -148,6 +149,13 @@ class Lead extends Model
     public function googleAdsCampaign(): BelongsTo
     {
         return $this->belongsTo(GoogleAdsCampaign::class, 'google_ads_campaign_id', 'campaign_id');
+    }
+
+    public function mailgunEvents(): HasMany
+    {
+        return $this->hasMany(MailgunEvent::class, 'website_lead_id')
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('created_at');
     }
 
     public function getDisplayNameAttribute(): ?string

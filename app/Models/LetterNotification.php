@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LetterNotification extends Model
 {
@@ -41,18 +42,27 @@ class LetterNotification extends Model
     ];
 
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     public const MAX_ATTACHMENTS_SIZE_MB = 20;
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_IGNORED = 'ignored';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_QUEUED = 'queued';
+
     public const STATUS_SENDING = 'sending';
+
     public const STATUS_SENT = 'sent';
+
     public const STATUS_FAILED = 'failed';
+
     public const STATUS_MISSING_RECIPIENT = 'missing_recipient';
 
     public const AUTO_CANCELLABLE_STATUSES = [
@@ -102,5 +112,12 @@ class LetterNotification extends Model
     public function template(): BelongsTo
     {
         return $this->belongsTo(LetterNotificationTemplate::class, 'template_id', 'id');
+    }
+
+    public function mailgunEvents(): HasMany
+    {
+        return $this->hasMany(MailgunEvent::class, 'letter_notification_id')
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('created_at');
     }
 }

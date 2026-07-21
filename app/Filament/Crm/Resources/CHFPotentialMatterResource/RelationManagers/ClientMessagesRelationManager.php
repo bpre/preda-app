@@ -2,6 +2,8 @@
 
 namespace App\Filament\Crm\Resources\CHFPotentialMatterResource\RelationManagers;
 
+use App\Models\CrmClientMessage;
+use App\Models\MailgunEvent;
 use App\Services\Crm\PotentialMatterWorkflowService;
 use App\Support\Crm\ClientAcquisitionAccess;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -47,6 +49,15 @@ class ClientMessagesRelationManager extends RelationManager
                     ->label('Temat')
                     ->searchable()
                     ->wrap(),
+                TextColumn::make('mailgun_status')
+                    ->label('Status dostarczenia')
+                    ->state(fn (CrmClientMessage $record): ?string => MailgunEvent::mostRelevantFrom(
+                        $record->mailgunEvents()->get(['id', 'event', 'occurred_at', 'created_at'])
+                    )?->event)
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => MailgunEvent::labelFor($state))
+                    ->color(fn (?string $state): string => MailgunEvent::colorFor($state))
+                    ->placeholder('—'),
                 TextColumn::make('crm_workflow_offer_label')
                     ->label('Oferta')
                     ->placeholder('-')

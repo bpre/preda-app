@@ -2,9 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\LetterNotificationMail;
+use App\Models\Letter;
+use App\Models\LetterNotification;
 use App\Models\Website\Lead;
 use App\Notifications\LeadGeneratedMessage;
+use App\Notifications\NewLeadToClient;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class LeadGeneratedMessageTest extends TestCase
@@ -65,5 +70,85 @@ class LeadGeneratedMessageTest extends TestCase
         $this->assertSame([
             ['jan.prawnik@example.test', 'Jan Prawnik'],
         ], $message->replyTo);
+    }
+
+    public function test_it_adds_mailgun_tags_and_metadata_when_provided(): void
+    {
+        $message = (new LeadGeneratedMessage(
+            subject: 'Edytowany temat',
+            body: '<p>Edytowana treść</p>',
+            mailTags: [
+                'crm-client-message',
+                'crm-action-send_offer',
+            ],
+            mailMetadata: [
+                'crm_client_message_id' => 'message-uuid',
+                'matter_id' => 'matter-uuid',
+                'crm_action' => 'send_offer',
+            ],
+        ))->toMail((object) []);
+
+        $this->assertSame([
+            'crm-client-message',
+            'crm-action-send_offer',
+        ], $message->tags);
+
+        $this->assertSame([
+            'crm_client_message_id' => 'message-uuid',
+            'matter_id' => 'matter-uuid',
+            'crm_action' => 'send_offer',
+        ], $message->metadata);
+    }
+
+    public function test_new_lead_confirmation_adds_mailgun_metadata(): void
+    {
+        $matterId = (string) Str::uuid();
+
+        $lead = new Lead([
+            'email' => 'klient@example.test',
+            'potential_matter_id' => $matterId,
+        ]);
+        $lead->id = 123;
+
+        $message = (new NewLeadToClient($lead))->toMail((object) []);
+
+        $this->assertSame(['website-lead-confirmation'], $message->tags);
+        $this->assertSame([
+            'website_lead_id' => '123',
+            'recipient_email' => 'klient@example.test',
+            'matter_id' => $matterId,
+        ], $message->metadata);
+    }
+
+    public function test_letter_notification_mail_adds_mailgun_metadata(): void
+    {
+        $letterId = (string) Str::uuid();
+        $matterId = (string) Str::uuid();
+        $contactId = (string) Str::uuid();
+        $notificationId = (string) Str::uuid();
+
+        $letter = new Letter([
+            'matter_id' => $matterId,
+            'files' => [],
+        ]);
+        $letter->id = $letterId;
+
+        $notification = new LetterNotification([
+            'contact_id' => $contactId,
+            'recipient_email' => 'klient@example.test',
+            'subject' => 'Powiadomienie o piśmie',
+            'message' => 'Treść wiadomości.',
+        ]);
+        $notification->id = $notificationId;
+        $notification->setRelation('letter', $letter);
+
+        $mail = (new LetterNotificationMail($notification))->build();
+
+        $this->assertTrue($mail->hasTag('letter-notification'));
+        $this->assertTrue($mail->hasMetadata('letter_notification_id', $notificationId));
+        $this->assertTrue($mail->hasMetadata('letter_id', $letterId));
+        $this->assertTrue($mail->hasMetadata('matter_id', $matterId));
+        $this->assertTrue($mail->hasMetadata('contact_id', $contactId));
+        $this->assertTrue($mail->hasMetadata('recipient_email', 'klient@example.test'));
     }
 }

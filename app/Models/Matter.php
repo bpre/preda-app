@@ -134,6 +134,13 @@ class Matter extends Model
         return $this->hasMany(CrmClientMessage::class, 'matter_id');
     }
 
+    public function mailgunEvents(): HasMany
+    {
+        return $this->hasMany(MailgunEvent::class, 'matter_id')
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('created_at');
+    }
+
     public function currentStage(): BelongsTo
     {
         return $this->belongsTo(TemplateStage::class, 'current_template_stage_id');
